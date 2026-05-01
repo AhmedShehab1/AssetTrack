@@ -23,10 +23,25 @@ import java.security.interfaces.RSAPublicKey;
 
 @Configuration
 @ConfigurationProperties(prefix = "rsa-config")
-@Data
 public class RsaKeyProperties {
     private String publicKeyLocation;
     private String privateKeyLocation;
+
+    public String getPublicKeyLocation() {
+        return publicKeyLocation;
+    }
+
+    public void setPublicKeyLocation(String publicKeyLocation) {
+        this.publicKeyLocation = publicKeyLocation;
+    }
+
+    public String getPrivateKeyLocation() {
+        return privateKeyLocation;
+    }
+
+    public void setPrivateKeyLocation(String privateKeyLocation) {
+        this.privateKeyLocation = privateKeyLocation;
+    }
 
     @Autowired
     private ResourceLoader resourceLoader;

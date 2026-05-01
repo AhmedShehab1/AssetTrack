@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: AssetTrack
+  datasource:
+    url: jdbc:postgresql://localhost:5432/assettrack
+    username: postgres
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    username: dummy_user
+    password: dummy_password
+
+jwt:
+  issuer: assettrack-api
+
+# RsaKeyProperties has prefix rsa-config
+rsa-config:
+  private-key-location: classpath:private_pkcs8.pem
+  public-key-location: classpath:public.pem
