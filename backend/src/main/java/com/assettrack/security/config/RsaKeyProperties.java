@@ -1,0 +1,58 @@
+package com.assettrack.security.config;
+
+import com.nimbusds.jose.jwk.JWK;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.security.converter.RsaKeyConverters;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+
+@Configuration
+@ConfigurationProperties(prefix = "rsa-config")
+@Data
+public class RsaKeyProperties {
+    private String publicKeyLocation;
+    private String privateKeyLocation;
+
+    @Autowired
+    private ResourceLoader resourceLoader;
+
+    @Bean
+    public RSAPublicKey publicKey() throws Exception {
+        Resource resource = resourceLoader.getResource(publicKeyLocation);
+        return RsaKeyConverters.x509().convert(resource.getInputStream());
+    }
+
+    @Bean
+    public RSAPrivateKey privateKey() throws Exception {
+        Resource resource = resourceLoader.getResource(privateKeyLocation);
+        return RsaKeyConverters.pkcs8().convert(resource.getInputStream());
+
+    }
+    @Bean
+    public JwtEncoder jwtEncoder(RSAPublicKey publicKey, RSAPrivateKey privateKey) {
+        JWK jwk = new RSAKey.Builder(publicKey)
+                .privateKey(privateKey)
+                .build();
+        return new NimbusJwtEncoder(new ImmutableJWKSet<>(new JWKSet(jwk)));
+    }
+
+    @Bean
+    public JwtDecoder jwtDecoder(RSAPublicKey publicKey) {
+        return NimbusJwtDecoder.withPublicKey(publicKey).build();
+    }
+}
