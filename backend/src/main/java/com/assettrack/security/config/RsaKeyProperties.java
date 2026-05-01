@@ -22,7 +22,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 
 @Configuration
-@ConfigurationProperties(prefix = "rsa-config")
+@ConfigurationProperties(prefix = "rsa")
 public class RsaKeyProperties {
     private String publicKeyLocation;
     private String privateKeyLocation;
@@ -49,15 +49,19 @@ public class RsaKeyProperties {
     @Bean
     public RSAPublicKey publicKey() throws Exception {
         Resource resource = resourceLoader.getResource(publicKeyLocation);
-        return RsaKeyConverters.x509().convert(resource.getInputStream());
+        try (java.io.InputStream is = resource.getInputStream()) {
+            return RsaKeyConverters.x509().convert(is);
+        }
     }
 
     @Bean
     public RSAPrivateKey privateKey() throws Exception {
         Resource resource = resourceLoader.getResource(privateKeyLocation);
-        return RsaKeyConverters.pkcs8().convert(resource.getInputStream());
-
+        try (java.io.InputStream is = resource.getInputStream()) {
+            return RsaKeyConverters.pkcs8().convert(is);
+        }
     }
+
     @Bean
     public JwtEncoder jwtEncoder(RSAPublicKey publicKey, RSAPrivateKey privateKey) {
         JWK jwk = new RSAKey.Builder(publicKey)

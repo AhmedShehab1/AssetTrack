@@ -1,23 +1,14 @@
-package  com.assettrack.security.service;
+package com.assettrack.security.service;
 
-import com.nimbusds.jose.jwk.JWK;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class JwtService {
 
     @Value("${jwt.issuer:roombooking-app}")
