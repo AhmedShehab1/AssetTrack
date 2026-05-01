@@ -1,6 +1,0 @@
-com/assettrack/security/config/SecurityConfig.class
-com/assettrack/security/util/SecurityUtils.class
-com/assettrack/security/config/RsaKeyProperties.class
-com/assettrack/security/config/JwtAuthenticationConverter.class
-com/assettrack/AssetTrackApplication.class
-com/assettrack/security/service/JwtService.class
