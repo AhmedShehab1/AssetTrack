@@ -5,10 +5,13 @@ import com.assettrack.domain.user.User;
 import com.assettrack.dto.auth.AuthResponse;
 import com.assettrack.dto.auth.LoginRequest;
 import com.assettrack.dto.auth.SignupRequest;
+import com.assettrack.exception.InvalidCredentialsException;
+import com.assettrack.exception.UserAlreadyExistsException;
 import com.assettrack.repository.user.UserRepository;
 import com.assettrack.security.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,31 +29,41 @@ public class AuthService {
 
     public AuthResponse register(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already in use");
+            throw new UserAlreadyExistsException("Email already in use");
         }
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.DEVELOPER);
         userRepository.save(user);
+        String userIdStr = String.valueOf(user.getId());
         String token = jwtService.generateToken(Map.of(
+                        "email", user.getEmail(),
                         "role", "ROLE_" + user.getRole().name(),
-                        "userId", user.getId()
+                        "userId", userIdStr
                 ),
                 Duration.ofHours(24)
         );
-        return new AuthResponse(token, user.getRole().name());
+        return new AuthResponse(token, user.getRole().name(), userIdStr, user.getEmail());
     }
+
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(),request.getPassword()));
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
+        } catch (BadCredentialsException e) {
+            throw new InvalidCredentialsException("Invalid credentials");
+        }
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
+        String userIdStr = String.valueOf(user.getId());
         String token = jwtService.generateToken(Map.of(
+                        "email", user.getEmail(),
                         "role", "ROLE_" + user.getRole().name(),
-                        "userId", user.getId()
+                        "userId", userIdStr
                 ),
                 Duration.ofHours(24)
         );
-        return new AuthResponse(token, user.getRole().name());
+        return new AuthResponse(token, user.getRole().name(), userIdStr, user.getEmail());
     }
 }

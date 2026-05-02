@@ -58,7 +58,11 @@ public class JwtService {
     }
 
     public Long extractUserId(String token) {
-        return validateToken(token).getClaim("userId");
+        String userIdStr = validateToken(token).getClaimAsString("userId");
+        if (userIdStr == null) {
+            return null;
+        }
+        return Long.parseLong(userIdStr);
     }
 
     public String extractSubject(String token) {
