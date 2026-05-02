@@ -1,0 +1,22 @@
+{
+  "groups": [
+    {
+      "name": "rsa",
+      "type": "com.assettrack.security.config.RsaKeyProperties",
+      "sourceType": "com.assettrack.security.config.RsaKeyProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "rsa.private-key-location",
+      "type": "java.lang.String",
+      "sourceType": "com.assettrack.security.config.RsaKeyProperties"
+    },
+    {
+      "name": "rsa.public-key-location",
+      "type": "java.lang.String",
+      "sourceType": "com.assettrack.security.config.RsaKeyProperties"
+    }
+  ],
+  "hints": []
+}
