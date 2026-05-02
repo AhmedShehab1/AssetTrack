@@ -3,6 +3,7 @@ package com.assettrack.exception;
 import com.assettrack.dto.exception.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -33,5 +34,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(400)
                 .body(new ErrorResponse(400, message));
+    }
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErrorResponse> handleDisabled(DisabledException ex) {
+        return ResponseEntity
+                .status(403)
+                .body(new ErrorResponse(403, "Account is disabled"));
     }
 }
