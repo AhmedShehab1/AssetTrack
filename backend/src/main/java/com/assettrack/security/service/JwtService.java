@@ -11,7 +11,7 @@ import java.util.Map;
 @Service
 public class JwtService {
 
-    @Value("${jwt.issuer:roombooking-app}")
+    @Value("${jwt.issuer:assettrack-api}")
     private String issuer;
 
     private final JwtEncoder jwtEncoder;
