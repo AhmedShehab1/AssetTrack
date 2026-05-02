@@ -14,13 +14,17 @@ import org.springframework.stereotype.Component;
 public class SecurityUtils {
 
     /**
-     * Extract current user ID from JWT authentication
+     * Extract current user ID from JWT authentication.
+     * Handles both Long and String representations of userId in the JWT claim.
      */
     public Long getCurrentUserId(Authentication authentication) {
         if (authentication instanceof JwtAuthenticationToken jwtAuth) {
             Jwt jwt = jwtAuth.getToken();
-            String userIdStr = jwt.getClaimAsString("userId");
-            if (userIdStr != null) {
+            Object userIdClaim = jwt.getClaim("userId");
+            if (userIdClaim instanceof Number number) {
+                return number.longValue();
+            }
+            if (userIdClaim instanceof String userIdStr) {
                 try {
                     return Long.parseLong(userIdStr);
                 } catch (NumberFormatException e) {

@@ -27,10 +27,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
-        String message = ex.getBindingResult()
-                .getFieldErrors()
-                .get(0)
-                .getDefaultMessage();
+        String message;
+        if (ex.getBindingResult().hasFieldErrors()) {
+            message = ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
+        } else if (ex.getBindingResult().hasGlobalErrors()) {
+            message = ex.getBindingResult().getGlobalErrors().get(0).getDefaultMessage();
+        } else {
+            message = "Validation failed";
+        }
         return ResponseEntity
                 .status(400)
                 .body(new ErrorResponse(400, message));

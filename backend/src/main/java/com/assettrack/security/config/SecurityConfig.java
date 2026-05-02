@@ -27,6 +27,9 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
 
+                        // Self-service user endpoints accessible to any authenticated user
+                        .requestMatchers("/api/users/me", "/api/users/me/**").authenticated()
+
                         // Admin-only user management endpoints
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
 

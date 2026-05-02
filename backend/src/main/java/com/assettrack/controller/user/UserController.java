@@ -26,7 +26,7 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
     @GetMapping()
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<UserResponse>> getAllUsers(Pageable pageable){
         return ResponseEntity.ok(userService.getAllUsers(pageable));
     }
@@ -36,7 +36,7 @@ public class UserController {
         return  ResponseEntity.ok(userService.getInactiveUsers(pageable));
     }
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> getUser(@PathVariable Long id){
         return ResponseEntity.ok(userService.getUserById(id));
     }
