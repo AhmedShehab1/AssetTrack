@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final AuthService authService;
 
-    @PostMapping("/register")
+    @PostMapping("/signup")
     public ResponseEntity<AuthResponse> register(@RequestBody @Validated SignupRequest request) {
         AuthResponse response = authService.register(request);
         return ResponseEntity.status(201).body(response);

@@ -10,6 +10,7 @@ import com.assettrack.exception.ResourceNotFoundException;
 import com.assettrack.repository.user.UserRepository;
 import com.assettrack.security.service.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,8 +35,13 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.DEVELOPER);
-        userRepository.save(user);
+        try {
+            userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new EmailAlreadyExistsException("Email already in use");
+        }
         String token = jwtService.generateToken(Map.of(
+                        "email", user.getEmail(),
                         "role", "ROLE_" + user.getRole().name(),
                         "userId", user.getId()
                 ),
@@ -43,11 +49,13 @@ public class AuthService {
         );
         return new AuthResponse(token, user.getRole().name());
     }
+
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(),request.getPassword()));
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         String token = jwtService.generateToken(Map.of(
+                        "email", user.getEmail(),
                         "role", "ROLE_" + user.getRole().name(),
                         "userId", user.getId()
                 ),
