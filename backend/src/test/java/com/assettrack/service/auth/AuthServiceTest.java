@@ -101,6 +101,7 @@ class AuthServiceTest {
     void register_passwordIsHashed() {
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(passwordEncoder.encode("Password1")).thenReturn("bcrypt-hash");
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
         when(jwtService.generateToken(anyMap(), any())).thenReturn("jwt-token");
 
         authService.register(signupRequest);
@@ -112,6 +113,7 @@ class AuthServiceTest {
     void register_jwtClaimsIncludeEmailRoleAndUserId() {
         when(userRepository.existsByEmail(anyString())).thenReturn(false);
         when(passwordEncoder.encode(anyString())).thenReturn("hashed");
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
         when(jwtService.generateToken(anyMap(), any())).thenReturn("jwt-token");
 
         authService.register(signupRequest);

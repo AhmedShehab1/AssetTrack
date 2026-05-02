@@ -35,16 +35,10 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.DEVELOPER);
-        userRepository.save(user);
-        String userIdStr = String.valueOf(user.getId());
-        String token = jwtService.generateToken(Map.of(
-                        "email", user.getEmail(),
-                        "role", "ROLE_" + user.getRole().name(),
-                        "userId", userIdStr
-                ),
-                Duration.ofHours(24)
-        );
-        return new AuthResponse(token, user.getRole().name(), userIdStr, user.getEmail());
+        User savedUser = userRepository.save(user);
+        String token = generateTokenForUser(savedUser);
+        String userIdStr = String.valueOf(savedUser.getId());
+        return new AuthResponse(token, savedUser.getRole().name(), userIdStr, savedUser.getEmail());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -56,14 +50,18 @@ public class AuthService {
         }
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid credentials"));
+        String token = generateTokenForUser(user);
         String userIdStr = String.valueOf(user.getId());
-        String token = jwtService.generateToken(Map.of(
+        return new AuthResponse(token, user.getRole().name(), userIdStr, user.getEmail());
+    }
+
+    private String generateTokenForUser(User user) {
+        return jwtService.generateToken(Map.of(
                         "email", user.getEmail(),
                         "role", "ROLE_" + user.getRole().name(),
-                        "userId", userIdStr
+                        "userId", String.valueOf(user.getId())
                 ),
                 Duration.ofHours(24)
         );
-        return new AuthResponse(token, user.getRole().name(), userIdStr, user.getEmail());
     }
 }
