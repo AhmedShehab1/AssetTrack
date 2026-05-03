@@ -1,14 +1,14 @@
-import Layout from "./components/Layout";
-// import AssetList from "./components/AssetList";
-import AssetRegistrationForm from "./components/AssetRegistrationForm";
+import { Routes, Route } from 'react-router-dom';
+import DashboardPage from './pages/DashboardPage';
+import LoginPage from './pages/LoginPage';
+import AssetsPage from './pages/AssetsPage';
 
-function App() {
+export default function App() {
   return (
-    <Layout>
-      {/* <AssetList /> */}
-      <AssetRegistrationForm />
-    </Layout>
+    <Routes>
+      <Route path="/" element={<DashboardPage/>} />
+      <Route path="/assets" element={<AssetsPage/>} />
+      <Route path="/login" element={<LoginPage/>} />
+    </Routes>
   );
 }
-
-export default App;
