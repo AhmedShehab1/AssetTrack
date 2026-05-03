@@ -1,5 +1,155 @@
-/target/
-**/target/
-node_modules/
+# =========================
+# Java / Spring Boot
+# =========================
+*.class
 *.log
+*.ctxt
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+
+# =========================
+# Maven
+# =========================
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+!.mvn/wrapper/maven-wrapper.jar
+
+# =========================
+# Gradle
+# =========================
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# =========================
+# IDEs
+# =========================
+
+## IntelliJ IDEA
 .idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+## Eclipse / STS
+.project
+.classpath
+.settings/
+.apt_generated/
+.factorypath
+.springBeans
+.sts4-cache/
+
+## VS Code
+.vscode/
+
+## NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# =========================
+# Operating System Files
+# =========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# =========================
+# Environment & Secrets
+# =========================
+.env
+.env.*
+*.env
+
+# Spring Boot config with secrets
+application-local.properties
+application-dev.properties
+application-prod.properties
+application-secret.properties
+
+application-local.yml
+application-dev.yml
+application-prod.yml
+application-secret.yml
+
+application-local.yaml
+application-dev.yaml
+application-prod.yaml
+application-secret.yaml
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.crt
+*.cer
+
+# SSH / GPG
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+*.gpg
+*.asc
+
+# Firebase / Google Cloud / AWS credentials
+google-services.json
+firebase-service-account*.json
+*serviceAccount*.json
+aws-credentials*
+credentials.json
+secrets.json
+
+# =========================
+# Logs & Reports
+# =========================
+logs/
+*.log
+spring.log
+surefire-reports/
+failsafe-reports/
+
+# Coverage
+coverage/
+jacoco.exec
+.jacoco/
+
+# =========================
+# Temporary / Generated Files
+# =========================
+*.tmp
+*.temp
+*.swp
+*~
+bin/
+generated/
+
+# =========================
+# Optional: Local Uploads / Database Files
+# =========================
+uploads/
+*.db
+*.sqlite
+*.sqlite3
