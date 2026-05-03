@@ -1,0 +1,68 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: assettrack-backend
+  labels:
+    app: assettrack-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: assettrack-backend
+  template:
+    metadata:
+      labels:
+        app: assettrack-backend
+    spec:
+      containers:
+      - name: assettrack-backend
+        image: DOCKER_IMAGE
+        resources:
+          requests:
+            memory: 200M
+            cpu: 100m
+          limits:
+            memory: 500M
+            cpu: 200m
+        ports:
+          - containerPort: 8080
+        envFrom:
+            - configMapRef:
+                  name: shared-environment
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: assettrack-backend
+  name: assettrack-backend
+spec:
+  ports:
+    - name: "8080-8080"
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: assettrack-backend
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: assettrack-backend
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: assettrack-backend
+                port:
+                  number: 8080
