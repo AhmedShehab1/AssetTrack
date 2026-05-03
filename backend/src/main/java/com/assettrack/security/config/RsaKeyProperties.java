@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.security.converter.RsaKeyConverters;
@@ -47,6 +48,7 @@ public class RsaKeyProperties {
     private ResourceLoader resourceLoader;
 
     @Bean
+    @Lazy
     public RSAPublicKey publicKey() throws Exception {
         Resource resource = resourceLoader.getResource(publicKeyLocation);
         try (java.io.InputStream is = resource.getInputStream()) {
@@ -55,6 +57,7 @@ public class RsaKeyProperties {
     }
 
     @Bean
+    @Lazy
     public RSAPrivateKey privateKey() throws Exception {
         Resource resource = resourceLoader.getResource(privateKeyLocation);
         try (java.io.InputStream is = resource.getInputStream()) {
@@ -63,6 +66,7 @@ public class RsaKeyProperties {
     }
 
     @Bean
+    @Lazy
     public JwtEncoder jwtEncoder(RSAPublicKey publicKey, RSAPrivateKey privateKey) {
         JWK jwk = new RSAKey.Builder(publicKey)
                 .privateKey(privateKey)
@@ -71,6 +75,7 @@ public class RsaKeyProperties {
     }
 
     @Bean
+    @Lazy
     public JwtDecoder jwtDecoder(RSAPublicKey publicKey) {
         return NimbusJwtDecoder.withPublicKey(publicKey).build();
     }
