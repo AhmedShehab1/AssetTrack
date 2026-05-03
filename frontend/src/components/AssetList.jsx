@@ -1,3 +1,5 @@
+import AssetDetail from './AssetDetail';
+
 export default function AssetList() {
   return (
     <main className="flex-1 p-container-padding overflow-x-hidden">
@@ -210,6 +212,7 @@ export default function AssetList() {
           </div>
         </div>
       </div>
+      <AssetDetail />
     </main>
   );
 }
