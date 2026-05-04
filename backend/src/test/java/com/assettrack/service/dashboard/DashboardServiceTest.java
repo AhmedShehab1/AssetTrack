@@ -1,5 +1,6 @@
 package com.assettrack.service.dashboard;
 
+import com.assettrack.domain.asset.Asset;
 import com.assettrack.domain.asset.AssetStatus;
 import com.assettrack.domain.asset.AssetType;
 import com.assettrack.dto.dashboard.DashboardSummaryDto;
@@ -18,7 +19,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
-import com.assettrack.domain.asset.Asset;
 
 @ExtendWith(MockitoExtension.class)
 class DashboardServiceTest {
