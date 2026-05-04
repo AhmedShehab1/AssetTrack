@@ -1,9 +1,11 @@
 package com.assettrack.service.notification;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
+@Profile("!prod")
 public class MockInventoryCheckPort implements InventoryCheckPort {
     @Override
     public List<LowStockItem> getLowStockItems(int threshold) {
