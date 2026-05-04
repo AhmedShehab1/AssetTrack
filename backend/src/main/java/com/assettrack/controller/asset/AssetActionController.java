@@ -1,6 +1,6 @@
 package com.assettrack.controller.asset;
 
-import com.assettrack.domain.asset.Asset;
+import com.assettrack.dto.dashboard.QuickSpareAssetDto;
 import com.assettrack.service.dashboard.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +16,7 @@ public class AssetActionController {
     private final DashboardService dashboardService;
 
     @GetMapping("/quick-spare")
-    public ResponseEntity<Asset> getQuickSpareLaptop() {
+    public ResponseEntity<QuickSpareAssetDto> getQuickSpareLaptop() {
         return ResponseEntity.ok(dashboardService.getQuickSpareLaptop());
     }
 }

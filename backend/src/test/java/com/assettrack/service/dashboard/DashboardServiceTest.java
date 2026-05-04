@@ -1,9 +1,9 @@
 package com.assettrack.service.dashboard;
 
-import com.assettrack.domain.asset.Asset;
 import com.assettrack.domain.asset.AssetStatus;
 import com.assettrack.domain.asset.AssetType;
 import com.assettrack.dto.dashboard.DashboardSummaryDto;
+import com.assettrack.dto.dashboard.QuickSpareAssetDto;
 import com.assettrack.exception.ResourceNotFoundException;
 import com.assettrack.repository.asset.AssetRepository;
 import org.junit.jupiter.api.Test;
@@ -18,6 +18,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
+import com.assettrack.domain.asset.Asset;
 
 @ExtendWith(MockitoExtension.class)
 class DashboardServiceTest {
@@ -47,7 +48,7 @@ class DashboardServiceTest {
             @Override public Long getCount() { return 8L; }
         };
         AssetRepository.TypeCount tc2 = new AssetRepository.TypeCount() {
-            @Override public AssetType getType() { return AssetType.MONITOR; }
+            @Override public AssetType getType() { return AssetType.SCREEN; }
             @Override public Long getCount() { return 2L; }
         };
         when(assetRepository.countByType()).thenReturn(List.of(tc1, tc2));
@@ -55,8 +56,20 @@ class DashboardServiceTest {
         DashboardSummaryDto summary = dashboardService.getSummary();
 
         assertThat(summary.getTotalAssets()).isEqualTo(10L);
-        assertThat(summary.getStatusDistribution()).containsEntry("AVAILABLE", 6L).containsEntry("ALLOCATED", 4L);
-        assertThat(summary.getTypeDistribution()).containsEntry("LAPTOP", 8L).containsEntry("MONITOR", 2L);
+
+        List<String> statusLabels = summary.getStatusDistribution().getLabels();
+        List<Long> statusData = summary.getStatusDistribution().getData();
+        assertThat(statusLabels).containsExactly("AVAILABLE", "ALLOCATED", "EXPIRED");
+        assertThat(statusData.get(statusLabels.indexOf("AVAILABLE"))).isEqualTo(6L);
+        assertThat(statusData.get(statusLabels.indexOf("ALLOCATED"))).isEqualTo(4L);
+        assertThat(statusData.get(statusLabels.indexOf("EXPIRED"))).isEqualTo(0L);
+
+        List<String> typeLabels = summary.getTypeDistribution().getLabels();
+        List<Long> typeData = summary.getTypeDistribution().getData();
+        assertThat(typeLabels).containsExactly("LAPTOP", "SCREEN", "ACCESSORY");
+        assertThat(typeData.get(typeLabels.indexOf("LAPTOP"))).isEqualTo(8L);
+        assertThat(typeData.get(typeLabels.indexOf("SCREEN"))).isEqualTo(2L);
+        assertThat(typeData.get(typeLabels.indexOf("ACCESSORY"))).isEqualTo(0L);
     }
 
     @Test
@@ -69,9 +82,11 @@ class DashboardServiceTest {
         when(assetRepository.findFirstByTypeAndStatusOrderByCreatedAtAsc(AssetType.LAPTOP, AssetStatus.AVAILABLE))
                 .thenReturn(Optional.of(laptop));
 
-        Asset result = dashboardService.getQuickSpareLaptop();
+        QuickSpareAssetDto result = dashboardService.getQuickSpareLaptop();
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getType()).isEqualTo("LAPTOP");
+        assertThat(result.getStatus()).isEqualTo("AVAILABLE");
     }
 
     @Test
