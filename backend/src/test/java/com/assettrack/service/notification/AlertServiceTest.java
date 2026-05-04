@@ -1,10 +1,12 @@
 package com.assettrack.service.notification;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
@@ -26,6 +28,12 @@ class AlertServiceTest {
 
     @InjectMocks
     private AlertService alertService;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(alertService, "lowStockThreshold", 5);
+        ReflectionTestUtils.setField(alertService, "recipientEmail", "admin@assettrack.com");
+    }
 
     @Test
     void checkLowStockAndAlert_SendsEmail_WhenLowStock() {
