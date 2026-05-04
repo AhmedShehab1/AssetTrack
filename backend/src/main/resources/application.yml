@@ -10,13 +10,23 @@ spring:
       ddl-auto: update
     show-sql: true
   mail:
-    host: sandbox.smtp.mailtrap.io
-    port: 2525
-    username: dummy_user
-    password: dummy_password
+    host: ${MAILTRAP_HOST:sandbox.smtp.mailtrap.io}
+    port: ${MAILTRAP_PORT:2525}
+    username: ${MAILTRAP_USERNAME}
+    password: ${MAILTRAP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 jwt:
   issuer: assettrack-api
+
+alerts:
+  low-stock-threshold: 5
+  recipient-email: admin@assettrack.com
 
 # RSA keys
 rsa:
