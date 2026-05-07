@@ -23,6 +23,8 @@ docker-compose up -d
 ```
 
 Notes:
+- Compose loads variables from `.env` at the repo root.
+- Copy [.env.example](.env.example) to `.env` and fill values before running.
 - The backend container auto-generates RSA keys on first start and stores them in a named volume.
 - Database connection defaults to the `postgres` service inside the Compose network.
 - Optional mail settings are picked up from `.env` if present.
