@@ -3,7 +3,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, Lock } from 'lucide-react';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import api from '../../lib/axios';
+import { useAuth } from '../../hooks/useAuth';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 
@@ -23,12 +25,15 @@ const LoginForm = () => {
   });
 
   const [apiError, setApiError] = useState(null);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     setApiError(null);
     try {
-      await axios.post('/api/auth/login', data);
-      // Handle success (e.g., redirect)
+      const response = await api.post('/auth/login', data);
+      login(response.data?.user || null, response.data?.token);
+      navigate('/');
     } catch (err) {
       setApiError(err.response?.data?.message || 'Invalid email or password.');
     }

@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, Lock, Shield } from 'lucide-react';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import api from '../../lib/axios';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import Select from '../ui/Select';
@@ -31,12 +32,13 @@ const SignupForm = () => {
   });
 
   const [apiError, setApiError] = useState(null);
+  const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     setApiError(null);
     try {
-      await axios.post('/api/auth/signup', data);
-      // Handle success
+      await api.post('/auth/signup', data);
+      navigate('/login'); // Redirect to login on successful signup
     } catch (err) {
       setApiError(err.response?.data?.message || 'This email is already in use.');
     }

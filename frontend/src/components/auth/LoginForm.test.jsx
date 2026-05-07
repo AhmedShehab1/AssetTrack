@@ -1,10 +1,21 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import axios from 'axios';
+import api from '../../lib/axios';
 import LoginForm from './LoginForm';
 import '@testing-library/jest-dom';
 
-jest.mock('axios');
+const mockLogin = jest.fn();
+jest.mock('../../hooks/useAuth', () => ({
+  useAuth: () => ({ login: mockLogin })
+}));
+
+jest.mock('react-router-dom', () => ({
+  useNavigate: () => jest.fn(),
+}));
+
+jest.mock('../../lib/axios', () => ({
+  post: jest.fn(),
+}));
 
 describe('LoginForm', () => {
   beforeEach(() => {
@@ -41,8 +52,8 @@ describe('LoginForm', () => {
     });
   });
 
-  it('submits successfully and calls axios', async () => {
-    axios.post.mockResolvedValueOnce({ data: { token: '123' } });
+  it('submits successfully and calls api', async () => {
+    api.post.mockResolvedValueOnce({ data: { user: { id: 1 }, token: '123' } });
 
     render(<LoginForm />);
     const emailInput = screen.getByLabelText(/WORK EMAIL/i);
@@ -57,15 +68,16 @@ describe('LoginForm', () => {
     await userEvent.click(button);
 
     await waitFor(() => {
-      expect(axios.post).toHaveBeenCalledWith('/api/auth/login', {
+      expect(api.post).toHaveBeenCalledWith('/auth/login', {
         email: 'test@company.com',
         password: 'password123',
       });
+      expect(mockLogin).toHaveBeenCalledWith({ id: 1 }, '123');
     });
   });
 
   it('displays API error message on failure', async () => {
-    axios.post.mockRejectedValueOnce({
+    api.post.mockRejectedValueOnce({
       response: { data: { message: 'Custom API Error' } },
     });
 

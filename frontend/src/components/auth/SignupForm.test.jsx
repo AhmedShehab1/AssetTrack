@@ -1,10 +1,16 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import axios from 'axios';
+import api from '../../lib/axios';
 import SignupForm from './SignupForm';
 import '@testing-library/jest-dom';
 
-jest.mock('axios');
+jest.mock('react-router-dom', () => ({
+  useNavigate: () => jest.fn(),
+}));
+
+jest.mock('../../lib/axios', () => ({
+  post: jest.fn(),
+}));
 
 describe('SignupForm', () => {
   beforeEach(() => {
@@ -33,8 +39,8 @@ describe('SignupForm', () => {
 
 
 
-  it('submits successfully and calls axios', async () => {
-    axios.post.mockResolvedValueOnce({ data: { message: 'Success' } });
+  it('submits successfully and calls api', async () => {
+    api.post.mockResolvedValueOnce({ data: { message: 'Success' } });
 
     render(<SignupForm />);
     
@@ -50,7 +56,7 @@ describe('SignupForm', () => {
     await userEvent.click(button);
 
     await waitFor(() => {
-      expect(axios.post).toHaveBeenCalledWith('/api/auth/signup', {
+      expect(api.post).toHaveBeenCalledWith('/auth/signup', {
         email: 'test@company.com',
         role: 'DEVELOPER',
         password: 'password123',
@@ -60,7 +66,7 @@ describe('SignupForm', () => {
   });
 
   it('displays API error message on failure', async () => {
-    axios.post.mockRejectedValueOnce({
+    api.post.mockRejectedValueOnce({
       response: { data: { message: 'This email is already in use.' } },
     });
 

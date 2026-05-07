@@ -178,12 +178,12 @@ describe('response interceptor', () => {
     expect(navigation.navigateTo).toHaveBeenCalledTimes(1);
   });
 
-  test('does NOT call logout() on a 403 Forbidden response', async () => {
+  test('calls logout() on a 403 Forbidden response', async () => {
     mock.onDelete('/assets/99').reply(403, { message: 'Forbidden' });
 
     await expect(axiosInstance.delete('/assets/99')).rejects.toThrow();
 
-    expect(logoutMock).not.toHaveBeenCalled();
+    expect(logoutMock).toHaveBeenCalled();
   });
 
   test('does NOT call logout() on a 404 Not Found response', async () => {
@@ -194,12 +194,12 @@ describe('response interceptor', () => {
     expect(logoutMock).not.toHaveBeenCalled();
   });
 
-  test('does NOT redirect on a 403 Forbidden response', async () => {
+  test('redirects on a 403 Forbidden response', async () => {
     mock.onGet('/assets').reply(403);
 
     await expect(axiosInstance.get('/assets')).rejects.toThrow();
 
-    expect(navigation.navigateTo).not.toHaveBeenCalled();
+    expect(navigation.navigateTo).toHaveBeenCalledWith('/login');
   });
 
   test('rejects the promise on 5xx so callers can .catch() server errors', async () => {
