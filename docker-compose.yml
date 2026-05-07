@@ -8,18 +8,8 @@ services:
     restart: unless-stopped
     depends_on:
       - postgres
-    environment:
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/assettrack}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-postgres}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-password}
-      MAILTRAP_HOST: ${MAILTRAP_HOST:-sandbox.smtp.mailtrap.io}
-      MAILTRAP_PORT: ${MAILTRAP_PORT:-2525}
-      MAILTRAP_USERNAME: ${MAILTRAP_USERNAME:-}
-      MAILTRAP_PASSWORD: ${MAILTRAP_PASSWORD:-}
-      MAIL_FROM: ${MAIL_FROM:-no-reply@assettrack.local}
-      ALERTS_RECIPIENT_EMAIL: ${ALERTS_RECIPIENT_EMAIL:-admin@assettrack.com}
-      RSA_PRIVATE_KEY_LOCATION: ${RSA_PRIVATE_KEY_LOCATION:-file:/var/assettrack/keys/private_pkcs8.pem}
-      RSA_PUBLIC_KEY_LOCATION: ${RSA_PUBLIC_KEY_LOCATION:-file:/var/assettrack/keys/public.pem}
+    env_file:
+      - .env
     ports:
       - "8080:8080"
     volumes:
