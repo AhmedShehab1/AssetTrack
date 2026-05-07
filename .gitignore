@@ -76,7 +76,7 @@ Desktop.ini
 # =========================
 # Environment & Secrets
 # =========================
-.env
+backend/.env
 .env.*
 *.env
 
