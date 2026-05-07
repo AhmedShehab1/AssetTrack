@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
 import AssetsPage from './pages/AssetsPage';
 const AxiosSandboxPage = import.meta.env.DEV
   ? lazy(() => import('./pages/AxiosSandboxPage'))
@@ -13,6 +14,7 @@ export default function App() {
       <Route path="/" element={<DashboardPage/>} />
       <Route path="/assets" element={<AssetsPage/>} />
       <Route path="/login" element={<LoginPage/>} />
+      <Route path="/signup" element={<SignupPage/>} />
       {import.meta.env.DEV && AxiosSandboxPage && (
       <Route path="/__sandbox/axios" element={<Suspense fallback={null}><AxiosSandboxPage /></Suspense>} />
       )}

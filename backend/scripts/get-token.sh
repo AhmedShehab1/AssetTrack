@@ -69,12 +69,12 @@ if ! command -v curl >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! command -v python3 >/dev/null 2>&1; then
-  echo "python3 is required but not found." >&2
+if ! command -v python >/dev/null 2>&1; then
+  echo "python is required but not found." >&2
   exit 1
 fi
 
-payload=$(python3 - "$EMAIL" "$PASSWORD" <<'PY'
+payload=$(python - "$EMAIL" "$PASSWORD" <<'PY'
 import json
 import sys
 print(json.dumps({"email": sys.argv[1], "password": sys.argv[2]}))
@@ -95,7 +95,7 @@ request() {
 }
 
 extract_token() {
-  python3 - "$1" <<'PY'
+  python - "$1" <<'PY'
 import json
 import sys
 with open(sys.argv[1], "r", encoding="utf-8") as f:
