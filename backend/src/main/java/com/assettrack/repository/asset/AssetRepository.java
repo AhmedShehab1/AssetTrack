@@ -13,6 +13,8 @@ import java.util.Optional;
 @Repository
 public interface AssetRepository extends JpaRepository<Asset, Long> {
 
+    Optional<Asset> findBySerialNumber(String serialNumber);
+
     @Query("SELECT a.status as status, COUNT(a) as count FROM Asset a GROUP BY a.status")
     List<StatusCount> countByStatus();
 
