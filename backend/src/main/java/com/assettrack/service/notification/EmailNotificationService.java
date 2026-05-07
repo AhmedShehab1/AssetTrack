@@ -16,7 +16,7 @@ public class EmailNotificationService {
 
     private final JavaMailSender javaMailSender;
 
-    @Value("${spring.mail.username:}")
+    @Value("${mail.from:${spring.mail.username:no-reply@assettrack.local}}")
     private String fromAddress;
 
     public void sendEmail(String to, String subject, String text, boolean isHtml) {

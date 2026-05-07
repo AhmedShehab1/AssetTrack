@@ -12,14 +12,17 @@ spring:
   mail:
     host: ${MAILTRAP_HOST:sandbox.smtp.mailtrap.io}
     port: ${MAILTRAP_PORT:2525}
-    username: ${MAILTRAP_USERNAME}
-    password: ${MAILTRAP_PASSWORD}
+    username: ${MAILTRAP_USERNAME:}
+    password: ${MAILTRAP_PASSWORD:}
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
+
+mail:
+  from: ${MAIL_FROM:no-reply@assettrack.local}
 
 jwt:
   issuer: assettrack-api
