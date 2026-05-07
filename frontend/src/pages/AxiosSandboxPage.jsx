@@ -16,42 +16,73 @@ const SCENARIOS = [
     label: 'GET /assets → 200 OK',
     description: 'Happy path. Response interceptor passes data through unchanged.',
     tag: 'request',
+    mockSetup: (mock) => {
+      mock?.onGet('/assets').replyOnce(200, [
+        { id: 1, name: 'Dell XPS 15', status: 'AVAILABLE' },
+        { id: 2, name: 'MacBook Pro M3', status: 'ALLOCATED' },
+      ]);
+    },
+    execute: () => axiosInstance.get('/assets'),
   },
   {
     id: 'post-asset-201',
     label: 'POST /assets → 201 Created',
     description: 'Write operation. Request interceptor attaches JWT if present.',
     tag: 'request',
+    mockSetup: (mock) => {
+      mock?.onPost('/assets').replyOnce(201, { id: 99, name: 'ThinkPad X1' });
+    },
+    execute: () => axiosInstance.post('/assets', { name: 'ThinkPad X1', serialNumber: 'TP-001' }),
   },
   {
     id: 'get-401',
     label: 'GET /profile → 401 Unauthorized',
     description: 'Response interceptor calls logout() and navigateTo("/login"). Promise still rejects.',
     tag: 'auth',
+    mockSetup: (mock) => {
+      mock?.onGet('/profile').replyOnce(401, { message: 'Token expired' });
+    },
+    execute: () => axiosInstance.get('/profile'),
   },
   {
     id: 'get-403',
     label: 'GET /admin → 403 Forbidden',
     description: 'Response interceptor does NOT call logout(). Only 401 triggers that.',
     tag: 'auth',
+    mockSetup: (mock) => {
+      mock?.onGet('/admin').replyOnce(403, { message: 'Insufficient role' });
+    },
+    execute: () => axiosInstance.get('/admin'),
   },
   {
     id: 'get-404',
     label: 'GET /assets/999 → 404 Not Found',
     description: 'Interceptor is silent. Promise rejects — caller must handle.',
     tag: 'error',
+    mockSetup: (mock) => {
+      mock?.onGet('/assets/999').replyOnce(404, { message: 'Asset not found' });
+    },
+    execute: () => axiosInstance.get('/assets/999'),
   },
   {
     id: 'get-500',
     label: 'GET /assets → 500 Server Error',
     description: 'Interceptor is silent. Promise rejects — caller must handle.',
     tag: 'error',
+    mockSetup: (mock) => {
+      mock?.onGet('/assets').replyOnce(500, { message: 'Internal server error' });
+    },
+    execute: () => axiosInstance.get('/assets'),
   },
   {
     id: 'network-error',
     label: 'Network Error (no response)',
     description: 'Simulates the backend being unreachable. error.response is undefined.',
     tag: 'error',
+    mockSetup: (mock) => {
+      mock?.onGet('/health').networkErrorOnce();
+    },
+    execute: () => axiosInstance.get('/health'),
   },
 ];
 
@@ -118,39 +149,8 @@ export default function AxiosSandboxPage() {
     });
 
     try {
-        if (scenario.id === 'get-assets-200') {
-          mockRef.current?.onGet('/assets').replyOnce(200, [
-            { id: 1, name: 'Dell XPS 15', status: 'AVAILABLE' },
-            { id: 2, name: 'MacBook Pro M3', status: 'ALLOCATED' },
-          ]);
-        } else if (scenario.id === 'post-asset-201') {
-          mockRef.current?.onPost('/assets').replyOnce(201, { id: 99, name: 'ThinkPad X1' });
-        } else if (scenario.id === 'get-401') {
-          mockRef.current?.onGet('/profile').replyOnce(401, { message: 'Token expired' });
-        } else if (scenario.id === 'get-403') {
-          mockRef.current?.onGet('/admin').replyOnce(403, { message: 'Insufficient role' });
-        } else if (scenario.id === 'get-404') {
-          mockRef.current?.onGet('/assets/999').replyOnce(404, { message: 'Asset not found' });
-        } else if (scenario.id === 'get-500') {
-          mockRef.current?.onGet('/assets').replyOnce(500, { message: 'Internal server error' });
-        } else if (scenario.id === 'network-error') {
-          mockRef.current?.onGet('/health').networkErrorOnce();
-        }
-
-        const request =
-          scenario.id === 'post-asset-201'
-            ? axiosInstance.post('/assets', { name: 'ThinkPad X1', serialNumber: 'TP-001' })
-            : scenario.id === 'get-401'
-              ? axiosInstance.get('/profile')
-              : scenario.id === 'get-403'
-                ? axiosInstance.get('/admin')
-                : scenario.id === 'get-404'
-                  ? axiosInstance.get('/assets/999')
-                  : scenario.id === 'network-error'
-                    ? axiosInstance.get('/health')
-                    : axiosInstance.get('/assets');
-
-        const response = await request;
+        scenario.mockSetup(mockRef.current);
+        const response = await scenario.execute();
         addLog({
         type: 'success',
         scenarioLabel: scenario.label,
