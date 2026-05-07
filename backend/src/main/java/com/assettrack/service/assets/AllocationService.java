@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -66,9 +65,8 @@ public class AllocationService implements IAllocationService {
             throw new ConflictException("Asset is not currently allocated");
         }
 
-        AssetAllocation activeAllocation = assetAllocationRepository.findByAssetIdOrderByCheckoutDateDesc(assetId).stream()
-                .filter(allocation -> allocation.getReturnDate() == null)
-                .findFirst()
+        AssetAllocation activeAllocation = assetAllocationRepository
+                .findFirstByAssetIdAndReturnDateIsNullOrderByCheckoutDateDesc(assetId)
                 .orElseThrow(() -> new ResourceNotFoundException("Active allocation not found for asset id: " + assetId));
 
         activeAllocation.setReturnDate(LocalDateTime.now());
@@ -86,7 +84,6 @@ public class AllocationService implements IAllocationService {
         }
 
         return assetAllocationRepository.findByAssetIdOrderByCheckoutDateDesc(assetId).stream()
-                .sorted(Comparator.comparing(AssetAllocation::getCheckoutDate))
                 .map(allocationMapper::toHistoryDto)
                 .toList();
     }
