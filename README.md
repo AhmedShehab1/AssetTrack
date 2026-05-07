@@ -16,15 +16,20 @@ If you want to store keys elsewhere, set `RSA_PRIVATE_KEY_LOCATION` and `RSA_PUB
 
 ## Mailtrap (Email Testing)
 
-1) Create an inbox in Mailtrap and grab the SMTP credentials.
-2) Export these environment variables before starting the backend:
+1) Create a shared inbox in Mailtrap and invite the team to the workspace.
+2) Use the shared SMTP credentials locally (do not commit them).
+   - Copy [.env.example](.env.example) to `.env` and fill in the Mailtrap values.
+	 - Load it before starting the backend:
+		 - `source scripts/load-env.sh`
+3) Environment variables used by the app:
 	- `MAILTRAP_HOST` (default: `sandbox.smtp.mailtrap.io`)
 	- `MAILTRAP_PORT` (default: `2525`)
 	- `MAILTRAP_USERNAME`
 	- `MAILTRAP_PASSWORD`
 	- Optional: `MAIL_FROM` (default: `no-reply@assettrack.local`)
 	- Optional: `ALERTS_RECIPIENT_EMAIL` (defaults to `admin@assettrack.com`)
-3) Email alerts are sent by the low-stock scheduled job in `AlertService`.
+
+4) Email alerts are sent by the low-stock scheduled job in `AlertService`.
 	- To test quickly, create low-stock items and set `ALERTS_RECIPIENT_EMAIL` to a test address.
 
 ## Token Helper
@@ -46,3 +51,17 @@ ASSETTRACK_EMAIL=user@company.com ASSETTRACK_PASSWORD=MyPass123 ./backend/script
 ```
 
 Swagger UI: `http://localhost:8080/swagger-ui/index.html` → Authorize → paste the token (or the `Authorization: Bearer ...` header).
+
+## Convenience Commands
+
+Use Make targets from the repo root:
+
+```bash
+make db
+make backend
+make frontend
+```
+
+Notes:
+- `make backend` loads `.env` via `scripts/load-env.sh` if it exists.
+- Run `make backend` and `make frontend` in separate terminals.
