@@ -8,6 +8,11 @@ jest.mock('../navigation.js', () => ({
   navigateTo: jest.fn(),
 }));
 
+jest.mock('../apiBaseUrl.js', () => ({
+  __esModule: true,
+  default: 'http://localhost:8080/api',
+}));
+
 
 jest.mock('../../store/useAuthStore.js', () => ({
   __esModule: true,

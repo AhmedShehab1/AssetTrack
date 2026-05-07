@@ -4,7 +4,7 @@ const config = {
   transform: {
     '^.+\\.jsx?$': 'babel-jest',
   },
-  setupFiles: ['./jest.setup.js'],
+  setupFilesAfterEnv: ['./jest.setup.js'],
   clearMocks: true,
 };
 

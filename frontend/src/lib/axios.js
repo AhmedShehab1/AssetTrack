@@ -1,9 +1,10 @@
 import axios from 'axios';
 import useAuthStore from '../store/useAuthStore';
 import { navigateTo } from './navigation';
+import apiBaseUrl from './apiBaseUrl';
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
