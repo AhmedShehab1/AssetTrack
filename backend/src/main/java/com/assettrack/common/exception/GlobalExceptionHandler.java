@@ -4,6 +4,7 @@ import com.assettrack.common.exception.dto.ErrorResponse;
 import com.assettrack.common.exception.dto.ValidationErrorDetail;
 import com.assettrack.common.exception.dto.ValidationErrorResponse;
 import com.assettrack.common.exception.util.JsonPointerUtils;
+import com.assettrack.exception.BaseException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -47,6 +48,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.builder().code("BAD_REQUEST").message("Malformed JSON request").build());
+    }
+
+    @ExceptionHandler(BaseException.class)
+    public ResponseEntity<ErrorResponse> handleBaseException(BaseException ex) {
+        HttpStatus status = HttpStatus.resolve(ex.getStatusCode());
+        if (status == null) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+
+        return ResponseEntity.status(status)
+                .body(ErrorResponse.builder().code(status.name()).message(ex.getMessage()).build());
     }
 
     @ExceptionHandler(Exception.class)

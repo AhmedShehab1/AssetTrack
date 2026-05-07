@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -33,5 +34,13 @@ public class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.message").value("Validation failed"))
                 .andExpect(jsonPath("$.errors[0].pointer").value("/items/0/quantity"))
                 .andExpect(jsonPath("$.errors[0].errorType").value("Min"));
+    }
+
+    @Test
+    public void testBaseExceptionReturnsConfiguredStatusCode() throws Exception {
+        mockMvc.perform(get("/test/base-exception"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CONFLICT"))
+                .andExpect(jsonPath("$.message").value("Email already in use"));
     }
 }
