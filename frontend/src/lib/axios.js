@@ -1,5 +1,6 @@
 import axios from 'axios';
 import useAuthStore from '../store/useAuthStore';
+import { navigateTo } from './navigation';
 
 const axiosInstance = axios.create({
   baseURL: 'http://localhost:8080/api',
@@ -27,7 +28,7 @@ axiosInstance.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       useAuthStore.getState().logout();
-      window.location.href = '/login';
+      navigateTo('/login');
     }
     return Promise.reject(error);
   }
