@@ -37,7 +37,7 @@ const SignupForm = () => {
   const onSubmit = async (data) => {
     setApiError(null);
     try {
-      await api.post('/auth/signup', data);
+      await api.post('/auth/register', data);
       navigate('/login'); // Redirect to login on successful signup
     } catch (err) {
       setApiError(err.response?.data?.message || 'This email is already in use.');
@@ -79,6 +79,7 @@ const SignupForm = () => {
         type="password"
         placeholder="••••••••"
         icon={Lock}
+        autoComplete="new-password"
         {...register('password')}
         error={formState.errors.password?.message}
       />
@@ -88,6 +89,7 @@ const SignupForm = () => {
         type="password"
         placeholder="••••••••"
         icon={Lock}
+        autoComplete="new-password"
         {...register('confirmPassword')}
         error={formState.errors.confirmPassword?.message}
       />

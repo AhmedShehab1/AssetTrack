@@ -32,7 +32,8 @@ const LoginForm = () => {
     setApiError(null);
     try {
       const response = await api.post('/auth/login', data);
-      login(response.data?.user || null, response.data?.token);
+      const { token, role } = response.data;
+      login({ email: data.email, role }, token);
       navigate('/');
     } catch (err) {
       setApiError(err.response?.data?.message || 'Invalid email or password.');

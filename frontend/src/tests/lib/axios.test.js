@@ -1,18 +1,15 @@
-// src/__tests__/axios.test.js
-
 import MockAdapter from 'axios-mock-adapter';
-import axiosInstance from '../axios.js';
-import * as navigation from '../navigation.js';
+import axiosInstance from '../../lib/axios.js';
+import * as navigation from '../../lib/navigation.js';
 
-jest.mock('../navigation.js', () => ({
+jest.mock('../../lib/navigation.js', () => ({
   navigateTo: jest.fn(),
 }));
 
-jest.mock('../apiBaseUrl.js', () => ({
+jest.mock('../../lib/apiBaseUrl.js', () => ({
   __esModule: true,
   default: 'http://localhost:8080/api',
 }));
-
 
 jest.mock('../../store/useAuthStore.js', () => ({
   __esModule: true,
@@ -21,40 +18,26 @@ jest.mock('../../store/useAuthStore.js', () => ({
   },
 }));
 
-// This import now correctly receives the mocked default export
 import useAuthStore from '../../store/useAuthStore.js';
 
-// ─── Shared test state ────────────────────────────────────────────────────────
 let mock;
 let logoutMock;
 
 beforeEach(() => {
-  // Fresh mock adapter on your real axiosInstance before every test.
-  // Requests that don't match a registered handler will throw — good for
-  // catching unexpected calls.
   mock = new MockAdapter(axiosInstance);
-
-  // Fresh logout spy for each test
   logoutMock = jest.fn();
 
-  // Default state: unauthenticated (no token)
   useAuthStore.getState.mockReturnValue({
     token: null,
     logout: logoutMock,
   });
 
-  // Clear navigation call history
   navigation.navigateTo.mockClear();
 });
 
 afterEach(() => {
-  // Detach mock adapter so the axiosInstance is clean for the next test file
   mock.restore();
 });
-
-// ─────────────────────────────────────────────────────────────────────────────
-// INSTANCE CONFIGURATION
-// ─────────────────────────────────────────────────────────────────────────────
 
 describe('instance configuration', () => {
   test('baseURL points to the Spring Boot API root', () => {
@@ -66,7 +49,6 @@ describe('instance configuration', () => {
   });
 
   test('default Content-Type is application/json', () => {
-    // axios v1+ stores instance-level headers under defaults.headers
     const ct =
       axiosInstance.defaults.headers['Content-Type'] ??
       axiosInstance.defaults.headers.common?.['Content-Type'];
@@ -74,15 +56,10 @@ describe('instance configuration', () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// REQUEST INTERCEPTOR
-// ─────────────────────────────────────────────────────────────────────────────
-
 describe('request interceptor', () => {
   test('attaches Authorization: Bearer <token> when a token exists in the store', async () => {
     const fakeToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test';
 
-    // Put an authenticated state in the store for this test
     useAuthStore.getState.mockReturnValue({
       token: fakeToken,
       logout: logoutMock,
@@ -90,8 +67,6 @@ describe('request interceptor', () => {
 
     mock.onGet('/assets').reply(200, []);
 
-    // Add a secondary interceptor to capture the outgoing config AFTER the
-    // primary interceptor has already run and added the Authorization header
     let capturedConfig;
     const spy = axiosInstance.interceptors.request.use((config) => {
       capturedConfig = config;
@@ -102,12 +77,10 @@ describe('request interceptor', () => {
 
     expect(capturedConfig.headers.Authorization).toBe(`Bearer ${fakeToken}`);
 
-    // Always clean up secondary interceptors so they don't bleed into other tests
     axiosInstance.interceptors.request.eject(spy);
   });
 
   test('does NOT add an Authorization header when no token is stored', async () => {
-    // Store already returns token: null from beforeEach
     mock.onGet('/assets').reply(200, []);
 
     let capturedConfig;
@@ -144,10 +117,6 @@ describe('request interceptor', () => {
   });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// RESPONSE INTERCEPTOR
-// ─────────────────────────────────────────────────────────────────────────────
-
 describe('response interceptor', () => {
   test('passes 2xx responses through to the caller unchanged', async () => {
     const payload = [{ id: 1, name: 'Dell XPS 15', status: 'AVAILABLE' }];
@@ -162,8 +131,6 @@ describe('response interceptor', () => {
   test('calls store.logout() when the server returns 401', async () => {
     mock.onGet('/profile').reply(401, { message: 'Unauthorized' });
 
-    // rejects.toThrow() awaits the rejection — necessary because the
-    // interceptor rejects the promise after calling logout
     await expect(axiosInstance.get('/profile')).rejects.toThrow();
 
     expect(logoutMock).toHaveBeenCalledTimes(1);

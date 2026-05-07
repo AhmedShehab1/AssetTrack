@@ -1,14 +1,14 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import api from '../../lib/axios';
-import SignupForm from './SignupForm';
+import api from '../../../lib/axios';
+import SignupForm from '../../../components/auth/SignupForm';
 import '@testing-library/jest-dom';
 
 jest.mock('react-router-dom', () => ({
   useNavigate: () => jest.fn(),
 }));
 
-jest.mock('../../lib/axios', () => ({
+jest.mock('../../../lib/axios', () => ({
   post: jest.fn(),
 }));
 
@@ -37,8 +37,6 @@ describe('SignupForm', () => {
     });
   });
 
-
-
   it('submits successfully and calls api', async () => {
     api.post.mockResolvedValueOnce({ data: { message: 'Success' } });
 
@@ -51,12 +49,10 @@ describe('SignupForm', () => {
 
     const button = screen.getByRole('button', { name: /Sign Up/i });
 
-
-
     await userEvent.click(button);
 
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/auth/signup', {
+      expect(api.post).toHaveBeenCalledWith('/auth/register', {
         email: 'test@company.com',
         role: 'DEVELOPER',
         password: 'password123',
@@ -79,8 +75,6 @@ describe('SignupForm', () => {
     fireEvent.blur(screen.getByLabelText(/CONFIRM PASSWORD/i));
 
     const button = screen.getByRole('button', { name: /Sign Up/i });
-
-
 
     await userEvent.click(button);
 

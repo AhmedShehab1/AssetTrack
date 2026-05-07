@@ -2,8 +2,8 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import '@testing-library/jest-dom';
-import ProtectedRoute from '../ProtectedRoute';
-import RoleProtectedRoute from '../RoleProtectedRoute';
+import ProtectedRoute from '../../../components/auth/ProtectedRoute';
+import RoleProtectedRoute from '../../../components/auth/RoleProtectedRoute';
 import useAuthStore from '../../../store/useAuthStore';
 
 // Helper component to track the current location during navigation
