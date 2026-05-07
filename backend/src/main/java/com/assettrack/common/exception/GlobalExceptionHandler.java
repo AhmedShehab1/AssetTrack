@@ -51,6 +51,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex) {
+        if (ex instanceof com.assettrack.exception.BaseException baseException) {
+            HttpStatus status = HttpStatus.resolve(baseException.getStatusCode());
+            if (status == null) {
+                status = HttpStatus.INTERNAL_SERVER_ERROR;
+            }
+
+            return ResponseEntity.status(status)
+                    .body(ErrorResponse.builder().code(status.name()).message(baseException.getMessage()).build());
+        }
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ErrorResponse.builder().code("INTERNAL_SERVER_ERROR").message("An unexpected error occurred").build());
     }
