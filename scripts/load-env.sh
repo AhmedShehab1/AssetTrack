@@ -9,7 +9,11 @@ fi
 ENV_FILE="${ENV_FILE:-.env}"
 
 if [[ ! -f "$ENV_FILE" ]]; then
-  echo "Missing $ENV_FILE. Copy .env.example to .env and fill in values."
+  if [[ "$ENV_FILE" == ".env" ]]; then
+    echo "No .env found; skipping env load."
+    return 0
+  fi
+  echo "Missing $ENV_FILE. Copy .env.example and fill in values."
   return 1
 fi
 

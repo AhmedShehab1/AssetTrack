@@ -1,16 +1,16 @@
 # AssetTrack
 Asset tracking system with role-based access control.
 
-## Local Development
+## Local Development (Host Backend + Docker DB)
 
-1) Start the database: `docker-compose up -d`
+1) Start the database only: `make db` (or `docker-compose up -d postgres pgadmin`)
 	- PostgreSQL runs on localhost:5432.
 	- pgAdmin is available at http://localhost:8081 (Login: admin@assettrack.com / admin).
-2) Generate JWT RSA keys (one-time): `./backend/scripts/generate-rsa-keys.sh`
-	- This writes `private_pkcs8.pem` and `public.pem` into `backend/src/main/resources` (ignored by git).
-3) Optional email alerts: set `MAILTRAP_USERNAME` and `MAILTRAP_PASSWORD` if you want emails sent.
-4) Run the backend: `cd backend && mvn spring-boot:run`
-5) Run the frontend: `cd frontend && npm install && npm run dev`
+2) Optional email alerts (host backend):
+	- Copy [.env.example](.env.example) to `.env` and fill in Mailtrap values.
+3) Run the backend: `make backend`
+	- Loads `.env.local` if present and generates RSA keys if missing.
+4) Run the frontend: `cd frontend && npm install && npm run dev`
 
 If you want to store keys elsewhere, set `RSA_PRIVATE_KEY_LOCATION` and `RSA_PUBLIC_KEY_LOCATION` (for example, `file:/absolute/path/private_pkcs8.pem`).
 
@@ -29,13 +29,17 @@ Notes:
 - Database connection defaults to the `postgres` service inside the Compose network.
 - Optional mail settings are picked up from `.env` if present.
 
+If you only want the database in Docker and run the backend on the host:
+
+```bash
+docker-compose up -d postgres pgadmin
+```
+
 ## Mailtrap (Email Testing)
 
 1) Create a shared inbox in Mailtrap and invite the team to the workspace.
 2) Use the shared SMTP credentials locally (do not commit them).
-   - Copy [.env.example](.env.example) to `.env` and fill in the Mailtrap values.
-	 - Load it before starting the backend:
-		 - `source scripts/load-env.sh`
+	- Copy [.env.example](.env.example) to `.env`.
 3) Environment variables used by the app:
 	- `MAILTRAP_HOST` (default: `sandbox.smtp.mailtrap.io`)
 	- `MAILTRAP_PORT` (default: `2525`)
@@ -75,6 +79,7 @@ Use Make targets from the repo root:
 make db
 make backend
 make frontend
+make docker
 ```
 
 Notes:
