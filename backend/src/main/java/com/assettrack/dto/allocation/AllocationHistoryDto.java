@@ -1,4 +1,5 @@
 package com.assettrack.dto.allocation;
+import com.assettrack.dto.user.UserResponse;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 public class AllocationHistoryDto {
     private java.util.UUID id;
 
-    private com.assettrack.dto.user.UserResponse user;
+    private UserResponse user;
 
     private LocalDateTime checkoutDate;
 
