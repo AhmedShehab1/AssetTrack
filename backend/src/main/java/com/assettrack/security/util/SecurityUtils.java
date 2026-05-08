@@ -6,6 +6,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+
 /**
  * Security utility class for extracting user context from JWT tokens
  * Provides centralized methods for user identification and role checking
@@ -45,6 +47,29 @@ public class SecurityUtils {
     }
 
     /**
+     * Check if the current user has any of the supplied roles.
+     * Accepts role names with or without the ROLE_ prefix.
+     */
+    public boolean hasAnyRole(Authentication authentication, String... roles) {
+        if (authentication == null || roles == null || roles.length == 0) {
+            return false;
+        }
+
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority -> Arrays.stream(roles)
+                        .map(this::normalizeRole)
+                        .anyMatch(authority::equals));
+    }
+
+    /**
+     * Managers and admins can operate across all condition reports.
+     */
+    public boolean isManagerOrAdmin(Authentication authentication) {
+        return hasAnyRole(authentication, "MANAGER", "ADMIN");
+    }
+
+    /**
      * Get user email from JWT token
      */
     public String getCurrentUserEmail(Authentication authentication) {
@@ -64,5 +89,9 @@ public class SecurityUtils {
             return jwt.getClaimAsString("role");
         }
         return null;
+    }
+
+    private String normalizeRole(String role) {
+        return role.startsWith("ROLE_") ? role : "ROLE_" + role;
     }
 }

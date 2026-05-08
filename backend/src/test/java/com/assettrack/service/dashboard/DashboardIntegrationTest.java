@@ -91,9 +91,9 @@ public class DashboardIntegrationTest {
 
     @Test
     void testDashboardSummaryAggregation() {
-        assetRepository.save(Asset.builder().type(AssetType.LAPTOP).status(AssetStatus.AVAILABLE).build());
-        assetRepository.save(Asset.builder().type(AssetType.LAPTOP).status(AssetStatus.ALLOCATED).build());
-        assetRepository.save(Asset.builder().type(AssetType.SCREEN).status(AssetStatus.AVAILABLE).build());
+        assetRepository.save(testAsset("SN-DASH-001", AssetType.LAPTOP, AssetStatus.AVAILABLE));
+        assetRepository.save(testAsset("SN-DASH-002", AssetType.LAPTOP, AssetStatus.ALLOCATED));
+        assetRepository.save(testAsset("SN-DASH-003", AssetType.SCREEN, AssetStatus.AVAILABLE));
 
         DashboardSummaryDto summary = dashboardService.getSummary();
 
@@ -116,8 +116,8 @@ public class DashboardIntegrationTest {
 
     @Test
     void testGetQuickSpareLaptop_Found() {
-        Asset laptop1 = Asset.builder().type(AssetType.LAPTOP).status(AssetStatus.AVAILABLE).build();
-        Asset laptop2 = Asset.builder().type(AssetType.LAPTOP).status(AssetStatus.AVAILABLE).build();
+        Asset laptop1 = testAsset("SN-SPARE-001", AssetType.LAPTOP, AssetStatus.AVAILABLE);
+        Asset laptop2 = testAsset("SN-SPARE-002", AssetType.LAPTOP, AssetStatus.AVAILABLE);
         
         assetRepository.save(laptop1);
         assetRepository.save(laptop2);
@@ -130,10 +130,20 @@ public class DashboardIntegrationTest {
 
     @Test
     void testGetQuickSpareLaptop_NotFound() {
-        assetRepository.save(Asset.builder().type(AssetType.LAPTOP).status(AssetStatus.ALLOCATED).build());
-        assetRepository.save(Asset.builder().type(AssetType.SCREEN).status(AssetStatus.AVAILABLE).build());
+        assetRepository.save(testAsset("SN-NO-SPARE-001", AssetType.LAPTOP, AssetStatus.ALLOCATED));
+        assetRepository.save(testAsset("SN-NO-SPARE-002", AssetType.SCREEN, AssetStatus.AVAILABLE));
 
         assertThatThrownBy(() -> dashboardService.getQuickSpareLaptop())
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    private Asset testAsset(String serialNumber, AssetType type, AssetStatus status) {
+        return Asset.builder()
+                .type(type)
+                .brand("TestBrand")
+                .model("TestModel")
+                .serialNumber(serialNumber)
+                .status(status)
+                .build();
     }
 }

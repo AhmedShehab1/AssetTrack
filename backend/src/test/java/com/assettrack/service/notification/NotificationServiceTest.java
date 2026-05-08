@@ -1,0 +1,100 @@
+package com.assettrack.service.notification;
+
+import com.assettrack.domain.notification.Notification;
+import com.assettrack.domain.user.Role;
+import com.assettrack.domain.user.User;
+import com.assettrack.dto.notification.NotificationResponse;
+import com.assettrack.repository.notification.NotificationRepository;
+import com.assettrack.repository.user.UserRepository;
+import com.assettrack.security.util.SecurityUtils;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class NotificationServiceTest {
+
+    @Mock
+    private NotificationRepository notificationRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private SecurityUtils securityUtils;
+
+    @Mock
+    private Authentication authentication;
+
+    @InjectMocks
+    private NotificationService notificationService;
+
+    @Test
+    void getCurrentUserNotifications_ReturnsOnlyAlertsForLoggedInUser() {
+        User currentUser = testUser();
+        Notification notification = Notification.builder()
+                .id(1L)
+                .recipient(currentUser.getEmail())
+                .messageBody("Laptop warranty expires soon")
+                .type("ALERT")
+                .createdAt(LocalDateTime.of(2026, 5, 7, 12, 0))
+                .build();
+
+        when(securityUtils.getCurrentUserId(authentication)).thenReturn(currentUser.getId());
+        when(userRepository.findById(currentUser.getId())).thenReturn(Optional.of(currentUser));
+        when(notificationRepository.findByRecipientOrderByCreatedAtDesc(currentUser.getEmail()))
+                .thenReturn(List.of(notification));
+
+        List<NotificationResponse> responses =
+                notificationService.getCurrentUserNotifications(authentication);
+
+        assertThat(responses).hasSize(1);
+        assertThat(responses.get(0).getRecipient()).isEqualTo(currentUser.getEmail());
+        assertThat(responses.get(0).getMessageBody()).isEqualTo("Laptop warranty expires soon");
+        verify(notificationRepository).findByRecipientOrderByCreatedAtDesc(currentUser.getEmail());
+    }
+
+    @Test
+    void markAsRead_UpdatesOnlyTheLoggedInUsersNotification() {
+        User currentUser = testUser();
+        Notification notification = Notification.builder()
+                .id(5L)
+                .recipient(currentUser.getEmail())
+                .messageBody("Condition report created")
+                .type("CONDITION_REPORT")
+                .createdAt(LocalDateTime.of(2026, 5, 7, 12, 30))
+                .build();
+
+        when(securityUtils.getCurrentUserId(authentication)).thenReturn(currentUser.getId());
+        when(userRepository.findById(currentUser.getId())).thenReturn(Optional.of(currentUser));
+        when(notificationRepository.findByIdAndRecipient(notification.getId(), currentUser.getEmail()))
+                .thenReturn(Optional.of(notification));
+        when(notificationRepository.save(notification)).thenReturn(notification);
+
+        NotificationResponse response = notificationService.markAsRead(notification.getId(), authentication);
+
+        assertThat(notification.isRead()).isTrue();
+        assertThat(response.isRead()).isTrue();
+        verify(notificationRepository).findByIdAndRecipient(notification.getId(), currentUser.getEmail());
+    }
+
+    private User testUser() {
+        return User.builder()
+                .id(7L)
+                .email("developer@assettrack.com")
+                .passwordHash("$2a$12$hashed_password")
+                .role(Role.DEVELOPER)
+                .build();
+    }
+}

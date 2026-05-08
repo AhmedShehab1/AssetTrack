@@ -1,8 +1,10 @@
 package com.assettrack.security;
 
 import com.assettrack.repository.user.UserRepository;
+import com.assettrack.service.asset.AssetService;
 import com.assettrack.service.auth.AuthService;
 import com.assettrack.service.dashboard.DashboardService;
+import com.assettrack.service.notification.NotificationService;
 import com.assettrack.service.user.UserService;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
@@ -49,6 +51,12 @@ public class SecurityFilterChainTest {
 
     @MockBean
     private DashboardService dashboardService;
+
+    @MockBean
+    private AssetService assetService;
+
+    @MockBean
+    private NotificationService notificationService;
 
     @MockBean
     private com.assettrack.service.notification.AlertService alertService;

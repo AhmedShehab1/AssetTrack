@@ -10,4 +10,6 @@ import java.util.List;
 public interface AssetAllocationRepository extends JpaRepository<AssetAllocation, Long> {
 
     List<AssetAllocation> findByAssetIdOrderByCheckoutDateDesc(Long assetId);
+
+    boolean existsByAssetIdAndUserIdAndReturnDateIsNull(Long assetId, Long userId);
 }
