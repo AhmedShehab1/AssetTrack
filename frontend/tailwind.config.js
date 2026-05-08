@@ -38,6 +38,7 @@ export default {
         "text-body": "#6C757D",
         "on-secondary": "#ffffff",
         "primary-fixed-dim": "#bac3ff",
+        "primary-fixed-variant": "#3f51b5",
         "on-tertiary-fixed-variant": "#713700",
         "text-heading": "#212529",
         "on-error": "#ffffff",
@@ -87,7 +88,9 @@ export default {
         "label-caps": ["Inter"]
       },
       fontSize: {
+        "display-sm": ["28px", { "lineHeight": "1.2", "fontWeight": "700" }],
         "headline-sm": ["18px", { "lineHeight": "1.4", "fontWeight": "600" }],
+        "body-sm": ["12px", { "lineHeight": "1.4", "fontWeight": "400" }],
         "body-lg": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
         "display-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "700" }],
         "body-md": ["14px", { "lineHeight": "1.5", "fontWeight": "400" }],

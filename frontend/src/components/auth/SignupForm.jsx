@@ -2,20 +2,24 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, Lock, Shield } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/axios';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
-import Select from '../ui/Select';
+
+const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 const signupSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters long'),
+  password: z
+    .string()
+    .min(1, 'Password is required')
+    .regex(
+      PASSWORD_PATTERN,
+      'Password must be at least 8 characters, contain uppercase, lowercase, and a number'
+    ),
   confirmPassword: z.string().min(1, 'Please confirm your password'),
-  role: z.enum(['ADMIN', 'MANAGER', 'DEVELOPER'], {
-    errorMap: () => ({ message: 'Please select a valid role' })
-  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -37,7 +41,11 @@ const SignupForm = () => {
   const onSubmit = async (data) => {
     setApiError(null);
     try {
-      await api.post('/auth/register', data);
+      const payload = {
+        email: data.email,
+        password: data.password,
+      };
+      await api.post('/auth/register', payload);
       navigate('/login'); // Redirect to login on successful signup
     } catch (err) {
       setApiError(err.response?.data?.message || 'This email is already in use.');
@@ -52,19 +60,6 @@ const SignupForm = () => {
         </div>
       )}
       
-      <Select
-        label="ROLE"
-        icon={Shield}
-        options={[
-          { value: '', label: 'Select a role...' },
-          { value: 'ADMIN', label: 'Admin' },
-          { value: 'MANAGER', label: 'Manager' },
-          { value: 'DEVELOPER', label: 'Developer' }
-        ]}
-        {...register('role')}
-        error={formState.errors.role?.message}
-      />
-
       <Input
         label="WORK EMAIL"
         type="email"

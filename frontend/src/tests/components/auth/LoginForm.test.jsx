@@ -53,7 +53,7 @@ describe('LoginForm', () => {
   });
 
   it('submits successfully and calls api', async () => {
-    api.post.mockResolvedValueOnce({ data: { user: { id: 1 }, token: '123' } });
+    api.post.mockResolvedValueOnce({ data: { role: 'DEVELOPER', token: '123' } });
 
     render(<LoginForm />);
     const emailInput = screen.getByLabelText(/WORK EMAIL/i);
@@ -70,9 +70,10 @@ describe('LoginForm', () => {
         email: 'test@company.com',
         password: 'password123',
       });
-      // The component expects token and role from response.data, but the test mocked user and token.
-      // We will adjust the test mock to return what the updated component expects: { data: { role: 'DEVELOPER', token: '123' } }
-      // But mockLogin will receive { email: 'test@company.com', role: 'DEVELOPER' }, '123'
+      expect(mockLogin).toHaveBeenCalledWith(
+        { email: 'test@company.com', role: 'DEVELOPER' },
+        '123'
+      );
     });
   });
 

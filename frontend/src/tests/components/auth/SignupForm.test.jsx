@@ -22,7 +22,6 @@ describe('SignupForm', () => {
     expect(screen.getByLabelText(/WORK EMAIL/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^PASSWORD$/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/CONFIRM PASSWORD/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/ROLE/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Sign Up/i })).toBeInTheDocument();
   });
 
@@ -33,7 +32,7 @@ describe('SignupForm', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Please enter a valid email address/i)).toBeInTheDocument();
-      expect(screen.getByText(/Password must be at least 8 characters long/i)).toBeInTheDocument();
+      expect(screen.getByText(/Password is required/i)).toBeInTheDocument();
     });
   });
 
@@ -43,9 +42,8 @@ describe('SignupForm', () => {
     render(<SignupForm />);
     
     await userEvent.type(screen.getByLabelText(/WORK EMAIL/i), 'test@company.com');
-    await userEvent.selectOptions(screen.getByLabelText(/ROLE/i), 'DEVELOPER');
-    await userEvent.type(screen.getByLabelText(/^PASSWORD$/i), 'password123');
-    await userEvent.type(screen.getByLabelText(/CONFIRM PASSWORD/i), 'password123');
+    await userEvent.type(screen.getByLabelText(/^PASSWORD$/i), 'Password123');
+    await userEvent.type(screen.getByLabelText(/CONFIRM PASSWORD/i), 'Password123');
 
     const button = screen.getByRole('button', { name: /Sign Up/i });
 
@@ -54,9 +52,7 @@ describe('SignupForm', () => {
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/register', {
         email: 'test@company.com',
-        role: 'DEVELOPER',
-        password: 'password123',
-        confirmPassword: 'password123',
+        password: 'Password123',
       });
     });
   });
@@ -69,9 +65,8 @@ describe('SignupForm', () => {
     render(<SignupForm />);
     
     await userEvent.type(screen.getByLabelText(/WORK EMAIL/i), 'test@company.com');
-    await userEvent.selectOptions(screen.getByLabelText(/ROLE/i), 'DEVELOPER');
-    await userEvent.type(screen.getByLabelText(/^PASSWORD$/i), 'password123');
-    await userEvent.type(screen.getByLabelText(/CONFIRM PASSWORD/i), 'password123');
+    await userEvent.type(screen.getByLabelText(/^PASSWORD$/i), 'Password123');
+    await userEvent.type(screen.getByLabelText(/CONFIRM PASSWORD/i), 'Password123');
     fireEvent.blur(screen.getByLabelText(/CONFIRM PASSWORD/i));
 
     const button = screen.getByRole('button', { name: /Sign Up/i });
