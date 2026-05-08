@@ -19,12 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @Tag(name = "Authentication", description = "User registration and login endpoints")
 public class AuthController {
     private final AuthService authService;
 
-    @PostMapping("/register")
+    @PostMapping("/signup")
     @Operation(summary = "Register a new user", description = "Creates a new user account and returns a JWT token")
     @ApiResponse(responseCode = "201", description = "User registered successfully",
             content = @Content(schema = @Schema(implementation = AuthResponse.class)))

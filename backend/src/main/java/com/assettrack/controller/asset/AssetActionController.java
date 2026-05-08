@@ -16,10 +16,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/assets")
+@RequestMapping("/search/assets")
 @RequiredArgsConstructor
 @Tag(name = "Assets", description = "Asset management and search endpoints")
 public class AssetActionController {
@@ -29,7 +30,8 @@ public class AssetActionController {
 
     // ──────────────────────────── Asset Search ────────────────────────────
 
-    @GetMapping("/search")
+    @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Search assets", description = "Dynamic asset search with optional filters for status, type, brand, and serial number. All parameters are optional and composable.")
     @ApiResponse(responseCode = "200", description = "Search results returned")
     public ResponseEntity<Page<AssetResponse>> searchAssets(
@@ -45,7 +47,8 @@ public class AssetActionController {
         return ResponseEntity.ok(assetService.searchAssets(status, type, brand, serialNumber, pageable));
     }
 
-    @GetMapping("/quick-spare")
+    @GetMapping("/spare-laptop")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get a quick spare laptop", description = "Returns the oldest available laptop asset for quick allocation")
     @ApiResponse(responseCode = "200", description = "Spare asset found",
             content = @Content(schema = @Schema(implementation = QuickSpareAssetDto.class)))

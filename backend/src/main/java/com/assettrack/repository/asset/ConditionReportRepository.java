@@ -8,15 +8,15 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface ConditionReportRepository extends JpaRepository<ConditionReport, Long> {
+public interface ConditionReportRepository extends JpaRepository<ConditionReport, java.util.UUID> {
 
     List<ConditionReport> findAllByOrderByReportDateDesc();
 
-    List<ConditionReport> findByAssetIdOrderByReportDateDesc(Long assetId);
+    List<ConditionReport> findByAssetIdOrderByReportDateDesc(java.util.UUID assetId);
 
-    List<ConditionReport> findByAssetIdAndReportedByIdOrderByReportDateDesc(Long assetId, Long userId);
+    List<ConditionReport> findByAssetIdAndReportedByIdOrderByReportDateDesc(java.util.UUID assetId, java.util.UUID userId);
 
-    List<ConditionReport> findByReportedByIdOrderByReportDateDesc(Long userId);
+    List<ConditionReport> findByReportedByIdOrderByReportDateDesc(java.util.UUID userId);
 
     List<ConditionReport> findByStatus(ReportStatus status);
 }

@@ -32,7 +32,7 @@ public class NotificationService {
     }
 
     @Transactional
-    public NotificationResponse markAsRead(Long notificationId, Authentication authentication) {
+    public NotificationResponse markAsRead(java.util.UUID notificationId, Authentication authentication) {
         String recipient = getCurrentUserEmail(authentication);
         Notification notification = notificationRepository.findByIdAndRecipient(notificationId, recipient)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -43,7 +43,7 @@ public class NotificationService {
     }
 
     private String getCurrentUserEmail(Authentication authentication) {
-        Long userId = securityUtils.getCurrentUserId(authentication);
+        java.util.UUID userId = securityUtils.getCurrentUserId(authentication);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
         return user.getEmail();

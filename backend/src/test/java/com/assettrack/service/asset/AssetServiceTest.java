@@ -1,5 +1,6 @@
 package com.assettrack.service.asset;
 
+import java.util.UUID;
 import com.assettrack.domain.asset.Asset;
 import com.assettrack.domain.asset.AssetStatus;
 import com.assettrack.domain.asset.AssetType;
@@ -87,9 +88,9 @@ class AssetServiceTest {
         Asset asset = testAsset();
         User reporter = testUser();
         ConditionReportResponse mappedResponse = ConditionReportResponse.builder()
-                .id(10L)
-                .assetId(asset.getId())
-                .reportedById(reporter.getId())
+                .id(UUID.fromString("00000000-0000-0000-0000-000000000010"))
+                .asset(com.assettrack.dto.asset.AssetResponse.builder().id(asset.getId()).build())
+                .reportedBy(com.assettrack.dto.user.UserResponse.builder().id(reporter.getId()).build())
                 .issueDescription("Battery no longer charges")
                 .status("OPEN")
                 .build();
@@ -120,10 +121,10 @@ class AssetServiceTest {
 
     @Test
     void getConditionReports_WhenManagerOrAdmin_ReturnsAllReports() {
-        ConditionReport report = testReport(1L, testUser(7L));
-        ConditionReportResponse mapped = ConditionReportResponse.builder().id(1L).build();
+        ConditionReport report = testReport(UUID.fromString("00000000-0000-0000-0000-000000000001"), testUser(UUID.fromString("00000000-0000-0000-0000-000000000007")));
+        ConditionReportResponse mapped = ConditionReportResponse.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000001")).build();
 
-        when(securityUtils.getCurrentUserId(authentication)).thenReturn(7L);
+        when(securityUtils.getCurrentUserId(authentication)).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000007"));
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(true);
         when(conditionReportRepository.findAllByOrderByReportDateDesc()).thenReturn(List.of(report));
         when(assetMapper.toResponse(report)).thenReturn(mapped);
@@ -137,29 +138,29 @@ class AssetServiceTest {
 
     @Test
     void getConditionReports_WhenRegularUser_ReturnsOnlyOwnReports() {
-        ConditionReport ownReport = testReport(1L, testUser(7L));
-        ConditionReportResponse mapped = ConditionReportResponse.builder().id(1L).build();
+        ConditionReport ownReport = testReport(UUID.fromString("00000000-0000-0000-0000-000000000001"), testUser(UUID.fromString("00000000-0000-0000-0000-000000000007")));
+        ConditionReportResponse mapped = ConditionReportResponse.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000001")).build();
 
-        when(securityUtils.getCurrentUserId(authentication)).thenReturn(7L);
+        when(securityUtils.getCurrentUserId(authentication)).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000007"));
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(false);
-        when(conditionReportRepository.findByReportedByIdOrderByReportDateDesc(7L)).thenReturn(List.of(ownReport));
+        when(conditionReportRepository.findByReportedByIdOrderByReportDateDesc(UUID.fromString("00000000-0000-0000-0000-000000000007"))).thenReturn(List.of(ownReport));
         when(assetMapper.toResponse(ownReport)).thenReturn(mapped);
 
         List<ConditionReportResponse> result = assetService.getConditionReports(authentication);
 
         assertThat(result).containsExactly(mapped);
-        verify(conditionReportRepository).findByReportedByIdOrderByReportDateDesc(7L);
+        verify(conditionReportRepository).findByReportedByIdOrderByReportDateDesc(UUID.fromString("00000000-0000-0000-0000-000000000007"));
         verify(conditionReportRepository, never()).findAllByOrderByReportDateDesc();
     }
 
     @Test
     void getReportsByAsset_WhenManagerOrAdmin_ReturnsAllAssetReports() {
-        Long assetId = 99L;
-        ConditionReport report = testReport(1L, testUser(8L));
-        ConditionReportResponse mapped = ConditionReportResponse.builder().id(1L).assetId(assetId).build();
+        UUID assetId = UUID.fromString("00000000-0000-0000-0000-000000000099");
+        ConditionReport report = testReport(UUID.fromString("00000000-0000-0000-0000-000000000001"), testUser(UUID.fromString("00000000-0000-0000-0000-000000000008")));
+        ConditionReportResponse mapped = ConditionReportResponse.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000001")).asset(com.assettrack.dto.asset.AssetResponse.builder().id(assetId).build()).build();
 
         when(assetRepository.existsById(assetId)).thenReturn(true);
-        when(securityUtils.getCurrentUserId(authentication)).thenReturn(7L);
+        when(securityUtils.getCurrentUserId(authentication)).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000007"));
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(true);
         when(conditionReportRepository.findByAssetIdOrderByReportDateDesc(assetId)).thenReturn(List.of(report));
         when(assetMapper.toResponse(report)).thenReturn(mapped);
@@ -174,10 +175,10 @@ class AssetServiceTest {
 
     @Test
     void getReportsByAsset_WhenRegularUser_ReturnsOnlyOwnAssetReports() {
-        Long assetId = 99L;
-        Long userId = 7L;
-        ConditionReport ownReport = testReport(1L, testUser(userId));
-        ConditionReportResponse mapped = ConditionReportResponse.builder().id(1L).assetId(assetId).build();
+        UUID assetId = UUID.fromString("00000000-0000-0000-0000-000000000099");
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000007");
+        ConditionReport ownReport = testReport(UUID.fromString("00000000-0000-0000-0000-000000000001"), testUser(userId));
+        ConditionReportResponse mapped = ConditionReportResponse.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000001")).asset(com.assettrack.dto.asset.AssetResponse.builder().id(assetId).build()).build();
 
         when(assetRepository.existsById(assetId)).thenReturn(true);
         when(securityUtils.getCurrentUserId(authentication)).thenReturn(userId);
@@ -195,8 +196,8 @@ class AssetServiceTest {
 
     @Test
     void getReportById_WhenManagerOrAdmin_CanViewAnyReport() {
-        Long reportId = 44L;
-        ConditionReport report = testReport(reportId, testUser(99L));
+        UUID reportId = UUID.fromString("00000000-0000-0000-0000-000000000044");
+        ConditionReport report = testReport(reportId, testUser(UUID.fromString("00000000-0000-0000-0000-000000000099")));
         ConditionReportResponse mapped = ConditionReportResponse.builder().id(reportId).build();
 
         when(conditionReportRepository.findById(reportId)).thenReturn(Optional.of(report));
@@ -211,10 +212,10 @@ class AssetServiceTest {
 
     @Test
     void getReportById_WhenRegularUserViewsOwnReport_ReturnsReport() {
-        Long userId = 7L;
-        Long reportId = 45L;
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000007");
+        UUID reportId = UUID.fromString("00000000-0000-0000-0000-000000000045");
         ConditionReport ownReport = testReport(reportId, testUser(userId));
-        ConditionReportResponse mapped = ConditionReportResponse.builder().id(reportId).reportedById(userId).build();
+        ConditionReportResponse mapped = ConditionReportResponse.builder().id(reportId).reportedBy(com.assettrack.dto.user.UserResponse.builder().id(userId).build()).build();
 
         when(conditionReportRepository.findById(reportId)).thenReturn(Optional.of(ownReport));
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(false);
@@ -228,9 +229,9 @@ class AssetServiceTest {
 
     @Test
     void getReportById_WhenRegularUserViewsAnotherUsersReport_ThrowsForbidden() {
-        Long userId = 7L;
-        Long reportId = 46L;
-        ConditionReport othersReport = testReport(reportId, testUser(8L));
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000007");
+        UUID reportId = UUID.fromString("00000000-0000-0000-0000-000000000046");
+        ConditionReport othersReport = testReport(reportId, testUser(UUID.fromString("00000000-0000-0000-0000-000000000008")));
 
         when(conditionReportRepository.findById(reportId)).thenReturn(Optional.of(othersReport));
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(false);
@@ -245,7 +246,7 @@ class AssetServiceTest {
 
     private Asset testAsset() {
         return Asset.builder()
-                .id(99L)
+                .id(UUID.fromString("00000000-0000-0000-0000-000000000099"))
                 .type(AssetType.LAPTOP)
                 .brand("Dell")
                 .model("Latitude")
@@ -254,7 +255,7 @@ class AssetServiceTest {
                 .build();
     }
 
-    private ConditionReport testReport(Long reportId, User reporter) {
+    private ConditionReport testReport(UUID reportId, User reporter) {
         return ConditionReport.builder()
                 .id(reportId)
                 .asset(testAsset())
@@ -264,7 +265,7 @@ class AssetServiceTest {
                 .build();
     }
 
-    private User testUser(Long id) {
+    private User testUser(UUID id) {
         User user = testUser();
         user.setId(id);
         return user;
@@ -272,7 +273,7 @@ class AssetServiceTest {
 
     private User testUser() {
         return User.builder()
-                .id(7L)
+                .id(UUID.fromString("00000000-0000-0000-0000-000000000007"))
                 .email("developer@assettrack.com")
                 .passwordHash("$2a$12$hashed_password")
                 .role(Role.DEVELOPER)

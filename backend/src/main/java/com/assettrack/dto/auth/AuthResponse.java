@@ -3,10 +3,14 @@ package com.assettrack.dto.auth;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import com.assettrack.dto.user.UserResponse;
+
 @Data
 @AllArgsConstructor
 public class AuthResponse {
 
-    private String token;
-    private String role;
+    private String accessToken;
+    private String tokenType;
+    private long expiresIn;
+    private UserResponse user;
 }

@@ -19,8 +19,8 @@ import java.time.LocalDateTime;
 public class Notification {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
+    private java.util.UUID id;
 
     @Column(nullable = false)
     private String recipient;

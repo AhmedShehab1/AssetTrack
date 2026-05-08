@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AssetResponse {
-    private Long id;
+    private java.util.UUID id;
     private String type;
     private String brand;
     private String model;
@@ -22,4 +22,7 @@ public class AssetResponse {
     private LocalDate warrantyExpirationDate;
     private String status;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private boolean warrantyExpired;
+    private String currentOwner;
 }

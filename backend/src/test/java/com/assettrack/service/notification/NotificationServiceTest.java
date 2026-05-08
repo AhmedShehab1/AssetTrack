@@ -1,5 +1,6 @@
 package com.assettrack.service.notification;
 
+import java.util.UUID;
 import com.assettrack.domain.notification.Notification;
 import com.assettrack.domain.user.Role;
 import com.assettrack.domain.user.User;
@@ -44,7 +45,7 @@ class NotificationServiceTest {
     void getCurrentUserNotifications_ReturnsOnlyAlertsForLoggedInUser() {
         User currentUser = testUser();
         Notification notification = Notification.builder()
-                .id(1L)
+                .id(UUID.fromString("00000000-0000-0000-0000-000000000001"))
                 .recipient(currentUser.getEmail())
                 .messageBody("Laptop warranty expires soon")
                 .type("ALERT")
@@ -69,7 +70,7 @@ class NotificationServiceTest {
     void markAsRead_UpdatesOnlyTheLoggedInUsersNotification() {
         User currentUser = testUser();
         Notification notification = Notification.builder()
-                .id(5L)
+                .id(UUID.fromString("00000000-0000-0000-0000-000000000005"))
                 .recipient(currentUser.getEmail())
                 .messageBody("Condition report created")
                 .type("CONDITION_REPORT")
@@ -91,7 +92,7 @@ class NotificationServiceTest {
 
     private User testUser() {
         return User.builder()
-                .id(7L)
+                .id(UUID.fromString("00000000-0000-0000-0000-000000000007"))
                 .email("developer@assettrack.com")
                 .passwordHash("$2a$12$hashed_password")
                 .role(Role.DEVELOPER)
