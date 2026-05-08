@@ -7,8 +7,9 @@ spring:
     name: AssetTrack
   datasource:
     url: jdbc:postgresql://localhost:5432/assettrack
-    username: postgres
+    username: username
     password: password
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: create
@@ -37,7 +38,6 @@ alerts:
   low-stock-threshold: 5
   recipient-email: admin@assettrack.com
 
-# RSA keys
 rsa:
   private-key-location: ${RSA_PRIVATE_KEY_LOCATION:classpath:private_pkcs8.pem}
   public-key-location: ${RSA_PUBLIC_KEY_LOCATION:classpath:public.pem}

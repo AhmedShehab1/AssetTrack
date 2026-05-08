@@ -1,20 +1,5 @@
 package com.assettrack.service.asset;
 
-import java.util.UUID;
-import com.assettrack.domain.asset.Asset;
-import com.assettrack.domain.asset.AssetStatus;
-import com.assettrack.domain.asset.AssetType;
-import com.assettrack.domain.asset.ConditionReport;
-import com.assettrack.domain.user.Role;
-import com.assettrack.domain.user.User;
-import com.assettrack.dto.asset.ConditionReportResponse;
-import com.assettrack.exception.SelfOperationException;
-import com.assettrack.mapper.asset.AssetMapper;
-import com.assettrack.repository.asset.AssetAllocationRepository;
-import com.assettrack.repository.asset.AssetRepository;
-import com.assettrack.repository.asset.ConditionReportRepository;
-import com.assettrack.repository.user.UserRepository;
-import com.assettrack.security.util.SecurityUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

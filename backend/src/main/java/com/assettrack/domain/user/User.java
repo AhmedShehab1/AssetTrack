@@ -49,6 +49,7 @@ public class User {
     }
     
     @Column(nullable = false)
+    @Builder.Default
     private boolean isActive = true;
 
 }

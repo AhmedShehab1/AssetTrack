@@ -68,6 +68,9 @@ public class SecurityFilterChainTest {
     @MockBean
     private UserRepository userRepository;
 
+    @MockBean
+    AssetService assetService;
+
     /**
      * Provides in-memory RSA keys for the test context, overriding the production
      * beans in {@code RsaKeyProperties} that require PEM files on disk.
