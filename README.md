@@ -91,3 +91,21 @@ Notes:
 
 The API is documented using the OpenAPI 3.0 specification. You can view the interactive Swagger UI documentation here:
 [https://AhmedShehab1.github.io/AssetTrack/docs/](https://AhmedShehab1.github.io/AssetTrack/docs/)
+
+## API Testing with Schemathesis
+
+We use property-based testing with [Schemathesis](https://schemathesis.io/) to ensure our Spring Boot implementation strictly adheres to our OpenAPI specification. This approach automatically generates hundreds of test cases to catch edge cases, validation errors, and conformance issues.
+
+The source of truth for our API is located at [`/docs/openapi.yaml`](./docs/openapi.yaml) and is hosted at [http://shehabtech.me/AssetTrack](http://shehabtech.me/AssetTrack).
+
+### Local Run
+
+You can run the API tests locally using Docker:
+
+```bash
+docker run schemathesis/schemathesis:stable run http://shehabtech.me/AssetTrack --schema ./docs/openapi.yaml
+```
+
+### GitHub Actions
+
+Schemathesis tests run automatically on every push and pull request to the `main` branch. You can view the results and detailed Schema Coverage reports in the **Actions** tab of the repository.

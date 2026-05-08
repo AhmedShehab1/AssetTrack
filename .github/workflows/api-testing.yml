@@ -1,0 +1,24 @@
+name: API Testing with Schemathesis
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  schemathesis:
+    name: Schemathesis Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Schemathesis tests
+        uses: schemathesis/action@v1
+        with:
+          schema: './docs/openapi.yaml'
+          base_url: 'http://shehabtech.me/AssetTrack'
+          checks: 'all'
+          max_examples: 200
+          workers: 'auto'
