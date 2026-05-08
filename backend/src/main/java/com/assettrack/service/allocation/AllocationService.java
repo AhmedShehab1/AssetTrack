@@ -73,7 +73,7 @@ public class AllocationService implements IAllocationService {
      */
     @Transactional
     @Override
-    public void deallocate(Long assetId) {
+    public void deallocate(java.util.UUID assetId) {
         log.info("Deallocating asset {}", assetId);
         Asset asset = assetRepository.findById(assetId)
                 .orElseThrow(() -> new ResourceNotFoundException("asset is not found"));
@@ -98,7 +98,7 @@ public class AllocationService implements IAllocationService {
      * @throws ResourceNotFoundException if the asset does not exist
      */
     @Override
-    public List<AllocationHistoryDto> getAllocationHistory(Long assetId) {
+    public List<AllocationHistoryDto> getAllocationHistory(java.util.UUID assetId) {
         assetRepository.findById(assetId)
                 .orElseThrow(() -> new ResourceNotFoundException("Asset is not found"));
         List<AssetAllocation> allocationList = allocationRepository.findByAssetIdOrderByCheckoutDateDesc(assetId);

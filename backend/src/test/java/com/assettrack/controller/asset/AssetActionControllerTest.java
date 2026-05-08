@@ -46,6 +46,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("AssetActionController")
 class AssetActionControllerTest {
 
+    private static final java.util.UUID ASSET_ID_1 = java.util.UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private static final java.util.UUID ASSET_ID_5 = java.util.UUID.fromString("55555555-5555-5555-5555-555555555555");
+    private static final java.util.UUID REPORT_ID_10 = java.util.UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+    private static final java.util.UUID ASSET_ID_999 = java.util.UUID.fromString("99999999-9999-9999-9999-999999999999");
+
+
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
     @MockBean  AssetService assetService;
@@ -86,7 +92,7 @@ class AssetActionControllerTest {
         }
     }
 
-    private AssetResponse buildAssetResponse(Long id) {
+    private AssetResponse buildAssetResponse(java.util.UUID id) {
         return AssetResponse.builder()
                 .id(id)
                 .type(AssetType.LAPTOP.name())
@@ -97,13 +103,11 @@ class AssetActionControllerTest {
                 .build();
     }
 
-    private ConditionReportResponse buildReportResponse(Long id, Long assetId) {
+    private ConditionReportResponse buildReportResponse(java.util.UUID id, java.util.UUID assetId) {
         return ConditionReportResponse.builder()
                 .id(id)
-                .assetId(assetId)
-                .assetSerialNumber("SN-001")
-                .reportedById(1L)
-                .reportedByEmail("alice@example.com")
+                .asset(AssetResponse.builder().id(assetId).serialNumber("SN-001").build())
+                .reportedBy(com.assettrack.dto.user.UserResponse.builder().id(java.util.UUID.randomUUID()).email("alice@example.com").build())
                 .issueDescription("Screen is cracked")
                 .reportDate(LocalDate.now())
                 .status("OPEN")
@@ -120,7 +124,7 @@ class AssetActionControllerTest {
         @DisplayName("returns 200 with results and no filters")
         void noFilters() throws Exception {
             Page<AssetResponse> page = new PageImpl<>(
-                    List.of(buildAssetResponse(1L)), PageRequest.of(0, 10), 1);
+                    List.of(buildAssetResponse(ASSET_ID_1)), PageRequest.of(0, 10), 1);
 
             // Use any() for ALL args to guarantee the stub always matches
             when(assetService.searchAssets(any(), any(), any(), any(), any()))
@@ -129,7 +133,7 @@ class AssetActionControllerTest {
             mockMvc.perform(get("/api/assets/search"))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.content[0].id").value(1))
+                    .andExpect(jsonPath("$.content[0].id").value(ASSET_ID_1.toString()))
                     .andExpect(jsonPath("$.page.totalElements").value(1));
         }
 
@@ -137,7 +141,7 @@ class AssetActionControllerTest {
         @DisplayName("returns 200 filtered by status and type")
         void withFilters() throws Exception {
             Page<AssetResponse> page = new PageImpl<>(
-                    List.of(buildAssetResponse(1L)), PageRequest.of(0, 10), 1);
+                    List.of(buildAssetResponse(ASSET_ID_1)), PageRequest.of(0, 10), 1);
 
             // Only be specific about the args you actually control via request params
             when(assetService.searchAssets(
@@ -176,12 +180,12 @@ class AssetActionControllerTest {
         @Test
         @DisplayName("returns 200 with spare laptop")
         void success() throws Exception {
-            QuickSpareAssetDto dto = new QuickSpareAssetDto(5L, "LAPTOP", "AVAILABLE");
+            QuickSpareAssetDto dto = new QuickSpareAssetDto(ASSET_ID_5, "LAPTOP", "AVAILABLE");
             when(dashboardService.getQuickSpareLaptop()).thenReturn(dto);
 
             mockMvc.perform(get("/api/assets/quick-spare"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.id").value(5))
+                    .andExpect(jsonPath("$.id").value(ASSET_ID_5.toString()))
                     .andExpect(jsonPath("$.type").value("LAPTOP"));
         }
 
@@ -207,18 +211,18 @@ class AssetActionControllerTest {
         @DisplayName("returns 201 on success")
         void success() throws Exception {
             CreateConditionReportRequest req = CreateConditionReportRequest.builder()
-                    .assetId(1L)
+                    .assetId(ASSET_ID_1)
                     .issueDescription("Screen is cracked")
                     .build();
-            ConditionReportResponse response = buildReportResponse(10L, 1L);
+            ConditionReportResponse response = buildReportResponse(REPORT_ID_10, ASSET_ID_1);
             when(assetService.createConditionReport(any(), any())).thenReturn(response);
 
             mockMvc.perform(post("/api/assets/condition-reports")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.id").value(10))
-                    .andExpect(jsonPath("$.assetId").value(1))
+                    .andExpect(jsonPath("$.id").value(REPORT_ID_10.toString()))
+                    .andExpect(jsonPath("$.asset.id").value(ASSET_ID_1.toString()))
                     .andExpect(jsonPath("$.status").value("OPEN"));
         }
 
@@ -227,7 +231,7 @@ class AssetActionControllerTest {
         @DisplayName("returns 404 when asset not found")
         void assetNotFound() throws Exception {
             CreateConditionReportRequest req = CreateConditionReportRequest.builder()
-                    .assetId(999L)
+                    .assetId(ASSET_ID_999)
                     .issueDescription("Screen is cracked")
                     .build();
             when(assetService.createConditionReport(any(), any()))
@@ -260,7 +264,7 @@ class AssetActionControllerTest {
         @DisplayName("returns 422 when issueDescription is blank")
         void missingDescription() throws Exception {
             CreateConditionReportRequest req = CreateConditionReportRequest.builder()
-                    .assetId(1L)
+                    .assetId(ASSET_ID_1)
                     .issueDescription("")
                     .build();
 
@@ -276,7 +280,7 @@ class AssetActionControllerTest {
         @DisplayName("returns 401 when not authenticated")
         void unauthenticated() throws Exception {
             CreateConditionReportRequest req = CreateConditionReportRequest.builder()
-                    .assetId(1L)
+                    .assetId(ASSET_ID_1)
                     .issueDescription("Screen is cracked")
                     .build();
 
@@ -296,21 +300,21 @@ class AssetActionControllerTest {
         @Test
         @DisplayName("returns 200 with reports list")
         void success() throws Exception {
-            when(assetService.getReportsByAsset(1L))
-                    .thenReturn(List.of(buildReportResponse(10L, 1L)));
+            when(assetService.getReportsByAsset(ASSET_ID_1))
+                    .thenReturn(List.of(buildReportResponse(REPORT_ID_10, ASSET_ID_1)));
 
-            mockMvc.perform(get("/api/assets/1/condition-reports"))
+            mockMvc.perform(get("/api/assets/" + ASSET_ID_1 + "/condition-reports"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$[0].id").value(10))
-                    .andExpect(jsonPath("$[0].assetId").value(1));
+                    .andExpect(jsonPath("$[0].id").value(REPORT_ID_10.toString()))
+                    .andExpect(jsonPath("$[0].asset.id").value(ASSET_ID_1.toString()));
         }
 
         @Test
         @DisplayName("returns 200 with empty list when no reports")
         void empty() throws Exception {
-            when(assetService.getReportsByAsset(1L)).thenReturn(List.of());
+            when(assetService.getReportsByAsset(ASSET_ID_1)).thenReturn(List.of());
 
-            mockMvc.perform(get("/api/assets/1/condition-reports"))
+            mockMvc.perform(get("/api/assets/" + ASSET_ID_1 + "/condition-reports"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$").isEmpty());
         }
@@ -318,10 +322,10 @@ class AssetActionControllerTest {
         @Test
         @DisplayName("returns 404 when asset not found")
         void assetNotFound() throws Exception {
-            when(assetService.getReportsByAsset(999L))
+            when(assetService.getReportsByAsset(ASSET_ID_999))
                     .thenThrow(new ResourceNotFoundException("Asset not found with id: 999"));
 
-            mockMvc.perform(get("/api/assets/999/condition-reports"))
+            mockMvc.perform(get("/api/assets/" + ASSET_ID_999 + "/condition-reports"))
                     .andExpect(status().isNotFound());
         }
     }
@@ -335,21 +339,21 @@ class AssetActionControllerTest {
         @Test
         @DisplayName("returns 200 with report")
         void success() throws Exception {
-            when(assetService.getReportById(10L)).thenReturn(buildReportResponse(10L, 1L));
+            when(assetService.getReportById(REPORT_ID_10)).thenReturn(buildReportResponse(REPORT_ID_10, ASSET_ID_1));
 
-            mockMvc.perform(get("/api/assets/condition-reports/10"))
+            mockMvc.perform(get("/api/assets/condition-reports/" + REPORT_ID_10))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.id").value(10))
+                    .andExpect(jsonPath("$.id").value(REPORT_ID_10.toString()))
                     .andExpect(jsonPath("$.issueDescription").value("Screen is cracked"));
         }
 
         @Test
         @DisplayName("returns 404 when report not found")
         void notFound() throws Exception {
-            when(assetService.getReportById(999L))
+            when(assetService.getReportById(ASSET_ID_999))
                     .thenThrow(new ResourceNotFoundException("Condition report not found with id: 999"));
 
-            mockMvc.perform(get("/api/assets/condition-reports/999"))
+            mockMvc.perform(get("/api/assets/condition-reports/" + ASSET_ID_999))
                     .andExpect(status().isNotFound());
         }
     }
@@ -364,23 +368,23 @@ class AssetActionControllerTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 200 with resolved report for admin")
         void successAsAdmin() throws Exception {
-            ConditionReportResponse response = buildReportResponse(10L, 1L);
+            ConditionReportResponse response = buildReportResponse(REPORT_ID_10, ASSET_ID_1);
             response.setStatus("RESOLVED");
-            when(assetService.resolveReport(10L)).thenReturn(response);
+            when(assetService.resolveReport(REPORT_ID_10)).thenReturn(response);
 
-            mockMvc.perform(patch("/api/assets/condition-reports/10/resolve"))
+            mockMvc.perform(patch("/api/assets/condition-reports/" + REPORT_ID_10 + "/resolve"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.id").value(10));
+                    .andExpect(jsonPath("$.id").value(REPORT_ID_10.toString()));
         }
 
         @Test
         @WithMockUser(roles = "MANAGER")
         @DisplayName("returns 200 with resolved report for manager")
         void successAsManager() throws Exception {
-            ConditionReportResponse response = buildReportResponse(10L, 1L);
-            when(assetService.resolveReport(10L)).thenReturn(response);
+            ConditionReportResponse response = buildReportResponse(REPORT_ID_10, ASSET_ID_1);
+            when(assetService.resolveReport(REPORT_ID_10)).thenReturn(response);
 
-            mockMvc.perform(patch("/api/assets/condition-reports/10/resolve"))
+            mockMvc.perform(patch("/api/assets/condition-reports/" + REPORT_ID_10 + "/resolve"))
                     .andExpect(status().isOk());
         }
 
@@ -389,7 +393,7 @@ class AssetActionControllerTest {
         @DisplayName("returns 403 for developer")
         void forbidden() throws Exception {
             // FIX 3: no stub needed — security must reject before reaching service
-            mockMvc.perform(patch("/api/assets/condition-reports/10/resolve"))
+            mockMvc.perform(patch("/api/assets/condition-reports/" + REPORT_ID_10 + "/resolve"))
                     .andExpect(status().isForbidden());
         }
 
@@ -397,7 +401,7 @@ class AssetActionControllerTest {
         @DisplayName("returns 401 when not authenticated")
         void unauthenticated() throws Exception {
             // FIX 3: no stub needed — security must reject before reaching service
-            mockMvc.perform(patch("/api/assets/condition-reports/10/resolve"))
+            mockMvc.perform(patch("/api/assets/condition-reports/" + REPORT_ID_10 + "/resolve"))
                     .andExpect(status().isUnauthorized());
         }
 
@@ -405,10 +409,10 @@ class AssetActionControllerTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 404 when report not found")
         void notFound() throws Exception {
-            when(assetService.resolveReport(999L))
+            when(assetService.resolveReport(ASSET_ID_999))
                     .thenThrow(new ResourceNotFoundException("Condition report not found with id: 999"));
 
-            mockMvc.perform(patch("/api/assets/condition-reports/999/resolve"))
+            mockMvc.perform(patch("/api/assets/condition-reports/" + ASSET_ID_999 + "/resolve"))
                     .andExpect(status().isNotFound());
         }
     }

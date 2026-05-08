@@ -10,7 +10,7 @@ public interface IAllocationService {
 
     AllocationResponseDto allocate(AllocationRequestDto dto);
 
-    void deallocate(Long assetId);
+    void deallocate(java.util.UUID assetId);
 
-    List<AllocationHistoryDto> getAllocationHistory(Long assetId);
+    List<AllocationHistoryDto> getAllocationHistory(java.util.UUID assetId);
 }

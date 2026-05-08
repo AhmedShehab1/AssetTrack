@@ -35,7 +35,7 @@ class AuthServiceTest {
 
     @InjectMocks AuthService authService;
 
-    private User buildUser(Long id, String email) {
+    private User buildUser(java.util.UUID id, String email) {
         User u = new User();
         u.setId(id);
         u.setEmail(email);
@@ -69,13 +69,13 @@ class AuthServiceTest {
         @DisplayName("saves user with encoded password and DEVELOPER role")
         void success() {
             SignupRequest req = signupRequest("alice@example.com", "Password1");
-            AuthResponse expected = new AuthResponse("jwt-token", "DEVELOPER");
+            AuthResponse expected = new AuthResponse("jwt-token", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().role("DEVELOPER").build());
 
             when(userRepository.existsByEmail(req.getEmail())).thenReturn(false);
             when(passwordEncoder.encode(req.getPassword())).thenReturn("hashed");
             when(userRepository.save(any(User.class))).thenAnswer(i -> {
                 User u = i.getArgument(0);
-                u.setId(1L);
+                u.setId(java.util.UUID.randomUUID());
                 return u;
             });
             when(jwtService.generateToken(anyMap(), any())).thenReturn("jwt-token");
@@ -113,11 +113,11 @@ class AuthServiceTest {
             when(passwordEncoder.encode("Password1")).thenReturn("bcrypt-hash");
             when(userRepository.save(any(User.class))).thenAnswer(i -> {
                 User u = i.getArgument(0);
-                u.setId(1L);
+                u.setId(java.util.UUID.randomUUID());
                 return u;
             });
             when(jwtService.generateToken(anyMap(), any())).thenReturn("tok");
-            when(authMapper.toResponse(any(), any())).thenReturn(new AuthResponse("tok", "DEVELOPER"));
+            when(authMapper.toResponse(any(), any())).thenReturn(new AuthResponse("tok", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().role("DEVELOPER").build()));
 
             authService.register(req);
 
@@ -137,11 +137,11 @@ class AuthServiceTest {
             when(passwordEncoder.encode(any())).thenReturn("hashed");
             when(userRepository.save(any(User.class))).thenAnswer(i -> {
                 User u = i.getArgument(0);
-                u.setId(1L);
+                u.setId(java.util.UUID.randomUUID());
                 return u;
             });
             when(jwtService.generateToken(anyMap(), any())).thenReturn("tok");
-            when(authMapper.toResponse(any(), any())).thenReturn(new AuthResponse("tok", "DEVELOPER"));
+            when(authMapper.toResponse(any(), any())).thenReturn(new AuthResponse("tok", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().role("DEVELOPER").build()));
 
             authService.register(req);
 
@@ -154,13 +154,13 @@ class AuthServiceTest {
         @DisplayName("returns token from jwtService")
         void returnsToken() {
             SignupRequest req = signupRequest("dave@example.com", "Password1");
-            AuthResponse expected = new AuthResponse("my-special-token", "DEVELOPER");
+            AuthResponse expected = new AuthResponse("my-special-token", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().role("DEVELOPER").build());
 
             when(userRepository.existsByEmail(any())).thenReturn(false);
             when(passwordEncoder.encode(any())).thenReturn("hashed");
             when(userRepository.save(any(User.class))).thenAnswer(i -> {
                 User u = i.getArgument(0);
-                u.setId(1L);
+                u.setId(java.util.UUID.randomUUID());
                 return u;
             });
             when(jwtService.generateToken(anyMap(), any())).thenReturn("my-special-token");
@@ -168,7 +168,7 @@ class AuthServiceTest {
 
             AuthResponse result = authService.register(req);
 
-            assertThat(result.getToken()).isEqualTo("my-special-token");
+            assertThat(result.getAccessToken()).isEqualTo("my-special-token");
         }
     }
 
@@ -182,8 +182,8 @@ class AuthServiceTest {
         @DisplayName("authenticates and returns token for valid credentials")
         void success() {
             LoginRequest req = loginRequest("alice@example.com", "Password1");
-            User user = buildUser(1L, "alice@example.com");
-            AuthResponse expected = new AuthResponse("jwt-token", "DEVELOPER");
+            User user = buildUser(java.util.UUID.randomUUID(), "alice@example.com");
+            AuthResponse expected = new AuthResponse("jwt-token", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().role("DEVELOPER").build());
 
             when(userRepository.findByEmail(req.getEmail())).thenReturn(Optional.of(user));
             when(jwtService.generateToken(anyMap(), any())).thenReturn("jwt-token");
@@ -224,11 +224,11 @@ class AuthServiceTest {
         @DisplayName("calls authenticationManager with correct email and password")
         void passesCorrectCredentialsToAuthManager() {
             LoginRequest req = loginRequest("bob@example.com", "MyPass1");
-            User user = buildUser(2L, "bob@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "bob@example.com");
 
             when(userRepository.findByEmail("bob@example.com")).thenReturn(Optional.of(user));
             when(jwtService.generateToken(anyMap(), any())).thenReturn("tok");
-            when(authMapper.toResponse(any(), any())).thenReturn(new AuthResponse("tok", "DEVELOPER"));
+            when(authMapper.toResponse(any(), any())).thenReturn(new AuthResponse("tok", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().role("DEVELOPER").build()));
 
             authService.login(req);
 

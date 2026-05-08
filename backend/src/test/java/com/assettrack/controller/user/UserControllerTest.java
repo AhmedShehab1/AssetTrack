@@ -68,7 +68,7 @@ class UserControllerTest {
         }
     }
 
-    private UserResponse buildResponse(Long id, String email) {
+    private UserResponse buildResponse(java.util.UUID id, String email) {
         return new UserResponse(id, email, "DEVELOPER", true, LocalDateTime.now());
     }
 
@@ -82,7 +82,7 @@ class UserControllerTest {
         @WithMockUser
         @DisplayName("returns 200 with profile for authenticated user")
         void success() throws Exception {
-            UserResponse response = buildResponse(1L, "alice@example.com");
+            UserResponse response = buildResponse(java.util.UUID.randomUUID(), "alice@example.com");
             when(userService.getMyProfile(any())).thenReturn(response);
 
             mockMvc.perform(get("/api/users/me"))
@@ -109,7 +109,7 @@ class UserControllerTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 200 with user page for admin")
         void success() throws Exception {
-            UserResponse response = buildResponse(1L, "alice@example.com");
+            UserResponse response = buildResponse(java.util.UUID.randomUUID(), "alice@example.com");
             var page = new PageImpl<>(List.of(response), PageRequest.of(0, 10), 1);
             when(userService.getAllUsers(any())).thenReturn(page);
 
@@ -145,7 +145,7 @@ class UserControllerTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 200 with inactive users for admin")
         void success() throws Exception {
-            UserResponse response = new UserResponse(2L, "bob@example.com", "DEVELOPER", false, LocalDateTime.now());
+            UserResponse response = new UserResponse(java.util.UUID.randomUUID(), "bob@example.com", "DEVELOPER", false, LocalDateTime.now());
             var page = new PageImpl<>(List.of(response), PageRequest.of(0, 10), 1);
             when(userService.getInactiveUsers(any())).thenReturn(page);
 
@@ -180,8 +180,8 @@ class UserControllerTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 200 with user for admin")
         void success() throws Exception {
-            UserResponse response = buildResponse(1L, "alice@example.com");
-            when(userService.getUserById(1L)).thenReturn(response);
+            UserResponse response = buildResponse(java.util.UUID.randomUUID(), "alice@example.com");
+            when(userService.getUserById(java.util.UUID.randomUUID())).thenReturn(response);
 
             mockMvc.perform(get("/api/users/1"))
                     .andExpect(status().isOk())
@@ -193,7 +193,7 @@ class UserControllerTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 404 when user not found")
         void notFound() throws Exception {
-            when(userService.getUserById(999L))
+            when(userService.getUserById(java.util.UUID.randomUUID()))
                     .thenThrow(new ResourceNotFoundException("User not found"));
 
             mockMvc.perform(get("/api/users/999"))
@@ -234,7 +234,7 @@ class UserControllerTest {
         @DisplayName("returns 200 with updated profile")
         void success() throws Exception {
             UpdateEmailRequest req = request("new@example.com", "Password1!");
-            UserResponse response = buildResponse(1L, "new@example.com");
+            UserResponse response = buildResponse(java.util.UUID.randomUUID(), "new@example.com");
             when(userService.updateEmail(any(), any())).thenReturn(response);
 
             mockMvc.perform(put("/api/users/me/email")
@@ -342,8 +342,8 @@ class UserControllerTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 200 with updated user")
         void success() throws Exception {
-            UserResponse response = buildResponse(2L, "bob@example.com");
-            when(userService.updateUserRole(eq(2L), eq("ADMIN"), any())).thenReturn(response);
+            UserResponse response = buildResponse(java.util.UUID.randomUUID(), "bob@example.com");
+            when(userService.updateUserRole(eq(java.util.UUID.randomUUID()), eq("ADMIN"), any())).thenReturn(response);
 
             mockMvc.perform(put("/api/users/2/role")
                             .param("role", "ADMIN"))
@@ -355,7 +355,7 @@ class UserControllerTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 400 for invalid role")
         void invalidRole() throws Exception {
-            when(userService.updateUserRole(eq(2L), eq("SUPERUSER"), any()))
+            when(userService.updateUserRole(eq(java.util.UUID.randomUUID()), eq("SUPERUSER"), any()))
                     .thenThrow(new InvalidRoleException("Invalid role"));
 
             mockMvc.perform(put("/api/users/2/role")
@@ -367,7 +367,7 @@ class UserControllerTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 400 when admin changes own role")
         void selfRole() throws Exception {
-            when(userService.updateUserRole(eq(1L), any(), any()))
+            when(userService.updateUserRole(eq(java.util.UUID.randomUUID()), any(), any()))
                     .thenThrow(new SelfOperationException("Cannot change own role"));
 
             mockMvc.perform(put("/api/users/1/role")
@@ -403,8 +403,8 @@ class UserControllerTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 200 on deactivate")
         void deactivate() throws Exception {
-            UserResponse response = new UserResponse(2L, "bob@example.com", "DEVELOPER", false, LocalDateTime.now());
-            when(userService.updateUserStatus(eq(2L), eq(false), any())).thenReturn(response);
+            UserResponse response = new UserResponse(java.util.UUID.randomUUID(), "bob@example.com", "DEVELOPER", false, LocalDateTime.now());
+            when(userService.updateUserStatus(eq(java.util.UUID.randomUUID()), eq(false), any())).thenReturn(response);
 
             mockMvc.perform(put("/api/users/2/status")
                             .param("active", "false"))
@@ -416,7 +416,7 @@ class UserControllerTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 400 when admin changes own status")
         void selfStatus() throws Exception {
-            when(userService.updateUserStatus(eq(1L), anyBoolean(), any()))
+            when(userService.updateUserStatus(eq(java.util.UUID.randomUUID()), anyBoolean(), any()))
                     .thenThrow(new SelfOperationException("Cannot change own status"));
 
             mockMvc.perform(put("/api/users/1/status")
@@ -476,7 +476,7 @@ class UserControllerTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 204 on success")
         void success() throws Exception {
-            doNothing().when(userService).deleteUser(eq(2L), any());
+            doNothing().when(userService).deleteUser(eq(java.util.UUID.randomUUID()), any());
 
             mockMvc.perform(delete("/api/users/2"))
                     .andExpect(status().isNoContent());
@@ -487,7 +487,7 @@ class UserControllerTest {
         @DisplayName("returns 404 when user not found")
         void notFound() throws Exception {
             doThrow(new ResourceNotFoundException("User not found"))
-                    .when(userService).deleteUser(eq(999L), any());
+                    .when(userService).deleteUser(eq(java.util.UUID.randomUUID()), any());
 
             mockMvc.perform(delete("/api/users/999"))
                     .andExpect(status().isNotFound());
@@ -498,7 +498,7 @@ class UserControllerTest {
         @DisplayName("returns 400 when user is still active")
         void activeUser() throws Exception {
             doThrow(new ActiveUserDeletionException("Cannot delete active user"))
-                    .when(userService).deleteUser(eq(2L), any());
+                    .when(userService).deleteUser(eq(java.util.UUID.randomUUID()), any());
 
             mockMvc.perform(delete("/api/users/2"))
                     .andExpect(status().isBadRequest());
@@ -509,7 +509,7 @@ class UserControllerTest {
         @DisplayName("returns 400 when admin deletes own account")
         void selfDelete() throws Exception {
             doThrow(new SelfOperationException("Cannot delete own account"))
-                    .when(userService).deleteUser(eq(1L), any());
+                    .when(userService).deleteUser(eq(java.util.UUID.randomUUID()), any());
 
             mockMvc.perform(delete("/api/users/1"))
                     .andExpect(status().isBadRequest());

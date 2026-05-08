@@ -39,7 +39,7 @@ class AllocationServiceTest {
 
     // ── Fixtures ──────────────────────────────────────────────────────────────
 
-    private Asset buildAsset(Long id, AssetStatus status) {
+    private Asset buildAsset(java.util.UUID id, AssetStatus status) {
         return Asset.builder()
                 .id(id)
                 .type(AssetType.LAPTOP)
@@ -51,7 +51,7 @@ class AllocationServiceTest {
                 .build();
     }
 
-    private User buildUser(Long id) {
+    private User buildUser(java.util.UUID id) {
         return User.builder()
                 .id(id)
                 .email("user" + id + "@example.com")
@@ -61,7 +61,7 @@ class AllocationServiceTest {
                 .build();
     }
 
-    private AssetAllocation buildAllocation(Long id, Asset asset, User user) {
+    private AssetAllocation buildAllocation(java.util.UUID id, Asset asset, User user) {
         return AssetAllocation.builder()
                 .id(id)
                 .asset(asset)
@@ -79,23 +79,26 @@ class AllocationServiceTest {
         @Test
         @DisplayName("allocates available asset to user and returns response")
         void success() {
-            Asset asset = buildAsset(1L, AssetStatus.AVAILABLE);
-            User user = buildUser(2L);
-            AssetAllocation allocation = buildAllocation(10L, asset, user);
+            Asset asset = buildAsset(java.util.UUID.randomUUID(), AssetStatus.AVAILABLE);
+            User user = buildUser(java.util.UUID.randomUUID());
+            AssetAllocation allocation = buildAllocation(java.util.UUID.randomUUID(), asset, user);
             AllocationResponseDto response = AllocationResponseDto.builder()
-                    .id(10L).assetId(1L).userId(2L).build();
+                    .id(java.util.UUID.randomUUID())
+                    .asset(com.assettrack.dto.asset.AssetResponse.builder().id(asset.getId()).build())
+                    .user(com.assettrack.dto.user.UserResponse.builder().id(user.getId()).build())
+                    .build();
 
             AllocationRequestDto dto = AllocationRequestDto.builder()
-                    .assetId(1L).userId(2L).build();
+                    .assetId(java.util.UUID.randomUUID()).userId(java.util.UUID.randomUUID()).build();
 
-            when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
-            when(userRepository.findById(2L)).thenReturn(Optional.of(user));
+            when(assetRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(asset));
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
             when(allocationRepository.save(any())).thenReturn(allocation);
             when(allocationMapper.toResponseDto(any(AssetAllocation.class))).thenReturn(response);
 
             AllocationResponseDto result = allocationService.allocate(dto);
 
-            assertThat(result.getId()).isEqualTo(10L);
+            assertThat(result.getId()).isEqualTo(java.util.UUID.randomUUID());
             assertThat(asset.getStatus()).isEqualTo(AssetStatus.ALLOCATED);
             verify(assetRepository).save(asset);
             verify(allocationRepository).save(any(AssetAllocation.class));
@@ -104,10 +107,10 @@ class AllocationServiceTest {
         @Test
         @DisplayName("throws ResourceNotFoundException when asset not found")
         void assetNotFound() {
-            when(assetRepository.findById(99L)).thenReturn(Optional.empty());
+            when(assetRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.empty());
 
             AllocationRequestDto dto = AllocationRequestDto.builder()
-                    .assetId(99L).userId(1L).build();
+                    .assetId(java.util.UUID.randomUUID()).userId(java.util.UUID.randomUUID()).build();
 
             assertThatThrownBy(() -> allocationService.allocate(dto))
                     .isInstanceOf(ResourceNotFoundException.class)
@@ -117,11 +120,11 @@ class AllocationServiceTest {
         @Test
         @DisplayName("throws ConflictException when asset is not AVAILABLE")
         void assetNotAvailable() {
-            Asset asset = buildAsset(1L, AssetStatus.ALLOCATED);
-            when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
+            Asset asset = buildAsset(java.util.UUID.randomUUID(), AssetStatus.ALLOCATED);
+            when(assetRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(asset));
 
             AllocationRequestDto dto = AllocationRequestDto.builder()
-                    .assetId(1L).userId(2L).build();
+                    .assetId(java.util.UUID.randomUUID()).userId(java.util.UUID.randomUUID()).build();
 
             assertThatThrownBy(() -> allocationService.allocate(dto))
                     .isInstanceOf(ConflictException.class)
@@ -131,12 +134,12 @@ class AllocationServiceTest {
         @Test
         @DisplayName("throws ResourceNotFoundException when user not found")
         void userNotFound() {
-            Asset asset = buildAsset(1L, AssetStatus.AVAILABLE);
-            when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
-            when(userRepository.findById(99L)).thenReturn(Optional.empty());
+            Asset asset = buildAsset(java.util.UUID.randomUUID(), AssetStatus.AVAILABLE);
+            when(assetRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(asset));
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.empty());
 
             AllocationRequestDto dto = AllocationRequestDto.builder()
-                    .assetId(1L).userId(99L).build();
+                    .assetId(java.util.UUID.randomUUID()).userId(java.util.UUID.randomUUID()).build();
 
             assertThatThrownBy(() -> allocationService.allocate(dto))
                     .isInstanceOf(ResourceNotFoundException.class)
@@ -153,15 +156,15 @@ class AllocationServiceTest {
         @Test
         @DisplayName("sets returnDate, marks asset AVAILABLE, and saves both")
         void success() {
-            Asset asset = buildAsset(1L, AssetStatus.ALLOCATED);
-            User user = buildUser(2L);
-            AssetAllocation allocation = buildAllocation(10L, asset, user);
+            Asset asset = buildAsset(java.util.UUID.randomUUID(), AssetStatus.ALLOCATED);
+            User user = buildUser(java.util.UUID.randomUUID());
+            AssetAllocation allocation = buildAllocation(java.util.UUID.randomUUID(), asset, user);
 
-            when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
-            when(allocationRepository.findByAssetIdAndReturnDateIsNull(1L))
+            when(assetRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(asset));
+            when(allocationRepository.findByAssetIdAndReturnDateIsNull(java.util.UUID.randomUUID()))
                     .thenReturn(Optional.of(allocation));
 
-            allocationService.deallocate(1L);
+            allocationService.deallocate(java.util.UUID.randomUUID());
 
             assertThat(asset.getStatus()).isEqualTo(AssetStatus.AVAILABLE);
             assertThat(allocation.getReturnDate()).isNotNull();
@@ -172,19 +175,19 @@ class AllocationServiceTest {
         @Test
         @DisplayName("throws ResourceNotFoundException when asset not found")
         void assetNotFound() {
-            when(assetRepository.findById(99L)).thenReturn(Optional.empty());
+            when(assetRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> allocationService.deallocate(99L))
+            assertThatThrownBy(() -> allocationService.deallocate(java.util.UUID.randomUUID()))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
 
         @Test
         @DisplayName("throws ConflictException when asset is not ALLOCATED")
         void assetNotAllocated() {
-            Asset asset = buildAsset(1L, AssetStatus.AVAILABLE);
-            when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
+            Asset asset = buildAsset(java.util.UUID.randomUUID(), AssetStatus.AVAILABLE);
+            when(assetRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(asset));
 
-            assertThatThrownBy(() -> allocationService.deallocate(1L))
+            assertThatThrownBy(() -> allocationService.deallocate(java.util.UUID.randomUUID()))
                     .isInstanceOf(ConflictException.class)
                     .hasMessageContaining("not currently allocated");
         }
@@ -192,12 +195,12 @@ class AllocationServiceTest {
         @Test
         @DisplayName("throws ResourceNotFoundException when no active allocation found")
         void noActiveAllocation() {
-            Asset asset = buildAsset(1L, AssetStatus.ALLOCATED);
-            when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
-            when(allocationRepository.findByAssetIdAndReturnDateIsNull(1L))
+            Asset asset = buildAsset(java.util.UUID.randomUUID(), AssetStatus.ALLOCATED);
+            when(assetRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(asset));
+            when(allocationRepository.findByAssetIdAndReturnDateIsNull(java.util.UUID.randomUUID()))
                     .thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> allocationService.deallocate(1L))
+            assertThatThrownBy(() -> allocationService.deallocate(java.util.UUID.randomUUID()))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("No active allocation");
         }
@@ -212,42 +215,44 @@ class AllocationServiceTest {
         @Test
         @DisplayName("returns history list for existing asset")
         void success() {
-            Asset asset = buildAsset(1L, AssetStatus.AVAILABLE);
-            User user = buildUser(2L);
-            AssetAllocation allocation = buildAllocation(10L, asset, user);
+            Asset asset = buildAsset(java.util.UUID.randomUUID(), AssetStatus.AVAILABLE);
+            User user = buildUser(java.util.UUID.randomUUID());
+            AssetAllocation allocation = buildAllocation(java.util.UUID.randomUUID(), asset, user);
             AllocationHistoryDto dto = AllocationHistoryDto.builder()
-                    .id(10L).userId(2L).userEmail("user2@example.com").build();
+                    .id(java.util.UUID.randomUUID())
+                    .user(com.assettrack.dto.user.UserResponse.builder().id(user.getId()).email("user2@example.com").build())
+                    .build();
 
-            when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
-            when(allocationRepository.findByAssetIdOrderByCheckoutDateDesc(1L))
+            when(assetRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(asset));
+            when(allocationRepository.findByAssetIdOrderByCheckoutDateDesc(java.util.UUID.randomUUID()))
                     .thenReturn(List.of(allocation));
             when(allocationMapper.toHistoryDtoList(List.of(allocation)))
                     .thenReturn(List.of(dto));
 
-            List<AllocationHistoryDto> result = allocationService.getAllocationHistory(1L);
+            List<AllocationHistoryDto> result = allocationService.getAllocationHistory(java.util.UUID.randomUUID());
 
             assertThat(result).hasSize(1);
-            assertThat(result.get(0).getId()).isEqualTo(10L);
+            assertThat(result.get(0).getId()).isEqualTo(java.util.UUID.randomUUID());
         }
 
         @Test
         @DisplayName("returns empty list when asset has never been allocated")
         void empty() {
-            Asset asset = buildAsset(1L, AssetStatus.AVAILABLE);
-            when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
-            when(allocationRepository.findByAssetIdOrderByCheckoutDateDesc(1L))
+            Asset asset = buildAsset(java.util.UUID.randomUUID(), AssetStatus.AVAILABLE);
+            when(assetRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(asset));
+            when(allocationRepository.findByAssetIdOrderByCheckoutDateDesc(java.util.UUID.randomUUID()))
                     .thenReturn(List.of());
             when(allocationMapper.toHistoryDtoList(List.of())).thenReturn(List.of());
 
-            assertThat(allocationService.getAllocationHistory(1L)).isEmpty();
+            assertThat(allocationService.getAllocationHistory(java.util.UUID.randomUUID())).isEmpty();
         }
 
         @Test
         @DisplayName("throws ResourceNotFoundException when asset not found")
         void assetNotFound() {
-            when(assetRepository.findById(99L)).thenReturn(Optional.empty());
+            when(assetRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> allocationService.getAllocationHistory(99L))
+            assertThatThrownBy(() -> allocationService.getAllocationHistory(java.util.UUID.randomUUID()))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
     }

@@ -8,20 +8,11 @@ import org.mapstruct.Mapping;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {com.assettrack.mapper.user.UserMapper.class, com.assettrack.mapper.asset.AssetMapper.class})
 public interface AllocationMapper {
 
-    @Mapping(source = "user.id", target = "userId")
-    @Mapping(source = "user.email", target = "userEmail")
-    @Mapping(source = "asset.id", target = "assetId")
-    @Mapping(source = "asset.type", target = "type")
-    @Mapping(source = "asset.brand", target = "brand")
-    @Mapping(source = "asset.model", target = "model")
-    @Mapping(source = "asset.serialNumber", target = "serialNumber")
     AllocationResponseDto toResponseDto(AssetAllocation allocation);
 
-    @Mapping(source = "user.id", target = "userId")
-    @Mapping(source = "user.email", target = "userEmail")
     AllocationHistoryDto toHistoryDto(AssetAllocation allocation);
 
     List<AllocationHistoryDto> toHistoryDtoList(List<AssetAllocation> allocations);

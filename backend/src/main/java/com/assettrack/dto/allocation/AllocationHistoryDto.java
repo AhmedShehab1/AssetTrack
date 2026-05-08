@@ -12,11 +12,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class AllocationHistoryDto {
-    private Long id;
+    private java.util.UUID id;
 
-    private Long  userId;
-
-    private String userEmail;
+    private com.assettrack.dto.user.UserResponse user;
 
     private LocalDateTime checkoutDate;
 

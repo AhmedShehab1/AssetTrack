@@ -37,7 +37,7 @@ class UserServiceTest {
 
     @InjectMocks UserService userService;
 
-    private User buildUser(Long id, String email) {
+    private User buildUser(java.util.UUID id, String email) {
         User u = new User();
         u.setId(id);
         u.setEmail(email);
@@ -47,8 +47,8 @@ class UserServiceTest {
         return u;
     }
 
-    private UserResponse buildResponse(Long id, String email) {
-        return new UserResponse(id, email, "DEVELOPER", true, LocalDateTime.now());
+    private UserResponse buildResponse(java.util.UUID id, String email) {
+        return new UserResponse(id, email, "DEVELOPER", true, LocalDateTime.now(, java.time.LocalDateTime.now(), "Test User"));
     }
 
     // ── getMyProfile() ────────────────────────────────────────────────────────
@@ -60,11 +60,11 @@ class UserServiceTest {
         @Test
         @DisplayName("returns profile of authenticated user")
         void success() {
-            User user = buildUser(1L, "alice@example.com");
-            UserResponse expected = buildResponse(1L, "alice@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "alice@example.com");
+            UserResponse expected = buildResponse(java.util.UUID.randomUUID(), "alice@example.com");
 
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
             when(userMapper.toResponse(user)).thenReturn(expected);
 
             UserResponse result = userService.getMyProfile(authentication);
@@ -75,8 +75,8 @@ class UserServiceTest {
         @Test
         @DisplayName("throws ResourceNotFoundException when user not found")
         void notFound() {
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(99L);
-            when(userRepository.findById(99L)).thenReturn(Optional.empty());
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> userService.getMyProfile(authentication))
                     .isInstanceOf(ResourceNotFoundException.class);
@@ -92,8 +92,8 @@ class UserServiceTest {
         @Test
         @DisplayName("returns paginated list of all users")
         void success() {
-            User user = buildUser(1L, "alice@example.com");
-            UserResponse response = buildResponse(1L, "alice@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "alice@example.com");
+            UserResponse response = buildResponse(java.util.UUID.randomUUID(), "alice@example.com");
             Pageable pageable = PageRequest.of(0, 10);
             Page<User> page = new PageImpl<>(List.of(user), pageable, 1);
 
@@ -127,9 +127,9 @@ class UserServiceTest {
         @Test
         @DisplayName("returns only inactive users")
         void success() {
-            User inactive = buildUser(2L, "bob@example.com");
+            User inactive = buildUser(java.util.UUID.randomUUID(), "bob@example.com");
             inactive.setActive(false);
-            UserResponse response = new UserResponse(2L, "bob@example.com", "DEVELOPER", false, LocalDateTime.now());
+            UserResponse response = new UserResponse(java.util.UUID.randomUUID(), "bob@example.com", "DEVELOPER", false, LocalDateTime.now(, java.time.LocalDateTime.now(), "Test User"));
             Pageable pageable = PageRequest.of(0, 10);
             Page<User> page = new PageImpl<>(List.of(inactive), pageable, 1);
 
@@ -163,13 +163,13 @@ class UserServiceTest {
         @Test
         @DisplayName("returns user for valid id")
         void success() {
-            User user = buildUser(1L, "alice@example.com");
-            UserResponse expected = buildResponse(1L, "alice@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "alice@example.com");
+            UserResponse expected = buildResponse(java.util.UUID.randomUUID(), "alice@example.com");
 
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
             when(userMapper.toResponse(user)).thenReturn(expected);
 
-            UserResponse result = userService.getUserById(1L);
+            UserResponse result = userService.getUserById(java.util.UUID.randomUUID());
 
             assertThat(result).isEqualTo(expected);
         }
@@ -177,9 +177,9 @@ class UserServiceTest {
         @Test
         @DisplayName("throws ResourceNotFoundException for unknown id")
         void notFound() {
-            when(userRepository.findById(999L)).thenReturn(Optional.empty());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> userService.getUserById(999L))
+            assertThatThrownBy(() -> userService.getUserById(java.util.UUID.randomUUID()))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
     }
@@ -200,12 +200,12 @@ class UserServiceTest {
         @Test
         @DisplayName("updates email successfully")
         void success() {
-            User user = buildUser(1L, "old@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "old@example.com");
             UpdateEmailRequest req = request("new@example.com", "Password1");
-            UserResponse expected = buildResponse(1L, "new@example.com");
+            UserResponse expected = buildResponse(java.util.UUID.randomUUID(), "new@example.com");
 
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("Password1", "hashed")).thenReturn(true);
             when(userRepository.existsByEmail("new@example.com")).thenReturn(false);
             when(userRepository.save(any())).thenReturn(user);
@@ -220,11 +220,11 @@ class UserServiceTest {
         @Test
         @DisplayName("throws InvalidPasswordException on wrong password")
         void wrongPassword() {
-            User user = buildUser(1L, "old@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "old@example.com");
             UpdateEmailRequest req = request("new@example.com", "WrongPass");
 
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("WrongPass", "hashed")).thenReturn(false);
 
             assertThatThrownBy(() -> userService.updateEmail(req, authentication))
@@ -236,11 +236,11 @@ class UserServiceTest {
         @Test
         @DisplayName("throws EmailAlreadyExistsException when new email is taken")
         void emailTaken() {
-            User user = buildUser(1L, "old@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "old@example.com");
             UpdateEmailRequest req = request("taken@example.com", "Password1");
 
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("Password1", "hashed")).thenReturn(true);
             when(userRepository.existsByEmail("taken@example.com")).thenReturn(true);
 
@@ -255,8 +255,8 @@ class UserServiceTest {
         void userNotFound() {
             UpdateEmailRequest req = request("new@example.com", "Password1");
 
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(99L);
-            when(userRepository.findById(99L)).thenReturn(Optional.empty());
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> userService.updateEmail(req, authentication))
                     .isInstanceOf(ResourceNotFoundException.class);
@@ -279,11 +279,11 @@ class UserServiceTest {
         @Test
         @DisplayName("encodes and saves new password")
         void success() {
-            User user = buildUser(1L, "alice@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "alice@example.com");
             UpdatePasswordRequest req = request("Password1", "NewPassword1");
 
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("Password1", "hashed")).thenReturn(true);
             when(passwordEncoder.encode("NewPassword1")).thenReturn("new-hashed");
 
@@ -296,11 +296,11 @@ class UserServiceTest {
         @Test
         @DisplayName("throws InvalidPasswordException on wrong current password")
         void wrongPassword() {
-            User user = buildUser(1L, "alice@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "alice@example.com");
             UpdatePasswordRequest req = request("WrongPass", "NewPassword1");
 
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
             when(passwordEncoder.matches("WrongPass", "hashed")).thenReturn(false);
 
             assertThatThrownBy(() -> userService.updatePassword(req, authentication))
@@ -314,8 +314,8 @@ class UserServiceTest {
         void userNotFound() {
             UpdatePasswordRequest req = request("Password1", "NewPassword1");
 
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(99L);
-            when(userRepository.findById(99L)).thenReturn(Optional.empty());
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> userService.updatePassword(req, authentication))
                     .isInstanceOf(ResourceNotFoundException.class);
@@ -331,15 +331,15 @@ class UserServiceTest {
         @Test
         @DisplayName("updates role successfully")
         void success() {
-            User user = buildUser(2L, "bob@example.com");
-            UserResponse expected = buildResponse(2L, "bob@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "bob@example.com");
+            UserResponse expected = buildResponse(java.util.UUID.randomUUID(), "bob@example.com");
 
-            when(userRepository.findById(2L)).thenReturn(Optional.of(user));
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
             when(userRepository.save(any())).thenReturn(user);
             when(userMapper.toResponse(user)).thenReturn(expected);
 
-            UserResponse result = userService.updateUserRole(2L, "ADMIN", authentication);
+            UserResponse result = userService.updateUserRole(java.util.UUID.randomUUID(), "ADMIN", authentication);
 
             assertThat(user.getRole()).isEqualTo(Role.ADMIN);
             assertThat(result).isEqualTo(expected);
@@ -348,48 +348,48 @@ class UserServiceTest {
         @Test
         @DisplayName("throws InvalidRoleException for unknown role")
         void invalidRole() {
-            User user = buildUser(2L, "bob@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "bob@example.com");
 
-            when(userRepository.findById(2L)).thenReturn(Optional.of(user));
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
 
-            assertThatThrownBy(() -> userService.updateUserRole(2L, "SUPERUSER", authentication))
+            assertThatThrownBy(() -> userService.updateUserRole(java.util.UUID.randomUUID(), "SUPERUSER", authentication))
                     .isInstanceOf(InvalidRoleException.class);
         }
 
         @Test
         @DisplayName("throws SelfOperationException when admin changes own role")
         void selfRole() {
-            User user = buildUser(1L, "admin@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "admin@example.com");
 
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
 
-            assertThatThrownBy(() -> userService.updateUserRole(1L, "MANAGER", authentication))
+            assertThatThrownBy(() -> userService.updateUserRole(java.util.UUID.randomUUID(), "MANAGER", authentication))
                     .isInstanceOf(SelfOperationException.class);
         }
 
         @Test
         @DisplayName("throws ResourceNotFoundException when target user not found")
         void userNotFound() {
-            when(userRepository.findById(999L)).thenReturn(Optional.empty());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> userService.updateUserRole(999L, "ADMIN", authentication))
+            assertThatThrownBy(() -> userService.updateUserRole(java.util.UUID.randomUUID(), "ADMIN", authentication))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
 
         @Test
         @DisplayName("role matching is case-insensitive")
         void caseInsensitiveRole() {
-            User user = buildUser(2L, "bob@example.com");
-            UserResponse expected = buildResponse(2L, "bob@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "bob@example.com");
+            UserResponse expected = buildResponse(java.util.UUID.randomUUID(), "bob@example.com");
 
-            when(userRepository.findById(2L)).thenReturn(Optional.of(user));
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
             when(userRepository.save(any())).thenReturn(user);
             when(userMapper.toResponse(user)).thenReturn(expected);
 
-            userService.updateUserRole(2L, "admin", authentication);
+            userService.updateUserRole(java.util.UUID.randomUUID(), "admin", authentication);
 
             assertThat(user.getRole()).isEqualTo(Role.ADMIN);
         }
@@ -404,15 +404,15 @@ class UserServiceTest {
         @Test
         @DisplayName("deactivates user successfully")
         void deactivate() {
-            User user = buildUser(2L, "bob@example.com");
-            UserResponse expected = buildResponse(2L, "bob@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "bob@example.com");
+            UserResponse expected = buildResponse(java.util.UUID.randomUUID(), "bob@example.com");
 
-            when(userRepository.findById(2L)).thenReturn(Optional.of(user));
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
             when(userRepository.save(any())).thenReturn(user);
             when(userMapper.toResponse(user)).thenReturn(expected);
 
-            userService.updateUserStatus(2L, false, authentication);
+            userService.updateUserStatus(java.util.UUID.randomUUID(), false, authentication);
 
             assertThat(user.isActive()).isFalse();
             verify(userRepository).save(user);
@@ -421,16 +421,16 @@ class UserServiceTest {
         @Test
         @DisplayName("activates user successfully")
         void activate() {
-            User user = buildUser(2L, "bob@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "bob@example.com");
             user.setActive(false);
-            UserResponse expected = buildResponse(2L, "bob@example.com");
+            UserResponse expected = buildResponse(java.util.UUID.randomUUID(), "bob@example.com");
 
-            when(userRepository.findById(2L)).thenReturn(Optional.of(user));
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
             when(userRepository.save(any())).thenReturn(user);
             when(userMapper.toResponse(user)).thenReturn(expected);
 
-            userService.updateUserStatus(2L, true, authentication);
+            userService.updateUserStatus(java.util.UUID.randomUUID(), true, authentication);
 
             assertThat(user.isActive()).isTrue();
             verify(userRepository).save(user);
@@ -439,21 +439,21 @@ class UserServiceTest {
         @Test
         @DisplayName("throws SelfOperationException when admin changes own status")
         void selfStatus() {
-            User user = buildUser(1L, "admin@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "admin@example.com");
 
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
 
-            assertThatThrownBy(() -> userService.updateUserStatus(1L, false, authentication))
+            assertThatThrownBy(() -> userService.updateUserStatus(java.util.UUID.randomUUID(), false, authentication))
                     .isInstanceOf(SelfOperationException.class);
         }
 
         @Test
         @DisplayName("throws ResourceNotFoundException when target user not found")
         void userNotFound() {
-            when(userRepository.findById(999L)).thenReturn(Optional.empty());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> userService.updateUserStatus(999L, false, authentication))
+            assertThatThrownBy(() -> userService.updateUserStatus(java.util.UUID.randomUUID(), false, authentication))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
     }
@@ -467,13 +467,13 @@ class UserServiceTest {
         @Test
         @DisplayName("hard-deletes inactive user")
         void success() {
-            User user = buildUser(2L, "bob@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "bob@example.com");
             user.setActive(false);
 
-            when(userRepository.findById(2L)).thenReturn(Optional.of(user));
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
 
-            userService.deleteUser(2L, authentication);
+            userService.deleteUser(java.util.UUID.randomUUID(), authentication);
 
             verify(userRepository).delete(user);
         }
@@ -481,13 +481,13 @@ class UserServiceTest {
         @Test
         @DisplayName("throws ActiveUserDeletionException when user is still active")
         void activeUser() {
-            User user = buildUser(2L, "bob@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "bob@example.com");
             user.setActive(true);
 
-            when(userRepository.findById(2L)).thenReturn(Optional.of(user));
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
 
-            assertThatThrownBy(() -> userService.deleteUser(2L, authentication))
+            assertThatThrownBy(() -> userService.deleteUser(java.util.UUID.randomUUID(), authentication))
                     .isInstanceOf(ActiveUserDeletionException.class);
 
             verify(userRepository, never()).delete(any());
@@ -496,21 +496,21 @@ class UserServiceTest {
         @Test
         @DisplayName("throws SelfOperationException when admin deletes own account")
         void selfDelete() {
-            User user = buildUser(1L, "admin@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "admin@example.com");
 
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
 
-            assertThatThrownBy(() -> userService.deleteUser(1L, authentication))
+            assertThatThrownBy(() -> userService.deleteUser(java.util.UUID.randomUUID(), authentication))
                     .isInstanceOf(SelfOperationException.class);
         }
 
         @Test
         @DisplayName("throws ResourceNotFoundException when target user not found")
         void userNotFound() {
-            when(userRepository.findById(999L)).thenReturn(Optional.empty());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> userService.deleteUser(999L, authentication))
+            assertThatThrownBy(() -> userService.deleteUser(java.util.UUID.randomUUID(), authentication))
                     .isInstanceOf(ResourceNotFoundException.class);
         }
     }
@@ -524,10 +524,10 @@ class UserServiceTest {
         @Test
         @DisplayName("soft-deletes by setting active=false")
         void success() {
-            User user = buildUser(1L, "alice@example.com");
+            User user = buildUser(java.util.UUID.randomUUID(), "alice@example.com");
 
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(1L);
-            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.of(user));
 
             userService.deleteSelf(authentication);
 
@@ -538,8 +538,8 @@ class UserServiceTest {
         @Test
         @DisplayName("throws ResourceNotFoundException when user not found")
         void userNotFound() {
-            when(securityUtils.getCurrentUserId(authentication)).thenReturn(99L);
-            when(userRepository.findById(99L)).thenReturn(Optional.empty());
+            when(securityUtils.getCurrentUserId(authentication)).thenReturn(java.util.UUID.randomUUID());
+            when(userRepository.findById(java.util.UUID.randomUUID())).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> userService.deleteSelf(authentication))
                     .isInstanceOf(ResourceNotFoundException.class);

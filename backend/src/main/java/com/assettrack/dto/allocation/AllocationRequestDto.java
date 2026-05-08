@@ -13,8 +13,8 @@ import lombok.NoArgsConstructor;
 public class AllocationRequestDto {
 
     @NotNull
-    private Long assetId;
+    private java.util.UUID assetId;
 
     @NotNull
-    private Long userId;
+    private java.util.UUID userId;
 }

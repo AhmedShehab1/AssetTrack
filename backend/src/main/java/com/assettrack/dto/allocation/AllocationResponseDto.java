@@ -13,21 +13,11 @@ import java.time.LocalDateTime;
 @Builder
 public class AllocationResponseDto {
 
-    private Long id;
+    private java.util.UUID id;
 
-    private long userId;
+    private com.assettrack.dto.user.UserResponse user;
 
-    private String userEmail;
-
-    private Long assetId;
-
-    private AssetType type;
-
-    private String brand;
-
-    private String model;
-
-    private String serialNumber;
+    private com.assettrack.dto.asset.AssetResponse asset;
 
     private LocalDateTime checkoutDate;
 
