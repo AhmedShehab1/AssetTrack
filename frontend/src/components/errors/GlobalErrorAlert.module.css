@@ -1,0 +1,50 @@
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid transparent;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.alert--network { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+.alert--auth { background: #fff7ed; border-color: #fdba74; color: #7c2d12; }
+.alert--info { background: #eff6ff; border-color: #93c5fd; color: #1e3a8a; }
+.alert--warning { background: #fffbeb; border-color: #fcd34d; color: #78350f; }
+.alert--server { background: #fef2f2; border-color: #fca5a5; color: #7f1d1d; }
+.alert--error { background: #fff1f2; border-color: #fda4af; color: #881337; }
+
+.alert__icon {
+  flex: 0 0 auto;
+  font-size: 1.1rem;
+  line-height: 1;
+  margin-top: 0.1rem;
+}
+
+.alert__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.alert__message {
+  margin: 0;
+  font-weight: 600;
+}
+
+.alert__detail {
+  margin: 0.35rem 0 0;
+  font-size: 0.925rem;
+  opacity: 0.85;
+}
+
+.alert__dismiss {
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0.125rem 0.25rem;
+  cursor: pointer;
+}
