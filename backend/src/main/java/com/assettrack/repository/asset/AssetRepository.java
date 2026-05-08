@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AssetRepository extends JpaRepository<Asset, Long>, JpaSpecificationExecutor<Asset> {
+public interface AssetRepository extends JpaRepository<Asset, java.util.UUID>, JpaSpecificationExecutor<Asset> {
 
     Optional<Asset> findBySerialNumber(String serialNumber);
 

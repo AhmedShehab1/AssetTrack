@@ -1,5 +1,6 @@
 package com.assettrack.service.dashboard;
 
+import java.util.UUID;
 import com.assettrack.domain.asset.Asset;
 import com.assettrack.domain.asset.AssetStatus;
 import com.assettrack.domain.asset.AssetType;
@@ -99,15 +100,15 @@ public class DashboardIntegrationTest {
 
         assertThat(summary.getTotalAssets()).isEqualTo(3L);
 
-        List<String> statusLabels = summary.getStatusDistribution().getLabels();
-        List<Long> statusData = summary.getStatusDistribution().getData();
+        List<String> statusLabels = summary.getByStatus().stream().map(DashboardSummaryDto.StatusCountDto::getStatus).toList();
+        List<Long> statusData = summary.getByStatus().stream().map(DashboardSummaryDto.StatusCountDto::getCount).toList();
         assertThat(statusLabels).containsExactly("AVAILABLE", "ALLOCATED", "EXPIRED");
         assertThat(statusData.get(statusLabels.indexOf("AVAILABLE"))).isEqualTo(2L);
         assertThat(statusData.get(statusLabels.indexOf("ALLOCATED"))).isEqualTo(1L);
         assertThat(statusData.get(statusLabels.indexOf("EXPIRED"))).isEqualTo(0L);
 
-        List<String> typeLabels = summary.getTypeDistribution().getLabels();
-        List<Long> typeData = summary.getTypeDistribution().getData();
+        List<String> typeLabels = summary.getByType().stream().map(DashboardSummaryDto.TypeCountDto::getType).toList();
+        List<Long> typeData = summary.getByType().stream().map(DashboardSummaryDto.TypeCountDto::getCount).toList();
         assertThat(typeLabels).containsExactly("LAPTOP", "SCREEN", "ACCESSORY");
         assertThat(typeData.get(typeLabels.indexOf("LAPTOP"))).isEqualTo(2L);
         assertThat(typeData.get(typeLabels.indexOf("SCREEN"))).isEqualTo(1L);

@@ -19,17 +19,17 @@ public class SecurityUtils {
      * Extract current user ID from JWT authentication.
      * Handles both Long and String representations of userId in the JWT claim.
      */
-    public Long getCurrentUserId(Authentication authentication) {
+    public java.util.UUID getCurrentUserId(Authentication authentication) {
         if (authentication instanceof JwtAuthenticationToken jwtAuth) {
             Jwt jwt = jwtAuth.getToken();
             Object userIdClaim = jwt.getClaim("userId");
-            if (userIdClaim instanceof Number number) {
-                return number.longValue();
+            if (userIdClaim instanceof java.util.UUID uuid) {
+                return uuid;
             }
             if (userIdClaim instanceof String userIdStr) {
                 try {
-                    return Long.parseLong(userIdStr);
-                } catch (NumberFormatException e) {
+                    return java.util.UUID.fromString(userIdStr);
+                } catch (IllegalArgumentException e) {
                     throw new RuntimeException("Invalid user ID in token: " + userIdStr);
                 }
             }

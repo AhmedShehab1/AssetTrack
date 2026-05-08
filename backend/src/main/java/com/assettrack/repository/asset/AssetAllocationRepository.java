@@ -8,10 +8,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AssetAllocationRepository extends JpaRepository<AssetAllocation, Long> {
+public interface AssetAllocationRepository extends JpaRepository<AssetAllocation, java.util.UUID> {
 
     List<AssetAllocation> findByAssetIdOrderByCheckoutDateDesc(Long assetId);
     Optional<AssetAllocation> findByAssetIdAndReturnDateIsNull(Long assetId);
+    List<AssetAllocation> findByAssetIdOrderByCheckoutDateDesc(java.util.UUID assetId);
 
-    boolean existsByAssetIdAndUserIdAndReturnDateIsNull(Long assetId, Long userId);
+    boolean existsByAssetIdAndUserIdAndReturnDateIsNull(java.util.UUID assetId, java.util.UUID userId);
 }

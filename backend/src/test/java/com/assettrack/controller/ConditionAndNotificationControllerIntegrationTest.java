@@ -100,13 +100,14 @@ class ConditionAndNotificationControllerIntegrationTest {
                 .checkoutDate(LocalDateTime.now())
                 .build());
 
-        mockMvc.perform(post("/api/assets/{id}/condition", unownedAsset.getId())
+        mockMvc.perform(post("/api/v1/assets/{id}/condition", unownedAsset.getId())
+                        .contextPath("/api/v1")
                         .with(jwt().jwt(token -> token
                                         .claim("userId", currentUser.getId())
                                         .claim("role", "ROLE_DEVELOPER"))
                                 .authorities(new SimpleGrantedAuthority("ROLE_DEVELOPER")))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"issueDescription\":\"Screen flickers intermittently\"}"))
+                        .content("{\"issueDescription\":\"Screen flickers intermittently\", \"severity\":\"MEDIUM\"}"))
                 .andExpect(status().isForbidden());
     }
 
@@ -128,7 +129,8 @@ class ConditionAndNotificationControllerIntegrationTest {
                 .createdAt(LocalDateTime.now())
                 .build());
 
-        mockMvc.perform(get("/api/notifications")
+        mockMvc.perform(get("/api/v1/notifications")
+                        .contextPath("/api/v1")
                         .with(jwt().jwt(token -> token
                                         .claim("userId", currentUser.getId())
                                         .claim("role", "ROLE_DEVELOPER"))
@@ -157,13 +159,14 @@ class ConditionAndNotificationControllerIntegrationTest {
                 .createdAt(LocalDateTime.now())
                 .build());
 
-        mockMvc.perform(patch("/api/notifications/{notificationId}/read", ownNotification.getId())
+        mockMvc.perform(patch("/api/v1/notifications/{notificationId}/read", ownNotification.getId())
+                        .contextPath("/api/v1")
                         .with(jwt().jwt(token -> token
                                         .claim("userId", currentUser.getId())
                                         .claim("role", "ROLE_DEVELOPER"))
                                 .authorities(new SimpleGrantedAuthority("ROLE_DEVELOPER"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(ownNotification.getId()))
+                .andExpect(jsonPath("$.id").value(ownNotification.getId().toString()))
                 .andExpect(jsonPath("$.recipient").value(currentUser.getEmail()))
                 .andExpect(jsonPath("$.read").value(true));
 
@@ -185,7 +188,8 @@ class ConditionAndNotificationControllerIntegrationTest {
                 .createdAt(LocalDateTime.now())
                 .build());
 
-        mockMvc.perform(patch("/api/notifications/{notificationId}/read", otherNotification.getId())
+        mockMvc.perform(patch("/api/v1/notifications/{notificationId}/read", otherNotification.getId())
+                        .contextPath("/api/v1")
                         .with(jwt().jwt(token -> token
                                         .claim("userId", currentUser.getId())
                                         .claim("role", "ROLE_DEVELOPER"))

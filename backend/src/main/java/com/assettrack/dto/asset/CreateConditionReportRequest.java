@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class CreateConditionReportRequest {
 
     @NotNull(message = "Asset ID is required")
-    private Long assetId;
+    private java.util.UUID assetId;
 
     @NotBlank(message = "Issue description is required")
     private String issueDescription;

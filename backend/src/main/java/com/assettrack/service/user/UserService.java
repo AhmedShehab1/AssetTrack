@@ -33,7 +33,7 @@ public class UserService {
      * @throws ResourceNotFoundException if the authenticated user no longer exists
      */
     public UserResponse getMyProfile(Authentication authentication) {
-        long currentId = securityUtils.getCurrentUserId(authentication);
+        java.util.UUID currentId = securityUtils.getCurrentUserId(authentication);
         User user = userRepository.findById(currentId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentId));
         return userMapper.toResponse(user);
@@ -69,7 +69,7 @@ public class UserService {
      * @return the {@link UserResponse} DTO
      * @throws ResourceNotFoundException if no user exists with the given ID
      */
-    public UserResponse getUserById(Long id){
+    public UserResponse getUserById(java.util.UUID id){
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         return userMapper.toResponse(user);
@@ -87,7 +87,7 @@ public class UserService {
      * @throws EmailAlreadyExistsException if the new email is already in use
      */
     public UserResponse updateEmail(UpdateEmailRequest request, Authentication authentication){
-        long currentId = securityUtils.getCurrentUserId(authentication);
+        java.util.UUID currentId = securityUtils.getCurrentUserId(authentication);
         User user =  userRepository.findById(currentId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentId));
         if(!passwordEncoder.matches(request.getPassword(),user.getPasswordHash())){
@@ -112,7 +112,7 @@ public class UserService {
      * @throws InvalidPasswordException if the current password does not match
      */
     public void updatePassword(UpdatePasswordRequest request, Authentication authentication){
-        long currentId = securityUtils.getCurrentUserId(authentication);
+        java.util.UUID currentId = securityUtils.getCurrentUserId(authentication);
         User user =  userRepository.findById(currentId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentId));
         if(!passwordEncoder.matches(request.getCurrentPassword(),user.getPasswordHash())){
@@ -134,11 +134,11 @@ public class UserService {
      * @throws InvalidRoleException if the provided role string is not a valid {@link Role}
      * @throws SelfOperationException if the admin attempts to change their own role
      */
-    public UserResponse updateUserRole(Long id, String role, Authentication authentication){
+    public UserResponse updateUserRole(java.util.UUID id, String role, Authentication authentication){
 
         User user =  userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        long currentId = securityUtils.getCurrentUserId(authentication);
+        java.util.UUID currentId = securityUtils.getCurrentUserId(authentication);
         Role roleEnum;
         try {
             roleEnum = Role.valueOf(role.toUpperCase());
@@ -165,10 +165,10 @@ public class UserService {
      * @throws ResourceNotFoundException if no user exists with the given ID
      * @throws SelfOperationException if the admin attempts to change their own status
      */
-    public UserResponse updateUserStatus(Long id, boolean active, Authentication authentication){
+    public UserResponse updateUserStatus(java.util.UUID id, boolean active, Authentication authentication){
         User user =  userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        long currentId = securityUtils.getCurrentUserId(authentication);
+        java.util.UUID currentId = securityUtils.getCurrentUserId(authentication);
         if (id.equals(currentId)) {
             throw new SelfOperationException("Admin cannot change their own status");
         }
@@ -186,7 +186,7 @@ public class UserService {
      * @throws ResourceNotFoundException if the authenticated user no longer exists
      */
     public void deleteSelf(Authentication authentication){
-        long currentId = securityUtils.getCurrentUserId(authentication);
+        java.util.UUID currentId = securityUtils.getCurrentUserId(authentication);
         User user =  userRepository.findById(currentId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentId));
         user.setActive(false);
@@ -204,10 +204,10 @@ public class UserService {
      * @throws SelfOperationException if the admin attempts to delete their own account
      * @throws ActiveUserDeletionException if the target user is still active
      */
-    public void deleteUser(Long id, Authentication authentication){
+    public void deleteUser(java.util.UUID id, Authentication authentication){
         User user =  userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        long currentId = securityUtils.getCurrentUserId(authentication);
+        java.util.UUID currentId = securityUtils.getCurrentUserId(authentication);
         if (id.equals(currentId)) {
             throw new SelfOperationException("Admin cannot delete their own account");
         }

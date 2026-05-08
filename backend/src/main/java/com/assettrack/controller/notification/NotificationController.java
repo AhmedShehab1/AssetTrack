@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/notifications")
+@RequestMapping("/notifications")
 @RequiredArgsConstructor
 @Tag(name = "Notifications", description = "In-app notification endpoints")
 public class NotificationController {
@@ -42,7 +42,7 @@ public class NotificationController {
             content = @Content(schema = @Schema(implementation = NotificationResponse.class)))
     @ApiResponse(responseCode = "404", description = "Notification not found")
     public ResponseEntity<NotificationResponse> markAsRead(
-            @PathVariable Long notificationId,
+            @PathVariable java.util.UUID notificationId,
             Authentication authentication) {
         return ResponseEntity.ok(notificationService.markAsRead(notificationId, authentication));
     }
