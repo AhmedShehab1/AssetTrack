@@ -8,11 +8,13 @@ import com.assettrack.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,7 +41,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
     }
 
-    @ExceptionHandler({NoHandlerFoundException.class, com.assettrack.exception.ResourceNotFoundException.class})
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class, com.assettrack.exception.ResourceNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(Exception ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponse.builder().code("NOT_FOUND").message(ex.getMessage()).build());
@@ -56,8 +58,7 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.builder().code("EMAIL_ALREADY_EXISTS").message(ex.getMessage()).build());
     }
 
-    @ExceptionHandler({InvalidPasswordException.class, InvalidRoleException.class,
-            SelfOperationException.class, ActiveUserDeletionException.class})
+    @ExceptionHandler({ConflictException.class})
     public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.builder().code("BAD_REQUEST").message(ex.getMessage()).build());
@@ -67,6 +68,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.builder().code("INVALID_CREDENTIALS").message("Invalid email or password").build());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ErrorResponse.builder().code("FORBIDDEN").message("Access denied").build());
     }
 
     @ExceptionHandler(Exception.class)

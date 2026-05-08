@@ -66,10 +66,21 @@ public class SecurityFilterChainTest {
     private com.assettrack.service.notification.EmailNotificationService emailNotificationService;
 
     @MockBean
-    private UserRepository userRepository;
+    private com.assettrack.service.allocation.IAllocationService allocationService;
 
     @MockBean
-    AssetService assetService;
+    private com.assettrack.repository.asset.AssetRepository assetRepository;
+
+    @MockBean
+    private com.assettrack.repository.asset.AssetAllocationRepository assetAllocationRepository;
+
+    @MockBean
+    private com.assettrack.repository.asset.ConditionReportRepository conditionReportRepository;
+
+    @MockBean
+    private UserRepository userRepository;
+
+
 
     /**
      * Provides in-memory RSA keys for the test context, overriding the production
@@ -116,26 +127,26 @@ public class SecurityFilterChainTest {
 
     @Test
     public void publicEndpoint_ShouldReturn200() throws Exception {
-        mockMvc.perform(get("/api/v1/auth/test").contextPath("/api/v1"))
+        mockMvc.perform(get("/api/v1/v3/api-docs").contextPath("/api/v1"))
                 .andExpect(status().isOk());
     }
 
     @Test
     public void protectedEndpoint_WithoutJwt_ShouldReturn401() throws Exception {
-        mockMvc.perform(get("/api/v1/assets/test").contextPath("/api/v1"))
+        mockMvc.perform(get("/api/v1/assets/condition-reports").contextPath("/api/v1"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     public void adminEndpoint_WithDeveloperRole_ShouldReturn403() throws Exception {
-        mockMvc.perform(get("/api/v1/users/test").contextPath("/api/v1")
+        mockMvc.perform(get("/api/v1/users").contextPath("/api/v1")
                 .with(jwt().jwt(jwt -> jwt.claim("role", "DEVELOPER"))))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     public void adminEndpoint_WithAdminRole_ShouldReturn200() throws Exception {
-        mockMvc.perform(get("/api/v1/users/test").contextPath("/api/v1")
+        mockMvc.perform(get("/api/v1/users").contextPath("/api/v1")
                 .with(jwt().jwt(jwt -> jwt.claim("role", "ADMIN"))
                         .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
                 .andExpect(status().isOk());
