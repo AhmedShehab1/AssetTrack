@@ -1,7 +1,7 @@
 package com.assettrack.controller.dashboard;
 
 import com.assettrack.dto.dashboard.DashboardSummaryDto;
-import com.assettrack.service.dashboard.DashboardService;
+import com.assettrack.service.dashboard.IDashboardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,13 +20,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Dashboard", description = "Dashboard analytics and summary endpoints")
 public class DashboardController {
 
-    private final DashboardService dashboardService;
+    private final IDashboardService dashboardService;
 
     @GetMapping("/inventory")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Get dashboard summary", description = "Returns asset counts by status and type for the admin dashboard")
-    @ApiResponse(responseCode = "200", description = "Dashboard summary retrieved",
-            content = @Content(schema = @Schema(implementation = DashboardSummaryDto.class)))
+    @ApiResponse(responseCode = "200", description = "Dashboard summary retrieved", content = @Content(schema = @Schema(implementation = DashboardSummaryDto.class)))
     public ResponseEntity<DashboardSummaryDto> getSummary() {
         return ResponseEntity.ok(dashboardService.getSummary());
     }

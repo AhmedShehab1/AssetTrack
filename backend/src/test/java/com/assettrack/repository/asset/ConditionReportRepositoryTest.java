@@ -4,7 +4,8 @@ import com.assettrack.domain.asset.Asset;
 import com.assettrack.domain.asset.AssetStatus;
 import com.assettrack.domain.asset.AssetType;
 import com.assettrack.domain.asset.ConditionReport;
-import com.assettrack.domain.asset.ReportStatus;
+import com.assettrack.domain.asset.ConditionReportStatus;
+import com.assettrack.domain.asset.ConditionSeverity;
 import com.assettrack.domain.user.Role;
 import com.assettrack.domain.user.User;
 import com.assettrack.repository.user.UserRepository;
@@ -12,11 +13,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-
-import java.time.LocalDate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,8 +62,9 @@ class ConditionReportRepositoryTest {
                 .asset(testAsset)
                 .reportedBy(testUser)
                 .issueDescription("Screen flickering under load")
-                .reportDate(LocalDate.of(2025, 5, 1))
-                .status(ReportStatus.OPEN)
+                .reportDate(LocalDateTime.of(2025, 5, 1, 10, 0))
+                .severity(ConditionSeverity.MEDIUM)
+                .status(ConditionReportStatus.OPEN)
                 .build();
 
         ConditionReport saved = reportRepository.save(report);
@@ -70,7 +73,7 @@ class ConditionReportRepositoryTest {
         assertThat(saved.getAsset().getId()).isEqualTo(testAsset.getId());
         assertThat(saved.getReportedBy().getId()).isEqualTo(testUser.getId());
         assertThat(saved.getIssueDescription()).isEqualTo("Screen flickering under load");
-        assertThat(saved.getStatus()).isEqualTo(ReportStatus.OPEN);
+        assertThat(saved.getStatus()).isEqualTo(ConditionReportStatus.OPEN);
     }
 
     @Test
@@ -78,19 +81,23 @@ class ConditionReportRepositoryTest {
         reportRepository.save(ConditionReport.builder()
                 .asset(testAsset).reportedBy(testUser)
                 .issueDescription("Old issue")
-                .reportDate(LocalDate.of(2025, 1, 1))
+                .reportDate(LocalDateTime.of(2025, 1, 1, 10, 0))
+                .severity(ConditionSeverity.LOW)
+                .status(ConditionReportStatus.OPEN)
                 .build());
- 
+
         reportRepository.save(ConditionReport.builder()
                 .asset(testAsset).reportedBy(testUser)
                 .issueDescription("Recent issue")
-                .reportDate(LocalDate.of(2025, 5, 1))
+                .reportDate(LocalDateTime.of(2025, 5, 1, 10, 0))
+                .severity(ConditionSeverity.MEDIUM)
+                .status(ConditionReportStatus.OPEN)
                 .build());
- 
+
         Pageable pageable = PageRequest.of(0, 10);
         Page<ConditionReport> reportsPage =
                 reportRepository.findByAssetIdOrderByReportDateDesc(testAsset.getId(), pageable);
- 
+
         List<ConditionReport> reports = reportsPage.getContent();
         assertThat(reports).hasSize(2);
         assertThat(reports.get(0).getReportDate()).isAfter(reports.get(1).getReportDate());
@@ -102,13 +109,15 @@ class ConditionReportRepositoryTest {
         reportRepository.save(ConditionReport.builder()
                 .asset(testAsset).reportedBy(testUser)
                 .issueDescription("Keyboard malfunction")
-                .reportDate(LocalDate.now())
+                .reportDate(LocalDateTime.now())
+                .severity(ConditionSeverity.MEDIUM)
+                .status(ConditionReportStatus.OPEN)
                 .build());
- 
+
         Pageable pageable = PageRequest.of(0, 10);
         Page<ConditionReport> reportsPage =
                 reportRepository.findByReportedByIdOrderByReportDateDesc(testUser.getId(), pageable);
- 
+
         List<ConditionReport> reports = reportsPage.getContent();
         assertThat(reports).hasSize(1);
         assertThat(reports.get(0).getReportedBy().getEmail()).isEqualTo("reporter@assettrack.com");
@@ -119,19 +128,21 @@ class ConditionReportRepositoryTest {
         reportRepository.save(ConditionReport.builder()
                 .asset(testAsset).reportedBy(testUser)
                 .issueDescription("Open issue")
-                .reportDate(LocalDate.now())
-                .status(ReportStatus.OPEN)
+                .reportDate(LocalDateTime.now())
+                .severity(ConditionSeverity.MEDIUM)
+                .status(ConditionReportStatus.OPEN)
                 .build());
 
         reportRepository.save(ConditionReport.builder()
                 .asset(testAsset).reportedBy(testUser)
                 .issueDescription("Resolved issue")
-                .reportDate(LocalDate.now())
-                .status(ReportStatus.RESOLVED)
+                .reportDate(LocalDateTime.now())
+                .severity(ConditionSeverity.HIGH)
+                .status(ConditionReportStatus.RESOLVED)
                 .build());
 
-        List<ConditionReport> openReports = reportRepository.findByStatus(ReportStatus.OPEN);
-        List<ConditionReport> resolvedReports = reportRepository.findByStatus(ReportStatus.RESOLVED);
+        List<ConditionReport> openReports = reportRepository.findByStatus(ConditionReportStatus.OPEN);
+        List<ConditionReport> resolvedReports = reportRepository.findByStatus(ConditionReportStatus.RESOLVED);
 
         assertThat(openReports).hasSize(1);
         assertThat(openReports.get(0).getIssueDescription()).isEqualTo("Open issue");
@@ -144,7 +155,9 @@ class ConditionReportRepositoryTest {
         ConditionReport report = reportRepository.save(ConditionReport.builder()
                 .asset(testAsset).reportedBy(testUser)
                 .issueDescription("Battery drain issue")
-                .reportDate(LocalDate.now())
+                .reportDate(LocalDateTime.now())
+                .severity(ConditionSeverity.LOW)
+                .status(ConditionReportStatus.OPEN)
                 .build());
 
         ConditionReport found = reportRepository.findById(report.getId()).orElseThrow();

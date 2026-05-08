@@ -11,6 +11,7 @@ import com.assettrack.exception.ResourceNotFoundException;
 import com.assettrack.mapper.auth.AuthMapper;
 import com.assettrack.repository.user.UserRepository;
 import com.assettrack.security.service.JwtService;
+import com.assettrack.dto.user.UserSummary;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -35,7 +36,8 @@ class AuthServiceTest {
     @Mock AuthMapper authMapper;
     @Mock com.assettrack.mapper.user.UserMapper userMapper;
 
-    @InjectMocks AuthService authService;
+    @InjectMocks
+    AuthService authService;
 
     private User buildUser(java.util.UUID id, String email) {
         User u = new User();
@@ -71,7 +73,7 @@ class AuthServiceTest {
         @DisplayName("saves user with encoded password and DEVELOPER role")
         void success() {
             SignupRequest req = signupRequest("alice@example.com", "Password1");
-            UserResponse expected = UserResponse.builder().email("alice@example.com").role("DEVELOPER").build();
+            UserResponse expected = UserResponse.builder().email("alice@example.com").fullName("Alice Smith").build();
 
             when(userRepository.existsByEmail(req.getEmail())).thenReturn(false);
             when(passwordEncoder.encode(req.getPassword())).thenReturn("hashed");
@@ -117,7 +119,7 @@ class AuthServiceTest {
                 u.setId(java.util.UUID.randomUUID());
                 return u;
             });
-            when(userMapper.toResponse(any())).thenReturn(UserResponse.builder().role("DEVELOPER").build());
+            when(userMapper.toResponse(any())).thenReturn(UserResponse.builder().fullName("Bob").build());
 
             authService.register(req);
 
@@ -140,7 +142,7 @@ class AuthServiceTest {
                 u.setId(java.util.UUID.randomUUID());
                 return u;
             });
-            when(userMapper.toResponse(any())).thenReturn(UserResponse.builder().role("DEVELOPER").build());
+            when(userMapper.toResponse(any())).thenReturn(UserResponse.builder().fullName("Charlie").build());
 
             authService.register(req);
 
@@ -148,6 +150,7 @@ class AuthServiceTest {
             verify(userRepository).save(captor.capture());
             assertThat(captor.getValue().isActive()).isTrue();
         }
+
     }
 
     // ── login() ───────────────────────────────────────────────────────────────
@@ -161,7 +164,8 @@ class AuthServiceTest {
         void success() {
             LoginRequest req = loginRequest("alice@example.com", "Password1");
             User user = buildUser(java.util.UUID.randomUUID(), "alice@example.com");
-            AuthResponse expected = new AuthResponse("jwt-token", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().role("DEVELOPER").build());
+            AuthResponse expected = new AuthResponse("jwt-token", "Bearer", 3600L,
+                    UserSummary.builder().role(Role.DEVELOPER).build());
 
             when(userRepository.findByEmail(req.getEmail())).thenReturn(Optional.of(user));
             when(jwtService.generateToken(anyMap(), any())).thenReturn("jwt-token");
@@ -206,7 +210,8 @@ class AuthServiceTest {
 
             when(userRepository.findByEmail("bob@example.com")).thenReturn(Optional.of(user));
             when(jwtService.generateToken(anyMap(), any())).thenReturn("tok");
-            when(authMapper.toResponse(any(), any())).thenReturn(new AuthResponse("tok", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().role("DEVELOPER").build()));
+            when(authMapper.toResponse(any(), any())).thenReturn(
+                    new AuthResponse("tok", "Bearer", 3600L, UserSummary.builder().role(Role.DEVELOPER).build()));
 
             authService.login(req);
 

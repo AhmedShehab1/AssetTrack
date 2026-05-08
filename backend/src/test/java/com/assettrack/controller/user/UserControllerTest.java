@@ -3,8 +3,9 @@ package com.assettrack.controller.user;
 import com.assettrack.dto.user.UpdateEmailRequest;
 import com.assettrack.dto.user.UpdatePasswordRequest;
 import com.assettrack.dto.user.UserResponse;
+import com.assettrack.domain.user.Role;
 import com.assettrack.exception.*;
-import com.assettrack.service.user.UserService;
+import com.assettrack.service.user.IUserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,19 +34,23 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
-@Import({UserControllerTest.SecurityTestConfig.class, com.assettrack.common.exception.GlobalExceptionHandler.class})
+@Import({ UserControllerTest.SecurityTestConfig.class, com.assettrack.common.exception.GlobalExceptionHandler.class })
 @DisplayName("UserController")
 class UserControllerTest {
     private static final java.util.UUID TEST_ID = java.util.UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-    @Autowired MockMvc mockMvc;
-    @Autowired ObjectMapper objectMapper;
-    @MockBean  UserService userService;
+    @Autowired
+    MockMvc mockMvc;
+    @Autowired
+    ObjectMapper objectMapper;
+    @MockBean
+    IUserService userService;
 
     @BeforeEach
     void resetMocks() {
         reset(userService);
     }
+
     @TestConfiguration
     @EnableMethodSecurity
     static class SecurityTestConfig {
@@ -57,20 +62,18 @@ class UserControllerTest {
                     .formLogin(AbstractHttpConfigurer::disable)
                     .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .exceptionHandling(ex -> ex
-                            .authenticationEntryPoint((req, res, e) -> res.sendError(401))
-                    )
-                                            .authorizeHttpRequests(auth -> auth
+                            .authenticationEntryPoint((req, res, e) -> res.sendError(401)))
+                    .authorizeHttpRequests(auth -> auth
                             .requestMatchers("/auth/me", "/auth/me/**").authenticated()
                             .requestMatchers("/auth/**").permitAll()
                             .requestMatchers("/users/**").hasRole("ADMIN")
-                            .anyRequest().authenticated()
-                        )
+                            .anyRequest().authenticated())
                     .build();
         }
     }
 
     private UserResponse buildResponse(java.util.UUID id, String email) {
-        return new UserResponse(id, email, "DEVELOPER", true, LocalDateTime.now(), LocalDateTime.now(), "Test User");
+        return new UserResponse(id, email, "Test User", Role.DEVELOPER, LocalDateTime.now(), LocalDateTime.now(), true);
     }
 
     // ── GET /api/users/me ─────────────────────────────────────────────────────
@@ -146,7 +149,8 @@ class UserControllerTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 200 with inactive users for admin")
         void success() throws Exception {
-            UserResponse response = new UserResponse(TEST_ID, "bob@example.com", "DEVELOPER", false, LocalDateTime.now(), LocalDateTime.now(), "Test User");
+            UserResponse response = new UserResponse(TEST_ID, "bob@example.com", "Test User", Role.DEVELOPER,
+                    LocalDateTime.now(), LocalDateTime.now(), false);
             var page = new PageImpl<>(List.of(response), PageRequest.of(0, 10), 1);
             when(userService.getInactiveUsers(any())).thenReturn(page);
 
@@ -239,8 +243,8 @@ class UserControllerTest {
             when(userService.updateEmail(any(), any())).thenReturn(response);
 
             mockMvc.perform(put("/auth/me/email")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(req)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.email").value("new@example.com"));
         }
@@ -254,8 +258,8 @@ class UserControllerTest {
                     .thenThrow(new EmailAlreadyExistsException("Email already exists"));
 
             mockMvc.perform(put("/auth/me/email")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(req)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isConflict());
         }
 
@@ -268,8 +272,8 @@ class UserControllerTest {
                     .thenThrow(new InvalidPasswordException("Invalid password"));
 
             mockMvc.perform(put("/auth/me/email")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(req)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -277,8 +281,8 @@ class UserControllerTest {
         @DisplayName("returns 401 when not authenticated")
         void unauthenticated() throws Exception {
             mockMvc.perform(put("/auth/me/email")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{}"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{}"))
                     .andExpect(status().isUnauthorized());
         }
     }
@@ -303,9 +307,9 @@ class UserControllerTest {
             UpdatePasswordRequest req = request("Password1!", "NewPassword1!");
             doNothing().when(userService).updatePassword(any(), any());
 
-            mockMvc.perform(put("/auth/me/password")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(req)))
+            mockMvc.perform(patch("/auth/me/password")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isNoContent());
         }
 
@@ -317,18 +321,18 @@ class UserControllerTest {
             doThrow(new InvalidPasswordException("Invalid password"))
                     .when(userService).updatePassword(any(), any());
 
-            mockMvc.perform(put("/auth/me/password")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(req)))
+            mockMvc.perform(patch("/auth/me/password")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isBadRequest());
         }
 
         @Test
         @DisplayName("returns 401 when not authenticated")
         void unauthenticated() throws Exception {
-            mockMvc.perform(put("/auth/me/password")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{}"))
+            mockMvc.perform(patch("/auth/me/password")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{}"))
                     .andExpect(status().isUnauthorized());
         }
     }
@@ -347,7 +351,7 @@ class UserControllerTest {
             when(userService.updateUserRole(eq(TEST_ID), eq("ADMIN"), any())).thenReturn(response);
 
             mockMvc.perform(put("/users/" + TEST_ID + "/role")
-                            .param("role", "ADMIN"))
+                    .param("role", "ADMIN"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(response.getId().toString()));
         }
@@ -360,7 +364,7 @@ class UserControllerTest {
                     .thenThrow(new InvalidRoleException("Invalid role"));
 
             mockMvc.perform(put("/users/" + TEST_ID + "/role")
-                            .param("role", "SUPERUSER"))
+                    .param("role", "SUPERUSER"))
                     .andExpect(status().isBadRequest());
         }
 
@@ -372,7 +376,7 @@ class UserControllerTest {
                     .thenThrow(new SelfOperationException("Cannot change own role"));
 
             mockMvc.perform(put("/users/" + TEST_ID + "/role")
-                            .param("role", "MANAGER"))
+                    .param("role", "MANAGER"))
                     .andExpect(status().isForbidden());
         }
 
@@ -381,7 +385,7 @@ class UserControllerTest {
         @DisplayName("returns 403 for non-admin")
         void forbidden() throws Exception {
             mockMvc.perform(put("/users/" + TEST_ID + "/role")
-                            .param("role", "ADMIN"))
+                    .param("role", "ADMIN"))
                     .andExpect(status().isForbidden());
         }
 
@@ -389,7 +393,7 @@ class UserControllerTest {
         @DisplayName("returns 401 when not authenticated")
         void unauthenticated() throws Exception {
             mockMvc.perform(put("/users/" + TEST_ID + "/role")
-                            .param("role", "ADMIN"))
+                    .param("role", "ADMIN"))
                     .andExpect(status().isUnauthorized());
         }
     }
@@ -404,11 +408,12 @@ class UserControllerTest {
         @WithMockUser(roles = "ADMIN")
         @DisplayName("returns 200 on deactivate")
         void deactivate() throws Exception {
-            UserResponse response = new UserResponse(TEST_ID, "bob@example.com", "DEVELOPER", false, LocalDateTime.now(), LocalDateTime.now(), "Test User");
+            UserResponse response = new UserResponse(TEST_ID, "bob@example.com", "Test User", Role.DEVELOPER,
+                    LocalDateTime.now(), LocalDateTime.now(), false);
             when(userService.updateUserStatus(eq(TEST_ID), eq(false), any())).thenReturn(response);
 
             mockMvc.perform(put("/users/" + TEST_ID + "/status")
-                            .param("active", "false"))
+                    .param("active", "false"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.active").value(false));
         }
@@ -421,7 +426,7 @@ class UserControllerTest {
                     .thenThrow(new SelfOperationException("Cannot change own status"));
 
             mockMvc.perform(put("/users/" + TEST_ID + "/status")
-                            .param("active", "false"))
+                    .param("active", "false"))
                     .andExpect(status().isForbidden());
         }
 
@@ -430,7 +435,7 @@ class UserControllerTest {
         @DisplayName("returns 403 for non-admin")
         void forbidden() throws Exception {
             mockMvc.perform(put("/users/" + TEST_ID + "/status")
-                            .param("active", "false"))
+                    .param("active", "false"))
                     .andExpect(status().isForbidden());
         }
 
@@ -438,7 +443,7 @@ class UserControllerTest {
         @DisplayName("returns 401 when not authenticated")
         void unauthenticated() throws Exception {
             mockMvc.perform(put("/users/" + TEST_ID + "/status")
-                            .param("active", "false"))
+                    .param("active", "false"))
                     .andExpect(status().isUnauthorized());
         }
     }

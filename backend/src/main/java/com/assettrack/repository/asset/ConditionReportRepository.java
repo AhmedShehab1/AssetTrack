@@ -1,7 +1,7 @@
 package com.assettrack.repository.asset;
 
 import com.assettrack.domain.asset.ConditionReport;
-import com.assettrack.domain.asset.ReportStatus;
+import com.assettrack.domain.asset.ConditionReportStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,5 +20,5 @@ public interface ConditionReportRepository extends JpaRepository<ConditionReport
 
     Page<ConditionReport> findByReportedByIdOrderByReportDateDesc(java.util.UUID userId, Pageable pageable);
 
-    List<ConditionReport> findByStatus(ReportStatus status);
+    List<ConditionReport> findByStatus(ConditionReportStatus status);
 }

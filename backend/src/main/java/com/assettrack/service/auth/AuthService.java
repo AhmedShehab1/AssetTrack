@@ -24,7 +24,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class AuthService implements IAuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -35,11 +35,9 @@ public class AuthService {
     private String generateToken(User user) {
         return jwtService.generateToken(
                 Map.of(
-                        "role",   "ROLE_" + user.getRole().name(),
-                        "userId", user.getId()
-                ),
-                Duration.ofHours(24)
-        );
+                        "role", "ROLE_" + user.getRole().name(),
+                        "userId", user.getId()),
+                Duration.ofHours(24));
     }
     public UserResponse register(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -62,8 +60,10 @@ public class AuthService {
         User saved = userRepository.save(user);
         return userMapper.toResponse(saved);
     }
+
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(),request.getPassword()));
+        authenticationManager
+                .authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         String token = generateToken(user);

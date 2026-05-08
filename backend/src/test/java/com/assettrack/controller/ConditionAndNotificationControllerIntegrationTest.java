@@ -4,6 +4,7 @@ import com.assettrack.domain.asset.Asset;
 import com.assettrack.domain.asset.AssetAllocation;
 import com.assettrack.domain.asset.AssetStatus;
 import com.assettrack.domain.asset.AssetType;
+import com.assettrack.domain.notification.NotificationType;
 import com.assettrack.domain.notification.Notification;
 import com.assettrack.domain.user.Role;
 import com.assettrack.domain.user.User;
@@ -100,14 +101,14 @@ class ConditionAndNotificationControllerIntegrationTest {
                 .checkoutDate(LocalDateTime.now())
                 .build());
 
-        mockMvc.perform(post("/api/v1/assets/{id}/condition", unownedAsset.getId())
-                        .contextPath("/api/v1")
-                        .with(jwt().jwt(token -> token
-                                        .claim("userId", currentUser.getId())
-                                        .claim("role", "ROLE_DEVELOPER"))
-                                .authorities(new SimpleGrantedAuthority("ROLE_DEVELOPER")))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"issueDescription\":\"Screen flickers intermittently\", \"severity\":\"MEDIUM\"}"))
+        mockMvc.perform(post("/api/v1/assets/{id}/condition-reports", unownedAsset.getId())
+                .contextPath("/api/v1")
+                .with(jwt().jwt(token -> token
+                        .claim("userId", currentUser.getId())
+                        .claim("role", "ROLE_DEVELOPER"))
+                        .authorities(new SimpleGrantedAuthority("ROLE_DEVELOPER")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"description\":\"Screen flickers intermittently\", \"severity\":\"MEDIUM\"}"))
                 .andExpect(status().isForbidden());
     }
 
@@ -119,26 +120,26 @@ class ConditionAndNotificationControllerIntegrationTest {
         notificationRepository.save(Notification.builder()
                 .recipient(currentUser.getEmail())
                 .messageBody("Your condition report was received")
-                .type("CONDITION_REPORT")
+                .type(NotificationType.CONDITION_REPORT_OPENED)
                 .createdAt(LocalDateTime.now())
                 .build());
         notificationRepository.save(Notification.builder()
                 .recipient(otherUser.getEmail())
                 .messageBody("Another user's alert")
-                .type("CONDITION_REPORT")
+                .type(NotificationType.CONDITION_REPORT_OPENED)
                 .createdAt(LocalDateTime.now())
                 .build());
 
         mockMvc.perform(get("/api/v1/notifications")
-                        .contextPath("/api/v1")
-                        .with(jwt().jwt(token -> token
-                                        .claim("userId", currentUser.getId())
-                                        .claim("role", "ROLE_DEVELOPER"))
-                                .authorities(new SimpleGrantedAuthority("ROLE_DEVELOPER"))))
+                .contextPath("/api/v1")
+                .with(jwt().jwt(token -> token
+                        .claim("userId", currentUser.getId())
+                        .claim("role", "ROLE_DEVELOPER"))
+                        .authorities(new SimpleGrantedAuthority("ROLE_DEVELOPER"))))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].recipient").value(currentUser.getEmail()))
-                .andExpect(jsonPath("$[0].messageBody").value("Your condition report was received"));
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].message").value("Your condition report was received"))
+                .andExpect(jsonPath("$.meta.totalElements").value(1));
     }
 
     @Test
@@ -149,29 +150,30 @@ class ConditionAndNotificationControllerIntegrationTest {
         Notification ownNotification = notificationRepository.save(Notification.builder()
                 .recipient(currentUser.getEmail())
                 .messageBody("Your condition report was received")
-                .type("CONDITION_REPORT")
+                .type(NotificationType.CONDITION_REPORT_OPENED)
                 .createdAt(LocalDateTime.now())
                 .build());
         Notification otherNotification = notificationRepository.save(Notification.builder()
                 .recipient(otherUser.getEmail())
                 .messageBody("Another user's alert")
-                .type("CONDITION_REPORT")
+                .type(NotificationType.CONDITION_REPORT_OPENED)
                 .createdAt(LocalDateTime.now())
                 .build());
 
         mockMvc.perform(patch("/api/v1/notifications/{notificationId}/read", ownNotification.getId())
-                        .contextPath("/api/v1")
-                        .with(jwt().jwt(token -> token
-                                        .claim("userId", currentUser.getId())
-                                        .claim("role", "ROLE_DEVELOPER"))
-                                .authorities(new SimpleGrantedAuthority("ROLE_DEVELOPER"))))
+                .contextPath("/api/v1")
+                .with(jwt().jwt(token -> token
+                        .claim("userId", currentUser.getId())
+                        .claim("role", "ROLE_DEVELOPER"))
+                        .authorities(new SimpleGrantedAuthority("ROLE_DEVELOPER"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(ownNotification.getId().toString()))
-                .andExpect(jsonPath("$.recipient").value(currentUser.getEmail()))
+                .andExpect(jsonPath("$.message").value("Your condition report was received"))
                 .andExpect(jsonPath("$.read").value(true));
 
         Notification updatedOwnNotification = notificationRepository.findById(ownNotification.getId()).orElseThrow();
-        Notification unchangedOtherNotification = notificationRepository.findById(otherNotification.getId()).orElseThrow();
+        Notification unchangedOtherNotification = notificationRepository.findById(otherNotification.getId())
+                .orElseThrow();
         assertThat(updatedOwnNotification.isRead()).isTrue();
         assertThat(unchangedOtherNotification.isRead()).isFalse();
     }
@@ -184,16 +186,16 @@ class ConditionAndNotificationControllerIntegrationTest {
         Notification otherNotification = notificationRepository.save(Notification.builder()
                 .recipient(otherUser.getEmail())
                 .messageBody("Another user's alert")
-                .type("CONDITION_REPORT")
+                .type(NotificationType.CONDITION_REPORT_OPENED)
                 .createdAt(LocalDateTime.now())
                 .build());
 
         mockMvc.perform(patch("/api/v1/notifications/{notificationId}/read", otherNotification.getId())
-                        .contextPath("/api/v1")
-                        .with(jwt().jwt(token -> token
-                                        .claim("userId", currentUser.getId())
-                                        .claim("role", "ROLE_DEVELOPER"))
-                                .authorities(new SimpleGrantedAuthority("ROLE_DEVELOPER"))))
+                .contextPath("/api/v1")
+                .with(jwt().jwt(token -> token
+                        .claim("userId", currentUser.getId())
+                        .claim("role", "ROLE_DEVELOPER"))
+                        .authorities(new SimpleGrantedAuthority("ROLE_DEVELOPER"))))
                 .andExpect(status().isNotFound());
 
         Notification unchangedNotification = notificationRepository.findById(otherNotification.getId()).orElseThrow();

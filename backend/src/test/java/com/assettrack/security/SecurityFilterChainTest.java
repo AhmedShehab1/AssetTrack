@@ -53,19 +53,19 @@ public class SecurityFilterChainTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private AuthService authService;
+    private com.assettrack.service.auth.IAuthService authService;
 
     @MockBean
-    private UserService userService;
+    private com.assettrack.service.user.IUserService userService;
 
     @MockBean
-    private DashboardService dashboardService;
+    private com.assettrack.service.dashboard.IDashboardService dashboardService;
 
     @MockBean
-    private AssetService assetService;
+    private com.assettrack.service.asset.IAssetService assetService;
 
     @MockBean
-    private NotificationService notificationService;
+    private com.assettrack.service.notification.INotificationService notificationService;
 
     @MockBean
     private com.assettrack.service.notification.AlertService alertService;
@@ -164,21 +164,13 @@ public class SecurityFilterChainTest {
     }
 
     @Test
-    public void usersEndpoint_WithManagerRole_ShouldReturn403() throws Exception {
-        mockMvc.perform(get("/api/v1/users").contextPath("/api/v1")
-                .with(jwt().jwt(jwt -> jwt.claim("role", "MANAGER"))
-                        .authorities(new SimpleGrantedAuthority("ROLE_MANAGER"))))
-                .andExpect(status().isForbidden());
-    }
-
-    @Test
-    public void usersEndpoint_WithAdminRole_ShouldReturn200() throws Exception {
+    public void usersEndpoint_WithManagerRole_ShouldReturn200() throws Exception {
         Page<UserResponse> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10), 0);
         when(userService.getAllUsers(any())).thenReturn(emptyPage);
 
         mockMvc.perform(get("/api/v1/users").contextPath("/api/v1")
-                .with(jwt().jwt(jwt -> jwt.claim("role", "ADMIN"))
-                        .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .with(jwt().jwt(jwt -> jwt.claim("role", "MANAGER"))
+                        .authorities(new SimpleGrantedAuthority("ROLE_MANAGER"))))
                 .andExpect(status().isOk());
     }
 

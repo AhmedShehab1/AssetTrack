@@ -12,12 +12,15 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Represents a condition/issue report filed against an asset.
@@ -32,13 +35,15 @@ import java.time.LocalDate;
 public class ConditionReport {
 
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
-    private java.util.UUID id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
+    // Many reports → one asset
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "asset_id", nullable = false)
     private Asset asset;
 
+    // Many reports → one user (the reporter)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "reported_by", nullable = false)
     private User reportedBy;
@@ -47,10 +52,31 @@ public class ConditionReport {
     private String issueDescription;
 
     @Column(nullable = false)
-    private LocalDate reportDate;
+    private LocalDateTime reportDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ConditionSeverity severity;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private ReportStatus status = ReportStatus.OPEN;
+    private ConditionReportStatus status = ConditionReportStatus.OPEN;
+
+    @Column(columnDefinition = "TEXT")
+    private String resolutionNotes;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @PrePersist
+    protected void onCreate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }
