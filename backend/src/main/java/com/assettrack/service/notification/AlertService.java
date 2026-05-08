@@ -12,9 +12,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AlertService {
+public class AlertService implements IAlertService {
 
-    private final EmailNotificationService emailNotificationService;
+    private final IEmailNotificationService emailNotificationService;
     private final InventoryCheckPort inventoryCheckPort;
 
     @Value("${alerts.low-stock-threshold:5}")
@@ -27,7 +27,7 @@ public class AlertService {
     public void checkLowStockAndAlert() {
         log.info("Running low stock check...");
         List<InventoryCheckPort.LowStockItem> lowStockItems = inventoryCheckPort.getLowStockItems(lowStockThreshold);
-        
+
         if (!lowStockItems.isEmpty()) {
             StringBuilder htmlBody = new StringBuilder("<h3>Low Stock Alert</h3><ul>");
             for (InventoryCheckPort.LowStockItem item : lowStockItems) {
@@ -35,7 +35,7 @@ public class AlertService {
                         .append(": ").append(item.currentStock()).append(" units left</li>");
             }
             htmlBody.append("</ul>");
-            
+
             emailNotificationService.sendEmail(recipientEmail, "Low Stock Alert", htmlBody.toString(), true);
         }
     }

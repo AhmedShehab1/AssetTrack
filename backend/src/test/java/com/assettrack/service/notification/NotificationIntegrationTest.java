@@ -1,6 +1,7 @@
 package com.assettrack.service.notification;
 
 import com.assettrack.domain.notification.Notification;
+import com.assettrack.domain.notification.NotificationType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,9 +13,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @ActiveProfiles("test")
 @SpringBootTest(properties = {
-    "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
-    "spring.datasource.driverClassName=org.h2.Driver",
-    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
+        "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
+        "spring.datasource.driverClassName=org.h2.Driver",
+        "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect"
 })
 public class NotificationIntegrationTest {
 
@@ -31,11 +32,11 @@ public class NotificationIntegrationTest {
     void contextLoadsAndServicesAvailable() {
         assertNotNull(emailNotificationService);
         assertNotNull(alertService);
-        
+
         Notification notification = Notification.builder()
                 .recipient("test@test.com")
                 .messageBody("Test body")
-                .type("Alert")
+                .type(NotificationType.LOW_STOCK)
                 .build();
         assertNotNull(notification.getCreatedAt());
     }

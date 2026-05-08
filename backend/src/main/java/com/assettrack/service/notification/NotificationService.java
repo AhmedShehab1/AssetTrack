@@ -8,27 +8,25 @@ import com.assettrack.repository.notification.NotificationRepository;
 import com.assettrack.repository.user.UserRepository;
 import com.assettrack.security.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
-public class NotificationService {
+public class NotificationService implements INotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final SecurityUtils securityUtils;
 
     @Transactional(readOnly = true)
-    public List<NotificationResponse> getCurrentUserNotifications(Authentication authentication) {
+    public Page<NotificationResponse> getCurrentUserNotifications(Authentication authentication, Pageable pageable) {
         String recipient = getCurrentUserEmail(authentication);
-        return notificationRepository.findByRecipientOrderByCreatedAtDesc(recipient)
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        return notificationRepository.findByRecipient(recipient, pageable)
+                .map(this::toResponse);
     }
 
     @Transactional
@@ -50,13 +48,12 @@ public class NotificationService {
     }
 
     private NotificationResponse toResponse(Notification notification) {
-        return NotificationResponse.builder()
-                .id(notification.getId())
-                .recipient(notification.getRecipient())
-                .messageBody(notification.getMessageBody())
-                .type(notification.getType())
-                .read(notification.isRead())
-                .createdAt(notification.getCreatedAt())
-                .build();
+        return new NotificationResponse(
+                notification.getId(),
+                notification.getType(),
+                notification.getMessageBody(),
+                notification.isRead(),
+                notification.getAssetId(),
+                notification.getCreatedAt());
     }
 }

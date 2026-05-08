@@ -1,5 +1,11 @@
 package com.assettrack.domain.asset;
 
 public enum AssetType {
-    LAPTOP, SCREEN, ACCESSORY
+    LAPTOP,
+    MONITOR,
+    KEYBOARD,
+    MOUSE,
+    HEADSET,
+    DOCKING_STATION,
+    OTHER
 }
