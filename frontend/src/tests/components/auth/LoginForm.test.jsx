@@ -1,25 +1,36 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import api from '../../../lib/axios';
 import LoginForm from '../../../components/auth/LoginForm';
 import '@testing-library/jest-dom';
 
 const mockLogin = jest.fn();
+const mockNavigate = jest.fn();
+const mockSubmitLogin = jest.fn();
+const mockClearError = jest.fn();
+
+let mockUseLoginState;
+
 jest.mock('../../../hooks/useAuth', () => ({
   useAuth: () => ({ login: mockLogin })
 }));
 
-jest.mock('react-router-dom', () => ({
-  useNavigate: () => jest.fn(),
+jest.mock('../../../hooks/useAssetTrack', () => ({
+  useLogin: () => mockUseLoginState,
 }));
 
-jest.mock('../../../lib/axios', () => ({
-  post: jest.fn(),
+jest.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
 }));
 
 describe('LoginForm', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseLoginState = {
+      login: mockSubmitLogin,
+      loading: false,
+      error: null,
+      clearError: mockClearError,
+    };
   });
 
   it('renders correctly', () => {
@@ -53,7 +64,10 @@ describe('LoginForm', () => {
   });
 
   it('submits successfully and calls api', async () => {
-    api.post.mockResolvedValueOnce({ data: { role: 'DEVELOPER', token: '123' } });
+    mockSubmitLogin.mockResolvedValueOnce({
+      accessToken: '123',
+      role: 'DEVELOPER',
+    });
 
     render(<LoginForm />);
     const emailInput = screen.getByLabelText(/WORK EMAIL/i);
@@ -66,7 +80,7 @@ describe('LoginForm', () => {
     await userEvent.click(button);
 
     await waitFor(() => {
-      expect(api.post).toHaveBeenCalledWith('/auth/login', {
+      expect(mockSubmitLogin).toHaveBeenCalledWith({
         email: 'test@company.com',
         password: 'password123',
       });
@@ -74,25 +88,39 @@ describe('LoginForm', () => {
         { email: 'test@company.com', role: 'DEVELOPER' },
         '123'
       );
+      expect(mockNavigate).toHaveBeenCalledWith('/');
     });
   });
 
-  it('displays API error message on failure', async () => {
-    api.post.mockRejectedValueOnce({
-      response: { data: { message: 'Custom API Error' } },
-    });
+  it('shows a global API error banner for login failures', () => {
+    mockUseLoginState.error = {
+      status: 401,
+      message: 'Invalid email or password.',
+      error: 'Unauthorized',
+      timestamp: '2026-05-08T00:00:00Z',
+      path: '/auth/login',
+      fieldErrors: [],
+    };
 
     render(<LoginForm />);
-    const emailInput = screen.getByLabelText(/WORK EMAIL/i);
-    const passwordInput = screen.getByLabelText(/PASSWORD/i);
-    const button = screen.getByRole('button', { name: /Sign In/i });
+    expect(screen.getByText('Invalid email or password.')).toBeInTheDocument();
+  });
 
-    await userEvent.type(emailInput, 'test@company.com');
-    await userEvent.type(passwordInput, 'password123');
-    await userEvent.click(button);
+  it('shows backend field errors beneath the matching inputs', () => {
+    mockUseLoginState.error = {
+      status: 400,
+      message: 'Validation failed',
+      error: 'Bad Request',
+      timestamp: '2026-05-08T00:00:00Z',
+      path: '/auth/login',
+      fieldErrors: [
+        { field: 'email', message: 'Email is invalid' },
+        { field: 'password', message: 'Password is required' },
+      ],
+    };
 
-    await waitFor(() => {
-      expect(screen.getByText('Custom API Error')).toBeInTheDocument();
-    });
+    render(<LoginForm />);
+    expect(screen.getByText('Email is invalid')).toBeInTheDocument();
+    expect(screen.getByText('Password is required')).toBeInTheDocument();
   });
 });
