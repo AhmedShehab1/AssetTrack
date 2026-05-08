@@ -11,14 +11,22 @@ import java.util.List;
 @AllArgsConstructor
 public class DashboardSummaryDto {
     private long totalAssets;
-    private ChartData statusDistribution;
-    private ChartData typeDistribution;
+    private List<StatusCountDto> byStatus;
+    private List<TypeCountDto> byType;
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ChartData {
-        private List<String> labels;
-        private List<Long> data;
+    public static class StatusCountDto {
+        private String status;
+        private long count;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class TypeCountDto {
+        private String type;
+        private long count;
     }
 }

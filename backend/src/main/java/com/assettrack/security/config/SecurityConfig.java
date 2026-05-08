@@ -22,16 +22,16 @@ public class SecurityConfig {
         return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .authorizeHttpRequests(auth -> auth
+                        // Self-service user endpoints accessible to any authenticated user
+                        .requestMatchers("/auth/me", "/auth/me/**").authenticated()
+
                         // Public endpoints
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
 
-                        // Self-service user endpoints accessible to any authenticated user
-                        .requestMatchers("/api/users/me", "/api/users/me/**").authenticated()
-
                         // Admin-only user management endpoints
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/users/**").hasRole("ADMIN")
 
                         // All other endpoints (Assets, Allocation, Reports) require a valid JWT
                         .anyRequest().authenticated()

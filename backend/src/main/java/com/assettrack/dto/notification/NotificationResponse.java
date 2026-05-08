@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class NotificationResponse {
-    private Long id;
+    private java.util.UUID id;
     private String recipient;
     private String messageBody;
     private String type;

@@ -7,17 +7,18 @@ import com.assettrack.dto.asset.ConditionReportResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring")
+import com.assettrack.mapper.user.UserMapper;
+
+@Mapper(componentModel = "spring", uses = {UserMapper.class})
 public interface AssetMapper {
 
     @Mapping(target = "type", expression = "java(asset.getType().name())")
     @Mapping(target = "status", expression = "java(asset.getStatus().name())")
+    @Mapping(target = "warrantyExpired", expression = "java(asset.getWarrantyExpirationDate() != null && asset.getWarrantyExpirationDate().isBefore(java.time.LocalDate.now()))")
     AssetResponse toResponse(Asset asset);
 
-    @Mapping(target = "assetId", source = "asset.id")
-    @Mapping(target = "assetSerialNumber", source = "asset.serialNumber")
-    @Mapping(target = "reportedById", source = "reportedBy.id")
-    @Mapping(target = "reportedByEmail", source = "reportedBy.email")
+    @Mapping(target = "asset", source = "asset")
+    @Mapping(target = "reportedBy", source = "reportedBy")
     @Mapping(target = "status", expression = "java(report.getStatus().name())")
     ConditionReportResponse toResponse(ConditionReport report);
 }

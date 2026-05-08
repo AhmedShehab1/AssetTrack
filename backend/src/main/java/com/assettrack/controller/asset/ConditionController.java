@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/assets")
+@RequestMapping("/assets")
 @RequiredArgsConstructor
 @Tag(name = "Condition Reports", description = "Asset condition reporting endpoints")
 public class ConditionController {
@@ -43,7 +43,7 @@ public class ConditionController {
     @ApiResponse(responseCode = "404", description = "Asset not found")
     @ApiResponse(responseCode = "422", description = "Validation error")
     public ResponseEntity<ConditionReportResponse> reportAssetCondition(
-            @Parameter(description = "Asset ID") @PathVariable Long assetId,
+            @Parameter(description = "Asset ID") @PathVariable java.util.UUID assetId,
             @RequestBody @Validated ReportConditionRequest request,
             Authentication authentication) {
         ConditionReportResponse response = assetService.createConditionReport(
@@ -82,7 +82,7 @@ public class ConditionController {
     @ApiResponse(responseCode = "200", description = "Reports retrieved")
     @ApiResponse(responseCode = "404", description = "Asset not found")
     public ResponseEntity<List<ConditionReportResponse>> getReportsByAsset(
-            @Parameter(description = "Asset ID") @PathVariable Long assetId,
+            @Parameter(description = "Asset ID") @PathVariable java.util.UUID assetId,
             Authentication authentication) {
         return ResponseEntity.ok(assetService.getReportsByAsset(assetId, authentication));
     }
@@ -95,7 +95,7 @@ public class ConditionController {
     @ApiResponse(responseCode = "403", description = "Forbidden when a regular user does not own the report")
     @ApiResponse(responseCode = "404", description = "Report not found")
     public ResponseEntity<ConditionReportResponse> getConditionReport(
-            @Parameter(description = "Condition Report ID") @PathVariable Long reportId,
+            @Parameter(description = "Condition Report ID") @PathVariable java.util.UUID reportId,
             Authentication authentication) {
         return ResponseEntity.ok(assetService.getReportById(reportId, authentication));
     }
@@ -108,7 +108,7 @@ public class ConditionController {
     @ApiResponse(responseCode = "404", description = "Report not found")
     @ApiResponse(responseCode = "403", description = "Forbidden when Admin or Manager role is missing")
     public ResponseEntity<ConditionReportResponse> resolveReport(
-            @Parameter(description = "Condition Report ID") @PathVariable Long reportId) {
+            @Parameter(description = "Condition Report ID") @PathVariable java.util.UUID reportId) {
         return ResponseEntity.ok(assetService.resolveReport(reportId));
     }
 }

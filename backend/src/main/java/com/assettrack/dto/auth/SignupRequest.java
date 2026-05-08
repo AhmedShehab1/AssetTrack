@@ -12,6 +12,9 @@ public class SignupRequest {
     @Email(message = "Email must be valid")
     private String email;
 
+    @NotBlank(message = "Full name is required")
+    private String fullName;
+
     @NotBlank(message = "Password is required")
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$",

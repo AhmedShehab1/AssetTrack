@@ -26,27 +26,21 @@ public class DashboardService {
         Map<AssetStatus, Long> statusCounts = assetRepository.countByStatus().stream()
                 .collect(Collectors.toMap(AssetRepository.StatusCount::getStatus, AssetRepository.StatusCount::getCount));
 
-        List<String> statusLabels = Arrays.stream(AssetStatus.values())
-                .map(Enum::name)
-                .collect(Collectors.toList());
-        List<Long> statusData = Arrays.stream(AssetStatus.values())
-                .map(s -> statusCounts.getOrDefault(s, 0L))
+        List<DashboardSummaryDto.StatusCountDto> byStatus = Arrays.stream(AssetStatus.values())
+                .map(s -> new DashboardSummaryDto.StatusCountDto(s.name(), statusCounts.getOrDefault(s, 0L)))
                 .collect(Collectors.toList());
 
         Map<AssetType, Long> typeCounts = assetRepository.countByType().stream()
                 .collect(Collectors.toMap(AssetRepository.TypeCount::getType, AssetRepository.TypeCount::getCount));
 
-        List<String> typeLabels = Arrays.stream(AssetType.values())
-                .map(Enum::name)
-                .collect(Collectors.toList());
-        List<Long> typeData = Arrays.stream(AssetType.values())
-                .map(t -> typeCounts.getOrDefault(t, 0L))
+        List<DashboardSummaryDto.TypeCountDto> byType = Arrays.stream(AssetType.values())
+                .map(t -> new DashboardSummaryDto.TypeCountDto(t.name(), typeCounts.getOrDefault(t, 0L)))
                 .collect(Collectors.toList());
 
         return new DashboardSummaryDto(
                 totalAssets,
-                new DashboardSummaryDto.ChartData(statusLabels, statusData),
-                new DashboardSummaryDto.ChartData(typeLabels, typeData)
+                byStatus,
+                byType
         );
     }
 

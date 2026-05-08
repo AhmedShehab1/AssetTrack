@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface NotificationRepository extends JpaRepository<Notification, Long> {
+public interface NotificationRepository extends JpaRepository<Notification, java.util.UUID> {
 
     List<Notification> findByRecipientOrderByCreatedAtDesc(String recipient);
 
-    Optional<Notification> findByIdAndRecipient(Long id, String recipient);
+    Optional<Notification> findByIdAndRecipient(java.util.UUID id, String recipient);
 }

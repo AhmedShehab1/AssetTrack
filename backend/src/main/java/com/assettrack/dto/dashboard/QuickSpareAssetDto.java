@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QuickSpareAssetDto {
-    private Long id;
+    private java.util.UUID id;
     private String type;
     private String status;
 }

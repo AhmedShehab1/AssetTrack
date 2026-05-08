@@ -14,4 +14,7 @@ public class ReportConditionRequest {
 
     @NotBlank(message = "Issue description is required")
     private String issueDescription;
+
+    @NotBlank(message = "Severity is required")
+    private String severity;
 }

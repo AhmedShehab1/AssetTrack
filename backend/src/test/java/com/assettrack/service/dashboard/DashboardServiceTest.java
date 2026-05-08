@@ -1,5 +1,6 @@
 package com.assettrack.service.dashboard;
 
+import java.util.UUID;
 import com.assettrack.domain.asset.Asset;
 import com.assettrack.domain.asset.AssetStatus;
 import com.assettrack.domain.asset.AssetType;
@@ -57,15 +58,15 @@ class DashboardServiceTest {
 
         assertThat(summary.getTotalAssets()).isEqualTo(10L);
 
-        List<String> statusLabels = summary.getStatusDistribution().getLabels();
-        List<Long> statusData = summary.getStatusDistribution().getData();
+        List<String> statusLabels = summary.getByStatus().stream().map(DashboardSummaryDto.StatusCountDto::getStatus).toList();
+        List<Long> statusData = summary.getByStatus().stream().map(DashboardSummaryDto.StatusCountDto::getCount).toList();
         assertThat(statusLabels).containsExactly("AVAILABLE", "ALLOCATED", "EXPIRED");
         assertThat(statusData.get(statusLabels.indexOf("AVAILABLE"))).isEqualTo(6L);
         assertThat(statusData.get(statusLabels.indexOf("ALLOCATED"))).isEqualTo(4L);
         assertThat(statusData.get(statusLabels.indexOf("EXPIRED"))).isEqualTo(0L);
 
-        List<String> typeLabels = summary.getTypeDistribution().getLabels();
-        List<Long> typeData = summary.getTypeDistribution().getData();
+        List<String> typeLabels = summary.getByType().stream().map(DashboardSummaryDto.TypeCountDto::getType).toList();
+        List<Long> typeData = summary.getByType().stream().map(DashboardSummaryDto.TypeCountDto::getCount).toList();
         assertThat(typeLabels).containsExactly("LAPTOP", "SCREEN", "ACCESSORY");
         assertThat(typeData.get(typeLabels.indexOf("LAPTOP"))).isEqualTo(8L);
         assertThat(typeData.get(typeLabels.indexOf("SCREEN"))).isEqualTo(2L);
@@ -75,7 +76,7 @@ class DashboardServiceTest {
     @Test
     void getQuickSpareLaptop_WhenFound_ReturnsAsset() {
         Asset laptop = new Asset();
-        laptop.setId(1L);
+        laptop.setId(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         laptop.setType(AssetType.LAPTOP);
         laptop.setStatus(AssetStatus.AVAILABLE);
 
@@ -84,7 +85,7 @@ class DashboardServiceTest {
 
         QuickSpareAssetDto result = dashboardService.getQuickSpareLaptop();
         assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(1L);
+        assertThat(result.getId()).isEqualTo(UUID.fromString("00000000-0000-0000-0000-000000000001"));
         assertThat(result.getType()).isEqualTo("LAPTOP");
         assertThat(result.getStatus()).isEqualTo("AVAILABLE");
     }

@@ -1,5 +1,6 @@
 package com.assettrack.security;
 
+import java.util.UUID;
 import com.assettrack.repository.user.UserRepository;
 import com.assettrack.service.asset.AssetService;
 import com.assettrack.service.auth.AuthService;
@@ -112,26 +113,26 @@ public class SecurityFilterChainTest {
 
     @Test
     public void publicEndpoint_ShouldReturn200() throws Exception {
-        mockMvc.perform(get("/api/auth/test"))
+        mockMvc.perform(get("/api/v1/auth/test").contextPath("/api/v1"))
                 .andExpect(status().isOk());
     }
 
     @Test
     public void protectedEndpoint_WithoutJwt_ShouldReturn401() throws Exception {
-        mockMvc.perform(get("/api/assets/test"))
+        mockMvc.perform(get("/api/v1/assets/test").contextPath("/api/v1"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     public void adminEndpoint_WithDeveloperRole_ShouldReturn403() throws Exception {
-        mockMvc.perform(get("/api/users/test")
+        mockMvc.perform(get("/api/v1/users/test").contextPath("/api/v1")
                 .with(jwt().jwt(jwt -> jwt.claim("role", "DEVELOPER"))))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     public void adminEndpoint_WithAdminRole_ShouldReturn200() throws Exception {
-        mockMvc.perform(get("/api/users/test")
+        mockMvc.perform(get("/api/v1/users/test").contextPath("/api/v1")
                 .with(jwt().jwt(jwt -> jwt.claim("role", "ADMIN"))
                         .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
                 .andExpect(status().isOk());
@@ -139,7 +140,7 @@ public class SecurityFilterChainTest {
 
     @Test
     public void usersEndpoint_WithManagerRole_ShouldReturn403() throws Exception {
-        mockMvc.perform(get("/api/users")
+        mockMvc.perform(get("/api/v1/users").contextPath("/api/v1")
                 .with(jwt().jwt(jwt -> jwt.claim("role", "MANAGER"))
                         .authorities(new SimpleGrantedAuthority("ROLE_MANAGER"))))
                 .andExpect(status().isForbidden());
@@ -147,7 +148,7 @@ public class SecurityFilterChainTest {
 
     @Test
     public void usersEndpoint_WithAdminRole_ShouldReturn200() throws Exception {
-        mockMvc.perform(get("/api/users")
+        mockMvc.perform(get("/api/v1/users").contextPath("/api/v1")
                 .with(jwt().jwt(jwt -> jwt.claim("role", "ADMIN"))
                         .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
                 .andExpect(status().isOk());
@@ -155,15 +156,15 @@ public class SecurityFilterChainTest {
 
     @Test
     public void selfProfileEndpoint_WithAuthenticatedUser_ShouldReturn200() throws Exception {
-        mockMvc.perform(get("/api/users/me")
-                .with(jwt().jwt(jwt -> jwt.claim("role", "DEVELOPER").claim("userId", 1L))
+        mockMvc.perform(get("/api/v1/auth/me").contextPath("/api/v1")
+                .with(jwt().jwt(jwt -> jwt.claim("role", "DEVELOPER").claim("userId", UUID.fromString("00000000-0000-0000-0000-000000000001")))
                         .authorities(new SimpleGrantedAuthority("ROLE_DEVELOPER"))))
                 .andExpect(status().isOk());
     }
 
     @Test
     public void selfProfileEndpoint_WithoutJwt_ShouldReturn401() throws Exception {
-        mockMvc.perform(get("/api/users/me"))
+        mockMvc.perform(get("/api/v1/auth/me").contextPath("/api/v1"))
                 .andExpect(status().isUnauthorized());
     }
 }
