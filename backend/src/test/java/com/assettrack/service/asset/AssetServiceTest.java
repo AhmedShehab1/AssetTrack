@@ -22,6 +22,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -116,6 +118,131 @@ class AssetServiceTest {
         assertThat(response).isEqualTo(mappedResponse);
     }
 
+    @Test
+    void getConditionReports_WhenManagerOrAdmin_ReturnsAllReports() {
+        ConditionReport report = testReport(1L, testUser(7L));
+        ConditionReportResponse mapped = ConditionReportResponse.builder().id(1L).build();
+
+        when(securityUtils.getCurrentUserId(authentication)).thenReturn(7L);
+        when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(true);
+        when(conditionReportRepository.findAllByOrderByReportDateDesc()).thenReturn(List.of(report));
+        when(assetMapper.toResponse(report)).thenReturn(mapped);
+
+        List<ConditionReportResponse> result = assetService.getConditionReports(authentication);
+
+        assertThat(result).containsExactly(mapped);
+        verify(conditionReportRepository).findAllByOrderByReportDateDesc();
+        verify(conditionReportRepository, never()).findByReportedByIdOrderByReportDateDesc(any());
+    }
+
+    @Test
+    void getConditionReports_WhenRegularUser_ReturnsOnlyOwnReports() {
+        ConditionReport ownReport = testReport(1L, testUser(7L));
+        ConditionReportResponse mapped = ConditionReportResponse.builder().id(1L).build();
+
+        when(securityUtils.getCurrentUserId(authentication)).thenReturn(7L);
+        when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(false);
+        when(conditionReportRepository.findByReportedByIdOrderByReportDateDesc(7L)).thenReturn(List.of(ownReport));
+        when(assetMapper.toResponse(ownReport)).thenReturn(mapped);
+
+        List<ConditionReportResponse> result = assetService.getConditionReports(authentication);
+
+        assertThat(result).containsExactly(mapped);
+        verify(conditionReportRepository).findByReportedByIdOrderByReportDateDesc(7L);
+        verify(conditionReportRepository, never()).findAllByOrderByReportDateDesc();
+    }
+
+    @Test
+    void getReportsByAsset_WhenManagerOrAdmin_ReturnsAllAssetReports() {
+        Long assetId = 99L;
+        ConditionReport report = testReport(1L, testUser(8L));
+        ConditionReportResponse mapped = ConditionReportResponse.builder().id(1L).assetId(assetId).build();
+
+        when(assetRepository.existsById(assetId)).thenReturn(true);
+        when(securityUtils.getCurrentUserId(authentication)).thenReturn(7L);
+        when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(true);
+        when(conditionReportRepository.findByAssetIdOrderByReportDateDesc(assetId)).thenReturn(List.of(report));
+        when(assetMapper.toResponse(report)).thenReturn(mapped);
+
+        List<ConditionReportResponse> result = assetService.getReportsByAsset(assetId, authentication);
+
+        assertThat(result).containsExactly(mapped);
+        verify(conditionReportRepository).findByAssetIdOrderByReportDateDesc(assetId);
+        verify(conditionReportRepository, never())
+                .findByAssetIdAndReportedByIdOrderByReportDateDesc(any(), any());
+    }
+
+    @Test
+    void getReportsByAsset_WhenRegularUser_ReturnsOnlyOwnAssetReports() {
+        Long assetId = 99L;
+        Long userId = 7L;
+        ConditionReport ownReport = testReport(1L, testUser(userId));
+        ConditionReportResponse mapped = ConditionReportResponse.builder().id(1L).assetId(assetId).build();
+
+        when(assetRepository.existsById(assetId)).thenReturn(true);
+        when(securityUtils.getCurrentUserId(authentication)).thenReturn(userId);
+        when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(false);
+        when(conditionReportRepository.findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId))
+                .thenReturn(List.of(ownReport));
+        when(assetMapper.toResponse(ownReport)).thenReturn(mapped);
+
+        List<ConditionReportResponse> result = assetService.getReportsByAsset(assetId, authentication);
+
+        assertThat(result).containsExactly(mapped);
+        verify(conditionReportRepository).findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId);
+        verify(conditionReportRepository, never()).findByAssetIdOrderByReportDateDesc(any());
+    }
+
+    @Test
+    void getReportById_WhenManagerOrAdmin_CanViewAnyReport() {
+        Long reportId = 44L;
+        ConditionReport report = testReport(reportId, testUser(99L));
+        ConditionReportResponse mapped = ConditionReportResponse.builder().id(reportId).build();
+
+        when(conditionReportRepository.findById(reportId)).thenReturn(Optional.of(report));
+        when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(true);
+        when(assetMapper.toResponse(report)).thenReturn(mapped);
+
+        ConditionReportResponse result = assetService.getReportById(reportId, authentication);
+
+        assertThat(result).isEqualTo(mapped);
+        verify(securityUtils, never()).getCurrentUserId(authentication);
+    }
+
+    @Test
+    void getReportById_WhenRegularUserViewsOwnReport_ReturnsReport() {
+        Long userId = 7L;
+        Long reportId = 45L;
+        ConditionReport ownReport = testReport(reportId, testUser(userId));
+        ConditionReportResponse mapped = ConditionReportResponse.builder().id(reportId).reportedById(userId).build();
+
+        when(conditionReportRepository.findById(reportId)).thenReturn(Optional.of(ownReport));
+        when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(false);
+        when(securityUtils.getCurrentUserId(authentication)).thenReturn(userId);
+        when(assetMapper.toResponse(ownReport)).thenReturn(mapped);
+
+        ConditionReportResponse result = assetService.getReportById(reportId, authentication);
+
+        assertThat(result).isEqualTo(mapped);
+    }
+
+    @Test
+    void getReportById_WhenRegularUserViewsAnotherUsersReport_ThrowsForbidden() {
+        Long userId = 7L;
+        Long reportId = 46L;
+        ConditionReport othersReport = testReport(reportId, testUser(8L));
+
+        when(conditionReportRepository.findById(reportId)).thenReturn(Optional.of(othersReport));
+        when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(false);
+        when(securityUtils.getCurrentUserId(authentication)).thenReturn(userId);
+
+        assertThatThrownBy(() -> assetService.getReportById(reportId, authentication))
+                .isInstanceOf(SelfOperationException.class)
+                .hasMessageContaining("view your own condition reports");
+
+        verify(assetMapper, never()).toResponse(any(ConditionReport.class));
+    }
+
     private Asset testAsset() {
         return Asset.builder()
                 .id(99L)
@@ -125,6 +252,22 @@ class AssetServiceTest {
                 .serialNumber("SN-OWN-001")
                 .status(AssetStatus.ALLOCATED)
                 .build();
+    }
+
+    private ConditionReport testReport(Long reportId, User reporter) {
+        return ConditionReport.builder()
+                .id(reportId)
+                .asset(testAsset())
+                .reportedBy(reporter)
+                .issueDescription("Battery no longer charges")
+                .reportDate(LocalDate.now())
+                .build();
+    }
+
+    private User testUser(Long id) {
+        User user = testUser();
+        user.setId(id);
+        return user;
     }
 
     private User testUser() {

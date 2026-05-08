@@ -40,9 +40,11 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.time.LocalDateTime;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -135,6 +137,63 @@ class ConditionAndNotificationControllerIntegrationTest {
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].recipient").value(currentUser.getEmail()))
                 .andExpect(jsonPath("$[0].messageBody").value("Your condition report was received"));
+    }
+
+    @Test
+    void markNotificationAsRead_WhenNotificationBelongsToCurrentUser_ReturnsUpdatedNotification() throws Exception {
+        User currentUser = userRepository.save(user("developer@assettrack.com"));
+        User otherUser = userRepository.save(user("other@assettrack.com"));
+
+        Notification ownNotification = notificationRepository.save(Notification.builder()
+                .recipient(currentUser.getEmail())
+                .messageBody("Your condition report was received")
+                .type("CONDITION_REPORT")
+                .createdAt(LocalDateTime.now())
+                .build());
+        Notification otherNotification = notificationRepository.save(Notification.builder()
+                .recipient(otherUser.getEmail())
+                .messageBody("Another user's alert")
+                .type("CONDITION_REPORT")
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        mockMvc.perform(patch("/api/notifications/{notificationId}/read", ownNotification.getId())
+                        .with(jwt().jwt(token -> token
+                                        .claim("userId", currentUser.getId())
+                                        .claim("role", "ROLE_DEVELOPER"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_DEVELOPER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(ownNotification.getId()))
+                .andExpect(jsonPath("$.recipient").value(currentUser.getEmail()))
+                .andExpect(jsonPath("$.read").value(true));
+
+        Notification updatedOwnNotification = notificationRepository.findById(ownNotification.getId()).orElseThrow();
+        Notification unchangedOtherNotification = notificationRepository.findById(otherNotification.getId()).orElseThrow();
+        assertThat(updatedOwnNotification.isRead()).isTrue();
+        assertThat(unchangedOtherNotification.isRead()).isFalse();
+    }
+
+    @Test
+    void markNotificationAsRead_WhenNotificationBelongsToAnotherUser_ReturnsNotFound() throws Exception {
+        User currentUser = userRepository.save(user("developer@assettrack.com"));
+        User otherUser = userRepository.save(user("other@assettrack.com"));
+
+        Notification otherNotification = notificationRepository.save(Notification.builder()
+                .recipient(otherUser.getEmail())
+                .messageBody("Another user's alert")
+                .type("CONDITION_REPORT")
+                .createdAt(LocalDateTime.now())
+                .build());
+
+        mockMvc.perform(patch("/api/notifications/{notificationId}/read", otherNotification.getId())
+                        .with(jwt().jwt(token -> token
+                                        .claim("userId", currentUser.getId())
+                                        .claim("role", "ROLE_DEVELOPER"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_DEVELOPER"))))
+                .andExpect(status().isNotFound());
+
+        Notification unchangedNotification = notificationRepository.findById(otherNotification.getId()).orElseThrow();
+        assertThat(unchangedNotification.isRead()).isFalse();
     }
 
     private User user(String email) {
