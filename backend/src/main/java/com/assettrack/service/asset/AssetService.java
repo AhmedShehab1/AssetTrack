@@ -10,7 +10,9 @@ import com.assettrack.dto.asset.AssetResponse;
 import com.assettrack.dto.asset.ConditionReportResponse;
 import com.assettrack.dto.asset.CreateConditionReportRequest;
 import com.assettrack.exception.ResourceNotFoundException;
+import com.assettrack.exception.SelfOperationException;
 import com.assettrack.mapper.asset.AssetMapper;
+import com.assettrack.repository.asset.AssetAllocationRepository;
 import com.assettrack.repository.asset.AssetRepository;
 import com.assettrack.repository.asset.AssetSpecifications;
 import com.assettrack.repository.asset.ConditionReportRepository;
@@ -36,6 +38,7 @@ public class AssetService {
 
     private final AssetRepository assetRepository;
     private final ConditionReportRepository conditionReportRepository;
+    private final AssetAllocationRepository assetAllocationRepository;
     private final UserRepository userRepository;
     private final AssetMapper assetMapper;
     private final SecurityUtils securityUtils;
@@ -75,20 +78,33 @@ public class AssetService {
     @Transactional
     public ConditionReportResponse createConditionReport(CreateConditionReportRequest request,
                                                           Authentication authentication) {
+        return createConditionReport(request.getAssetId(), request.getIssueDescription(), authentication);
+    }
+
+    /**
+     * Creates a condition report for an asset.
+     * Managers and admins can report on any asset; regular users must currently own it.
+     */
+    @Transactional
+    public ConditionReportResponse createConditionReport(Long assetId,
+                                                          String issueDescription,
+                                                          Authentication authentication) {
         Long userId = securityUtils.getCurrentUserId(authentication);
 
-        Asset asset = assetRepository.findById(request.getAssetId())
+        Asset asset = assetRepository.findById(assetId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Asset not found with id: " + request.getAssetId()));
+                        "Asset not found with id: " + assetId));
 
         User reporter = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User not found with id: " + userId));
 
+        ensureCanSubmitConditionReport(asset.getId(), userId, authentication);
+
         ConditionReport report = ConditionReport.builder()
                 .asset(asset)
                 .reportedBy(reporter)
-                .issueDescription(request.getIssueDescription())
+                .issueDescription(issueDescription)
                 .reportDate(LocalDate.now())
                 .status(ReportStatus.OPEN)
                 .build();
@@ -97,14 +113,36 @@ public class AssetService {
     }
 
     /**
+     * Returns all condition reports visible to the current user.
+     */
+    @Transactional(readOnly = true)
+    public List<ConditionReportResponse> getConditionReports(Authentication authentication) {
+        Long userId = securityUtils.getCurrentUserId(authentication);
+        List<ConditionReport> reports = securityUtils.isManagerOrAdmin(authentication)
+                ? conditionReportRepository.findAllByOrderByReportDateDesc()
+                : conditionReportRepository.findByReportedByIdOrderByReportDateDesc(userId);
+
+        return reports.stream()
+                .map(assetMapper::toResponse)
+                .toList();
+    }
+
+    /**
      * Returns all condition reports for a specific asset, newest first.
      */
     @Transactional(readOnly = true)
-    public List<ConditionReportResponse> getReportsByAsset(Long assetId) {
+    public List<ConditionReportResponse> getReportsByAsset(Long assetId,
+                                                            Authentication authentication) {
         if (!assetRepository.existsById(assetId)) {
             throw new ResourceNotFoundException("Asset not found with id: " + assetId);
         }
-        return conditionReportRepository.findByAssetIdOrderByReportDateDesc(assetId)
+
+        Long userId = securityUtils.getCurrentUserId(authentication);
+        List<ConditionReport> reports = securityUtils.isManagerOrAdmin(authentication)
+                ? conditionReportRepository.findByAssetIdOrderByReportDateDesc(assetId)
+                : conditionReportRepository.findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId);
+
+        return reports
                 .stream()
                 .map(assetMapper::toResponse)
                 .toList();
@@ -114,10 +152,12 @@ public class AssetService {
      * Returns a single condition report by ID.
      */
     @Transactional(readOnly = true)
-    public ConditionReportResponse getReportById(Long reportId) {
+    public ConditionReportResponse getReportById(Long reportId,
+                                                  Authentication authentication) {
         ConditionReport report = conditionReportRepository.findById(reportId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Condition report not found with id: " + reportId));
+        ensureCanViewConditionReport(report, authentication);
         return assetMapper.toResponse(report);
     }
 
@@ -131,5 +171,27 @@ public class AssetService {
                         "Condition report not found with id: " + reportId));
         report.setStatus(ReportStatus.RESOLVED);
         return assetMapper.toResponse(conditionReportRepository.save(report));
+    }
+
+    private void ensureCanSubmitConditionReport(Long assetId, Long userId, Authentication authentication) {
+        if (securityUtils.isManagerOrAdmin(authentication)) {
+            return;
+        }
+
+        boolean ownsAsset = assetAllocationRepository.existsByAssetIdAndUserIdAndReturnDateIsNull(assetId, userId);
+        if (!ownsAsset) {
+            throw new SelfOperationException("You can only submit condition reports for assets currently assigned to you");
+        }
+    }
+
+    private void ensureCanViewConditionReport(ConditionReport report, Authentication authentication) {
+        if (securityUtils.isManagerOrAdmin(authentication)) {
+            return;
+        }
+
+        Long userId = securityUtils.getCurrentUserId(authentication);
+        if (!report.getReportedBy().getId().equals(userId)) {
+            throw new SelfOperationException("You can only view your own condition reports");
+        }
     }
 }

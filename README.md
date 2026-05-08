@@ -86,3 +86,8 @@ Notes:
 - `make backend` loads `.env` via `scripts/load-env.sh` if it exists.
 - `make backend` also runs `backend/scripts/ensure-rsa-keys.sh` to generate keys if missing.
 - Run `make backend` and `make frontend` in separate terminals.
+
+## 📖 API Documentation
+
+The API is documented using the OpenAPI 3.0 specification. You can view the interactive Swagger UI documentation here:
+[https://AhmedShehab1.github.io/AssetTrack/docs/](https://AhmedShehab1.github.io/AssetTrack/docs/)

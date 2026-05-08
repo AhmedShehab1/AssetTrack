@@ -10,7 +10,11 @@ import java.util.List;
 @Repository
 public interface ConditionReportRepository extends JpaRepository<ConditionReport, Long> {
 
+    List<ConditionReport> findAllByOrderByReportDateDesc();
+
     List<ConditionReport> findByAssetIdOrderByReportDateDesc(Long assetId);
+
+    List<ConditionReport> findByAssetIdAndReportedByIdOrderByReportDateDesc(Long assetId, Long userId);
 
     List<ConditionReport> findByReportedByIdOrderByReportDateDesc(Long userId);
 

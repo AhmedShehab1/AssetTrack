@@ -12,4 +12,6 @@ public interface AssetAllocationRepository extends JpaRepository<AssetAllocation
 
     List<AssetAllocation> findByAssetIdOrderByCheckoutDateDesc(Long assetId);
     Optional<AssetAllocation> findByAssetIdAndReturnDateIsNull(Long assetId);
+
+    boolean existsByAssetIdAndUserIdAndReturnDateIsNull(Long assetId, Long userId);
 }

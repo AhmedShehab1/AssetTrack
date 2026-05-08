@@ -10,11 +10,13 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  config:
+    import: "optional:file:.env[.properties]"
   mail:
     host: ${MAILTRAP_HOST:sandbox.smtp.mailtrap.io}
     port: ${MAILTRAP_PORT:2525}
-    username: ${MAILTRAP_USERNAME:}
-    password: ${MAILTRAP_PASSWORD:}
+    username: ${MAILTRAP_USERNAME}
+    password: ${MAILTRAP_PASSWORD}
     properties:
       mail:
         smtp:
