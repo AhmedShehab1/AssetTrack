@@ -1,6 +1,7 @@
 package com.assettrack.security;
 
 import com.assettrack.repository.user.UserRepository;
+import com.assettrack.service.asset.AssetService;
 import com.assettrack.service.auth.AuthService;
 import com.assettrack.service.dashboard.DashboardService;
 import com.assettrack.service.user.UserService;
@@ -58,6 +59,9 @@ public class SecurityFilterChainTest {
 
     @MockBean
     private UserRepository userRepository;
+
+    @MockBean
+    AssetService assetService;
 
     /**
      * Provides in-memory RSA keys for the test context, overriding the production

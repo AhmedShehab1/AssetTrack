@@ -4,9 +4,11 @@ import com.assettrack.common.exception.dto.ErrorResponse;
 import com.assettrack.common.exception.dto.ValidationErrorDetail;
 import com.assettrack.common.exception.dto.ValidationErrorResponse;
 import com.assettrack.common.exception.util.JsonPointerUtils;
+import com.assettrack.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -45,8 +47,26 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(ErrorResponse.builder().code("BAD_REQUEST").message("Malformed JSON request").build());
+    }
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleEmailExists(EmailAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.builder().code("EMAIL_ALREADY_EXISTS").message(ex.getMessage()).build());
+    }
+
+    @ExceptionHandler({InvalidPasswordException.class, InvalidRoleException.class,
+            SelfOperationException.class, ActiveUserDeletionException.class})
+    public ResponseEntity<ErrorResponse> handleBadRequest(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.builder().code("BAD_REQUEST").message(ex.getMessage()).build());
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.builder().code("INVALID_CREDENTIALS").message("Invalid email or password").build());
     }
 
     @ExceptionHandler(Exception.class)

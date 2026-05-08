@@ -45,8 +45,8 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.DEVELOPER);
-        userRepository.save(user);
-        String token = generateToken(user);
+        User saved = userRepository.save(user);;
+        String token = generateToken(saved);
         return authMapper.toResponse(token, user);
     }
     public AuthResponse login(LoginRequest request) {
