@@ -83,15 +83,15 @@ class AuthControllerTest {
         @DisplayName("returns 201 and token on success")
         void success() throws Exception {
             SignupRequest req = signupRequest("alice@example.com", "Password1!");
-            AuthResponse response = new AuthResponse("jwt-token", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().email("alice@example.com").role("DEVELOPER").build());
+            com.assettrack.dto.user.UserResponse response = com.assettrack.dto.user.UserResponse.builder().email("alice@example.com").role("DEVELOPER").build();
             when(authService.register(any())).thenReturn(response);
 
             mockMvc.perform(post("/auth/signup")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.accessToken").value("jwt-token"))
-                    .andExpect(jsonPath("$.user.role").value("DEVELOPER"));
+                    .andExpect(jsonPath("$.email").value("alice@example.com"))
+                    .andExpect(jsonPath("$.role").value("DEVELOPER"));
         }
 
         @Test
@@ -115,7 +115,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/auth/signup")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
 
             verify(authService, never()).register(any());
         }
@@ -128,7 +128,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/auth/signup")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
 
             verify(authService, never()).register(any());
         }
@@ -141,7 +141,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/auth/signup")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
 
             verify(authService, never()).register(any());
         }
@@ -151,7 +151,7 @@ class AuthControllerTest {
         void missingBody() throws Exception {
             mockMvc.perform(post("/auth/signup")
                             .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
         }
     }
 
@@ -197,7 +197,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
 
             verify(authService, never()).login(any());
         }
@@ -210,7 +210,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
 
             verify(authService, never()).login(any());
         }
@@ -220,7 +220,7 @@ class AuthControllerTest {
         void missingBody() throws Exception {
             mockMvc.perform(post("/auth/login")
                             .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
         }
     }
 }

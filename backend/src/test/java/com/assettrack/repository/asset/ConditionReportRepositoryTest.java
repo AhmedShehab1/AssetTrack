@@ -14,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.time.LocalDate;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -77,16 +80,18 @@ class ConditionReportRepositoryTest {
                 .issueDescription("Old issue")
                 .reportDate(LocalDate.of(2025, 1, 1))
                 .build());
-
+ 
         reportRepository.save(ConditionReport.builder()
                 .asset(testAsset).reportedBy(testUser)
                 .issueDescription("Recent issue")
                 .reportDate(LocalDate.of(2025, 5, 1))
                 .build());
-
-        List<ConditionReport> reports =
-                reportRepository.findByAssetIdOrderByReportDateDesc(testAsset.getId());
-
+ 
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ConditionReport> reportsPage =
+                reportRepository.findByAssetIdOrderByReportDateDesc(testAsset.getId(), pageable);
+ 
+        List<ConditionReport> reports = reportsPage.getContent();
         assertThat(reports).hasSize(2);
         assertThat(reports.get(0).getReportDate()).isAfter(reports.get(1).getReportDate());
         assertThat(reports.get(0).getIssueDescription()).isEqualTo("Recent issue");
@@ -99,10 +104,12 @@ class ConditionReportRepositoryTest {
                 .issueDescription("Keyboard malfunction")
                 .reportDate(LocalDate.now())
                 .build());
-
-        List<ConditionReport> reports =
-                reportRepository.findByReportedByIdOrderByReportDateDesc(testUser.getId());
-
+ 
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ConditionReport> reportsPage =
+                reportRepository.findByReportedByIdOrderByReportDateDesc(testUser.getId(), pageable);
+ 
+        List<ConditionReport> reports = reportsPage.getContent();
         assertThat(reports).hasSize(1);
         assertThat(reports.get(0).getReportedBy().getEmail()).isEqualTo("reporter@assettrack.com");
     }

@@ -72,8 +72,8 @@ public class ConditionController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "List condition reports", description = "Managers and admins see all reports. Regular users see only reports they submitted.")
     @ApiResponse(responseCode = "200", description = "Reports retrieved")
-    public ResponseEntity<List<ConditionReportResponse>> getConditionReports(Authentication authentication) {
-        return ResponseEntity.ok(assetService.getConditionReports(authentication));
+    public ResponseEntity<com.assettrack.dto.common.PagedResponse<ConditionReportResponse>> getConditionReports(Authentication authentication, org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(com.assettrack.dto.common.PageUtils.toPagedResponse(assetService.getConditionReports(authentication, pageable)));
     }
 
     @GetMapping("/{assetId}/condition-reports")
@@ -81,10 +81,10 @@ public class ConditionController {
     @Operation(summary = "Get condition reports for an asset", description = "Managers and admins see all reports for the asset. Regular users see only reports they submitted.")
     @ApiResponse(responseCode = "200", description = "Reports retrieved")
     @ApiResponse(responseCode = "404", description = "Asset not found")
-    public ResponseEntity<List<ConditionReportResponse>> getReportsByAsset(
+    public ResponseEntity<com.assettrack.dto.common.PagedResponse<ConditionReportResponse>> getReportsByAsset(
             @Parameter(description = "Asset ID") @PathVariable java.util.UUID assetId,
-            Authentication authentication) {
-        return ResponseEntity.ok(assetService.getReportsByAsset(assetId, authentication));
+            Authentication authentication, org.springframework.data.domain.Pageable pageable) {
+        return ResponseEntity.ok(com.assettrack.dto.common.PageUtils.toPagedResponse(assetService.getReportsByAsset(assetId, authentication, pageable)));
     }
 
     @GetMapping("/condition-reports/{reportId}")

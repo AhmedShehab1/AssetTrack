@@ -9,9 +9,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import com.assettrack.domain.asset.Asset;
 import com.assettrack.domain.asset.AssetStatus;
@@ -124,34 +130,39 @@ class AssetServiceTest {
     void getConditionReports_WhenManagerOrAdmin_ReturnsAllReports() {
         ConditionReport report = testReport(UUID.fromString("00000000-0000-0000-0000-000000000001"), testUser(UUID.fromString("00000000-0000-0000-0000-000000000007")));
         ConditionReportResponse mapped = ConditionReportResponse.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000001")).build();
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ConditionReport> page = new PageImpl<>(List.of(report));
 
         when(securityUtils.getCurrentUserId(authentication)).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000007"));
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(true);
-        when(conditionReportRepository.findAllByOrderByReportDateDesc()).thenReturn(List.of(report));
+        when(conditionReportRepository.findAllByOrderByReportDateDesc(pageable)).thenReturn(page);
         when(assetMapper.toResponse(report)).thenReturn(mapped);
 
-        List<ConditionReportResponse> result = assetService.getConditionReports(authentication);
+        Page<ConditionReportResponse> result = assetService.getConditionReports(authentication, pageable);
 
-        assertThat(result).containsExactly(mapped);
-        verify(conditionReportRepository).findAllByOrderByReportDateDesc();
-        verify(conditionReportRepository, never()).findByReportedByIdOrderByReportDateDesc(any());
+        assertThat(result.getContent()).containsExactly(mapped);
+        verify(conditionReportRepository).findAllByOrderByReportDateDesc(pageable);
+        verify(conditionReportRepository, never()).findByReportedByIdOrderByReportDateDesc(any(), any());
     }
 
     @Test
     void getConditionReports_WhenRegularUser_ReturnsOnlyOwnReports() {
-        ConditionReport ownReport = testReport(UUID.fromString("00000000-0000-0000-0000-000000000001"), testUser(UUID.fromString("00000000-0000-0000-0000-000000000007")));
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000007");
+        ConditionReport ownReport = testReport(UUID.fromString("00000000-0000-0000-0000-000000000001"), testUser(userId));
         ConditionReportResponse mapped = ConditionReportResponse.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000001")).build();
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ConditionReport> page = new PageImpl<>(List.of(ownReport));
 
-        when(securityUtils.getCurrentUserId(authentication)).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000007"));
+        when(securityUtils.getCurrentUserId(authentication)).thenReturn(userId);
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(false);
-        when(conditionReportRepository.findByReportedByIdOrderByReportDateDesc(UUID.fromString("00000000-0000-0000-0000-000000000007"))).thenReturn(List.of(ownReport));
+        when(conditionReportRepository.findByReportedByIdOrderByReportDateDesc(userId, pageable)).thenReturn(page);
         when(assetMapper.toResponse(ownReport)).thenReturn(mapped);
 
-        List<ConditionReportResponse> result = assetService.getConditionReports(authentication);
+        Page<ConditionReportResponse> result = assetService.getConditionReports(authentication, pageable);
 
-        assertThat(result).containsExactly(mapped);
-        verify(conditionReportRepository).findByReportedByIdOrderByReportDateDesc(UUID.fromString("00000000-0000-0000-0000-000000000007"));
-        verify(conditionReportRepository, never()).findAllByOrderByReportDateDesc();
+        assertThat(result.getContent()).containsExactly(mapped);
+        verify(conditionReportRepository).findByReportedByIdOrderByReportDateDesc(userId, pageable);
+        verify(conditionReportRepository, never()).findAllByOrderByReportDateDesc(any());
     }
 
     @Test
@@ -159,19 +170,21 @@ class AssetServiceTest {
         UUID assetId = UUID.fromString("00000000-0000-0000-0000-000000000099");
         ConditionReport report = testReport(UUID.fromString("00000000-0000-0000-0000-000000000001"), testUser(UUID.fromString("00000000-0000-0000-0000-000000000008")));
         ConditionReportResponse mapped = ConditionReportResponse.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000001")).asset(com.assettrack.dto.asset.AssetResponse.builder().id(assetId).build()).build();
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ConditionReport> page = new PageImpl<>(List.of(report));
 
         when(assetRepository.existsById(assetId)).thenReturn(true);
         when(securityUtils.getCurrentUserId(authentication)).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000007"));
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(true);
-        when(conditionReportRepository.findByAssetIdOrderByReportDateDesc(assetId)).thenReturn(List.of(report));
+        when(conditionReportRepository.findByAssetIdOrderByReportDateDesc(assetId, pageable)).thenReturn(page);
         when(assetMapper.toResponse(report)).thenReturn(mapped);
 
-        List<ConditionReportResponse> result = assetService.getReportsByAsset(assetId, authentication);
+        Page<ConditionReportResponse> result = assetService.getReportsByAsset(assetId, authentication, pageable);
 
-        assertThat(result).containsExactly(mapped);
-        verify(conditionReportRepository).findByAssetIdOrderByReportDateDesc(assetId);
+        assertThat(result.getContent()).containsExactly(mapped);
+        verify(conditionReportRepository).findByAssetIdOrderByReportDateDesc(assetId, pageable);
         verify(conditionReportRepository, never())
-                .findByAssetIdAndReportedByIdOrderByReportDateDesc(any(), any());
+                .findByAssetIdAndReportedByIdOrderByReportDateDesc(any(), any(), any());
     }
 
     @Test
@@ -180,19 +193,21 @@ class AssetServiceTest {
         UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000007");
         ConditionReport ownReport = testReport(UUID.fromString("00000000-0000-0000-0000-000000000001"), testUser(userId));
         ConditionReportResponse mapped = ConditionReportResponse.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000001")).asset(com.assettrack.dto.asset.AssetResponse.builder().id(assetId).build()).build();
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ConditionReport> page = new PageImpl<>(List.of(ownReport));
 
         when(assetRepository.existsById(assetId)).thenReturn(true);
         when(securityUtils.getCurrentUserId(authentication)).thenReturn(userId);
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(false);
-        when(conditionReportRepository.findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId))
-                .thenReturn(List.of(ownReport));
+        when(conditionReportRepository.findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId, pageable))
+                .thenReturn(page);
         when(assetMapper.toResponse(ownReport)).thenReturn(mapped);
 
-        List<ConditionReportResponse> result = assetService.getReportsByAsset(assetId, authentication);
+        Page<ConditionReportResponse> result = assetService.getReportsByAsset(assetId, authentication, pageable);
 
-        assertThat(result).containsExactly(mapped);
-        verify(conditionReportRepository).findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId);
-        verify(conditionReportRepository, never()).findByAssetIdOrderByReportDateDesc(any());
+        assertThat(result.getContent()).containsExactly(mapped);
+        verify(conditionReportRepository).findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId, pageable);
+        verify(conditionReportRepository, never()).findByAssetIdOrderByReportDateDesc(any(), any());
     }
 
     @Test

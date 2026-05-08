@@ -7,6 +7,12 @@ import com.assettrack.service.auth.AuthService;
 import com.assettrack.service.dashboard.DashboardService;
 import com.assettrack.service.notification.NotificationService;
 import com.assettrack.service.user.UserService;
+import com.assettrack.dto.user.UserResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import java.util.Collections;
+import java.util.List;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
@@ -30,6 +36,8 @@ import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -146,6 +154,9 @@ public class SecurityFilterChainTest {
 
     @Test
     public void adminEndpoint_WithAdminRole_ShouldReturn200() throws Exception {
+        Page<UserResponse> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10), 0);
+        when(userService.getAllUsers(any())).thenReturn(emptyPage);
+
         mockMvc.perform(get("/api/v1/users").contextPath("/api/v1")
                 .with(jwt().jwt(jwt -> jwt.claim("role", "ADMIN"))
                         .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
@@ -162,6 +173,9 @@ public class SecurityFilterChainTest {
 
     @Test
     public void usersEndpoint_WithAdminRole_ShouldReturn200() throws Exception {
+        Page<UserResponse> emptyPage = new PageImpl<>(Collections.emptyList(), PageRequest.of(0, 10), 0);
+        when(userService.getAllUsers(any())).thenReturn(emptyPage);
+
         mockMvc.perform(get("/api/v1/users").contextPath("/api/v1")
                 .with(jwt().jwt(jwt -> jwt.claim("role", "ADMIN"))
                         .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
@@ -170,6 +184,8 @@ public class SecurityFilterChainTest {
 
     @Test
     public void selfProfileEndpoint_WithAuthenticatedUser_ShouldReturn200() throws Exception {
+        when(userService.getMyProfile(any())).thenReturn(new UserResponse());
+
         mockMvc.perform(get("/api/v1/auth/me").contextPath("/api/v1")
                 .with(jwt().jwt(jwt -> jwt.claim("role", "DEVELOPER").claim("userId", UUID.fromString("00000000-0000-0000-0000-000000000001")))
                         .authorities(new SimpleGrantedAuthority("ROLE_DEVELOPER"))))

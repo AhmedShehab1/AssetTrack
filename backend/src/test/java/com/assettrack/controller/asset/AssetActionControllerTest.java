@@ -137,7 +137,7 @@ class AssetActionControllerTest {
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].id").value(ASSET_ID_1.toString()))
-                    .andExpect(jsonPath("$.page.totalElements").value(1));
+                    .andExpect(jsonPath("$.meta.totalElements").value(1));
         }
 
         @Test
@@ -155,7 +155,7 @@ class AssetActionControllerTest {
                             .param("status", "AVAILABLE")
                             .param("type", "LAPTOP"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.page.totalElements").value(1));
+                    .andExpect(jsonPath("$.meta.totalElements").value(1));
         }
 
         @Test
@@ -171,7 +171,7 @@ class AssetActionControllerTest {
             mockMvc.perform(get("/search/assets"))
                     .andDo(print())
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.page.totalElements").value(0));
+                    .andExpect(jsonPath("$.meta.totalElements").value(0));
         }
     }
 
@@ -261,7 +261,7 @@ class AssetActionControllerTest {
             mockMvc.perform(post("/assets/condition-reports")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
 
             verify(assetService, never()).createConditionReport(any(), any());
         }
@@ -278,7 +278,7 @@ class AssetActionControllerTest {
             mockMvc.perform(post("/assets/condition-reports")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
 
             verify(assetService, never()).createConditionReport(any(), any());
         }
@@ -308,31 +308,33 @@ class AssetActionControllerTest {
         @WithMockUser
         @DisplayName("returns 200 with reports list")
         void success() throws Exception {
-            when(assetService.getReportsByAsset(eq(ASSET_ID_1), any()))
-                    .thenReturn(List.of(buildReportResponse(REPORT_ID_10, ASSET_ID_1)));
+            Page<ConditionReportResponse> page = new PageImpl<>(List.of(buildReportResponse(REPORT_ID_10, ASSET_ID_1)), PageRequest.of(0, 10), 1);
+            when(assetService.getReportsByAsset(eq(ASSET_ID_1), any(), any()))
+                    .thenReturn(page);
 
             mockMvc.perform(get("/assets/" + ASSET_ID_1 + "/condition-reports"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$[0].id").value(REPORT_ID_10.toString()))
-                    .andExpect(jsonPath("$[0].asset.id").value(ASSET_ID_1.toString()));
+                    .andExpect(jsonPath("$.content[0].id").value(REPORT_ID_10.toString()))
+                    .andExpect(jsonPath("$.content[0].asset.id").value(ASSET_ID_1.toString()));
         }
 
         @Test
         @WithMockUser
         @DisplayName("returns 200 with empty list when no reports")
         void empty() throws Exception {
-            when(assetService.getReportsByAsset(eq(ASSET_ID_1), any())).thenReturn(List.of());
+            Page<ConditionReportResponse> page = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+            when(assetService.getReportsByAsset(eq(ASSET_ID_1), any(), any())).thenReturn(page);
 
             mockMvc.perform(get("/assets/" + ASSET_ID_1 + "/condition-reports"))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$").isEmpty());
+                    .andExpect(jsonPath("$.content").isEmpty());
         }
 
         @Test
         @WithMockUser
         @DisplayName("returns 404 when asset not found")
         void assetNotFound() throws Exception {
-            when(assetService.getReportsByAsset(eq(ASSET_ID_999), any()))
+            when(assetService.getReportsByAsset(eq(ASSET_ID_999), any(), any()))
                     .thenThrow(new ResourceNotFoundException("Asset not found with id: 999"));
 
             mockMvc.perform(get("/assets/" + ASSET_ID_999 + "/condition-reports"))

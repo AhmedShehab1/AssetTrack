@@ -25,13 +25,13 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/signup")
-    @Operation(summary = "Register a new user", description = "Creates a new user account and returns a JWT token")
+    @Operation(summary = "Register a new user", description = "Creates a new user account")
     @ApiResponse(responseCode = "201", description = "User registered successfully",
-            content = @Content(schema = @Schema(implementation = AuthResponse.class)))
+            content = @Content(schema = @Schema(implementation = com.assettrack.dto.user.UserResponse.class)))
     @ApiResponse(responseCode = "422", description = "Validation error")
     @ApiResponse(responseCode = "409", description = "Email already exists")
-    public ResponseEntity<AuthResponse> register(@RequestBody @Validated SignupRequest request) {
-        AuthResponse response = authService.register(request);
+    public ResponseEntity<com.assettrack.dto.user.UserResponse> register(@RequestBody @Validated SignupRequest request) {
+        com.assettrack.dto.user.UserResponse response = authService.register(request);
         return ResponseEntity.status(201).body(response);
     }
 

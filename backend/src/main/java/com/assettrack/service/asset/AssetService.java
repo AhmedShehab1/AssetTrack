@@ -116,36 +116,31 @@ public class AssetService {
      * Returns all condition reports visible to the current user.
      */
     @Transactional(readOnly = true)
-    public List<ConditionReportResponse> getConditionReports(Authentication authentication) {
+    public org.springframework.data.domain.Page<ConditionReportResponse> getConditionReports(Authentication authentication, org.springframework.data.domain.Pageable pageable) {
         java.util.UUID userId = securityUtils.getCurrentUserId(authentication);
-        List<ConditionReport> reports = securityUtils.isManagerOrAdmin(authentication)
-                ? conditionReportRepository.findAllByOrderByReportDateDesc()
-                : conditionReportRepository.findByReportedByIdOrderByReportDateDesc(userId);
+        org.springframework.data.domain.Page<ConditionReport> reports = securityUtils.isManagerOrAdmin(authentication)
+                ? conditionReportRepository.findAllByOrderByReportDateDesc(pageable)
+                : conditionReportRepository.findByReportedByIdOrderByReportDateDesc(userId, pageable);
 
-        return reports.stream()
-                .map(assetMapper::toResponse)
-                .toList();
+        return reports.map(assetMapper::toResponse);
     }
 
     /**
      * Returns all condition reports for a specific asset, newest first.
      */
     @Transactional(readOnly = true)
-    public List<ConditionReportResponse> getReportsByAsset(java.util.UUID assetId,
-                                                            Authentication authentication) {
+    public org.springframework.data.domain.Page<ConditionReportResponse> getReportsByAsset(java.util.UUID assetId,
+                                                            Authentication authentication, org.springframework.data.domain.Pageable pageable) {
         if (!assetRepository.existsById(assetId)) {
             throw new ResourceNotFoundException("Asset not found with id: " + assetId);
         }
 
         java.util.UUID userId = securityUtils.getCurrentUserId(authentication);
-        List<ConditionReport> reports = securityUtils.isManagerOrAdmin(authentication)
-                ? conditionReportRepository.findByAssetIdOrderByReportDateDesc(assetId)
-                : conditionReportRepository.findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId);
+        org.springframework.data.domain.Page<ConditionReport> reports = securityUtils.isManagerOrAdmin(authentication)
+                ? conditionReportRepository.findByAssetIdOrderByReportDateDesc(assetId, pageable)
+                : conditionReportRepository.findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId, pageable);
 
-        return reports
-                .stream()
-                .map(assetMapper::toResponse)
-                .toList();
+        return reports.map(assetMapper::toResponse);
     }
 
     /**

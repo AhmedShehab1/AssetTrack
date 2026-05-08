@@ -41,8 +41,8 @@ public class UserController {
     @Operation(summary = "List all users", description = "Returns a paginated list of all users (Admin only)")
     @ApiResponse(responseCode = "200", description = "Users retrieved")
     @ApiResponse(responseCode = "403", description = "Forbidden – Admin role required")
-    public ResponseEntity<Page<UserResponse>> getAllUsers(Pageable pageable){
-        return ResponseEntity.ok(userService.getAllUsers(pageable));
+    public ResponseEntity<com.assettrack.dto.common.PagedResponse<UserResponse>> getAllUsers(Pageable pageable){
+        return ResponseEntity.ok(com.assettrack.dto.common.PageUtils.toPagedResponse(userService.getAllUsers(pageable)));
     }
 
     @GetMapping("/users/inactive")

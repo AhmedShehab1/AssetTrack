@@ -34,7 +34,7 @@ public class AssetActionController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Search assets", description = "Dynamic asset search with optional filters for status, type, brand, and serial number. All parameters are optional and composable.")
     @ApiResponse(responseCode = "200", description = "Search results returned")
-    public ResponseEntity<Page<AssetResponse>> searchAssets(
+    public ResponseEntity<com.assettrack.dto.common.PagedResponse<AssetResponse>> searchAssets(
             @Parameter(description = "Filter by status (AVAILABLE, ALLOCATED, EXPIRED)")
             @RequestParam(required = false) AssetStatus status,
             @Parameter(description = "Filter by type (LAPTOP, SCREEN, ACCESSORY)")
@@ -44,7 +44,7 @@ public class AssetActionController {
             @Parameter(description = "Filter by exact serial number")
             @RequestParam(required = false) String serialNumber,
             Pageable pageable) {
-        return ResponseEntity.ok(assetService.searchAssets(status, type, brand, serialNumber, pageable));
+        return ResponseEntity.ok(com.assettrack.dto.common.PageUtils.toPagedResponse(assetService.searchAssets(status, type, brand, serialNumber, pageable)));
     }
 
     @GetMapping("/spare-laptop")
