@@ -1,5 +1,8 @@
 package com.assettrack.domain.asset;
 
 public enum ReportStatus {
-    OPEN, RESOLVED
+    OPEN,
+    IN_PROGRESS,
+    RESOLVED,
+    CLOSED
 }

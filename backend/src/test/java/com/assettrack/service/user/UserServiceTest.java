@@ -29,13 +29,19 @@ import static org.mockito.Mockito.*;
 @DisplayName("UserService")
 class UserServiceTest {
 
-    @Mock UserRepository userRepository;
-    @Mock PasswordEncoder passwordEncoder;
-    @Mock UserMapper userMapper;
-    @Mock SecurityUtils securityUtils;
-    @Mock Authentication authentication;
+    @Mock
+    UserRepository userRepository;
+    @Mock
+    PasswordEncoder passwordEncoder;
+    @Mock
+    UserMapper userMapper;
+    @Mock
+    SecurityUtils securityUtils;
+    @Mock
+    Authentication authentication;
 
-    @InjectMocks UserService userService;
+    @InjectMocks
+    UserService userService;
 
     private User buildUser(java.util.UUID id, String email) {
         User u = new User();
@@ -48,7 +54,8 @@ class UserServiceTest {
     }
 
     private UserResponse buildResponse(java.util.UUID id, String email) {
-        return new UserResponse(id, email, "DEVELOPER", true, LocalDateTime.now(), java.time.LocalDateTime.now(), "Test User");
+        return new UserResponse(id, email, "Test User", Role.DEVELOPER, LocalDateTime.now(),
+                java.time.LocalDateTime.now(), true);
     }
 
     // ── getMyProfile() ────────────────────────────────────────────────────────
@@ -133,7 +140,8 @@ class UserServiceTest {
             java.util.UUID testId = java.util.UUID.randomUUID();
             User inactive = buildUser(testId, "bob@example.com");
             inactive.setActive(false);
-            UserResponse response = new UserResponse(testId, "bob@example.com", "DEVELOPER", false, LocalDateTime.now(), java.time.LocalDateTime.now(), "Test User");
+            UserResponse response = new UserResponse(testId, "bob@example.com", "Test User", Role.DEVELOPER,
+                    LocalDateTime.now(), java.time.LocalDateTime.now(), false);
             Pageable pageable = PageRequest.of(0, 10);
             Page<User> page = new PageImpl<>(List.of(inactive), pageable, 1);
 

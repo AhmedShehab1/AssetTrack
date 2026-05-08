@@ -5,7 +5,7 @@ import com.assettrack.dto.auth.AuthResponse;
 import com.assettrack.dto.auth.LoginRequest;
 import com.assettrack.dto.auth.SignupRequest;
 import com.assettrack.exception.EmailAlreadyExistsException;
-import com.assettrack.service.auth.AuthService;
+import com.assettrack.service.auth.IAuthService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,19 +28,22 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
-@Import({AuthControllerTest.SecurityTestConfig.class, GlobalExceptionHandler.class})
+@Import({ AuthControllerTest.SecurityTestConfig.class, GlobalExceptionHandler.class })
 @DisplayName("AuthController")
 class AuthControllerTest {
 
-    @Autowired MockMvc mockMvc;
-    @Autowired ObjectMapper objectMapper;
-    @MockBean  AuthService authService;
+    @Autowired
+    MockMvc mockMvc;
+    @Autowired
+    ObjectMapper objectMapper;
+    @MockBean
+    IAuthService authService;
 
     @BeforeEach
     void resetMocks() {
         reset(authService);
     }
-    
+
     @TestConfiguration
     static class SecurityTestConfig {
         @Bean
@@ -52,8 +55,7 @@ class AuthControllerTest {
                     .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .authorizeHttpRequests(auth -> auth
                             .requestMatchers("/auth/**").permitAll()
-                            .anyRequest().authenticated()
-                    )
+                            .anyRequest().authenticated())
                     .build();
         }
     }
@@ -83,15 +85,19 @@ class AuthControllerTest {
         @DisplayName("returns 201 and token on success")
         void success() throws Exception {
             SignupRequest req = signupRequest("alice@example.com", "Password1!");
-            AuthResponse response = new AuthResponse("jwt-token", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().email("alice@example.com").role("DEVELOPER").build());
+            com.assettrack.dto.user.UserResponse response = com.assettrack.dto.user.UserResponse.builder()
+                    .email("alice@example.com")
+                    .fullName("Alice Johnson")
+                    .role(com.assettrack.domain.user.Role.DEVELOPER)
+                    .build();
             when(authService.register(any())).thenReturn(response);
 
             mockMvc.perform(post("/auth/signup")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(req)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.accessToken").value("jwt-token"))
-                    .andExpect(jsonPath("$.user.role").value("DEVELOPER"));
+                    .andExpect(jsonPath("$.email").value("alice@example.com"))
+                    .andExpect(jsonPath("$.role").value("DEVELOPER"));
         }
 
         @Test
@@ -102,8 +108,8 @@ class AuthControllerTest {
                     .thenThrow(new EmailAlreadyExistsException("Email already in use"));
 
             mockMvc.perform(post("/auth/signup")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(req)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isConflict());
         }
 
@@ -115,7 +121,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/auth/signup")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
 
             verify(authService, never()).register(any());
         }
@@ -128,7 +134,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/auth/signup")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
 
             verify(authService, never()).register(any());
         }
@@ -141,7 +147,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/auth/signup")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
 
             verify(authService, never()).register(any());
         }
@@ -151,7 +157,7 @@ class AuthControllerTest {
         void missingBody() throws Exception {
             mockMvc.perform(post("/auth/signup")
                             .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
         }
     }
 
@@ -165,12 +171,13 @@ class AuthControllerTest {
         @DisplayName("returns 200 and token on success")
         void success() throws Exception {
             LoginRequest req = loginRequest("alice@example.com", "Password1!");
-            AuthResponse response = new AuthResponse("jwt-token", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().email("alice@example.com").role("DEVELOPER").build());
+            AuthResponse response = new AuthResponse("jwt-token", "Bearer", 3600L, com.assettrack.dto.user.UserSummary
+                    .builder().email("alice@example.com").role(com.assettrack.domain.user.Role.DEVELOPER).build());
             when(authService.login(any())).thenReturn(response);
 
             mockMvc.perform(post("/auth/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(req)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.accessToken").value("jwt-token"))
                     .andExpect(jsonPath("$.user.role").value("DEVELOPER"));
@@ -184,8 +191,8 @@ class AuthControllerTest {
                     .thenThrow(new BadCredentialsException("Bad credentials"));
 
             mockMvc.perform(post("/auth/login")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(req)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isUnauthorized());
         }
 
@@ -197,7 +204,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
 
             verify(authService, never()).login(any());
         }
@@ -210,7 +217,7 @@ class AuthControllerTest {
             mockMvc.perform(post("/auth/login")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
 
             verify(authService, never()).login(any());
         }
@@ -220,7 +227,7 @@ class AuthControllerTest {
         void missingBody() throws Exception {
             mockMvc.perform(post("/auth/login")
                             .contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isUnprocessableEntity());
+                    .andExpect(status().isBadRequest());
         }
     }
 }

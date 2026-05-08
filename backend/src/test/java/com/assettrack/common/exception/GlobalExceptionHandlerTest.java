@@ -28,10 +28,9 @@ public class GlobalExceptionHandlerTest {
         mockMvc.perform(post("/test/validation")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
-                .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.message").value("Validation failed"))
-                .andExpect(jsonPath("$.errors[0].pointer").value("/items/0/quantity"))
-                .andExpect(jsonPath("$.errors[0].errorType").value("Min"));
+                .andExpect(jsonPath("$.fieldErrors[0].field").value("items[0].quantity"));
     }
 }

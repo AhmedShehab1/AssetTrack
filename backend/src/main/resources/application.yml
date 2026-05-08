@@ -5,6 +5,10 @@ server:
 spring:
   application:
     name: AssetTrack
+  data:
+    web:
+      pageable:
+        max-page-size: 100
   datasource:
     url: jdbc:postgresql://localhost:5432/assettrack
     username: ${DB_USERNAME:postgres}

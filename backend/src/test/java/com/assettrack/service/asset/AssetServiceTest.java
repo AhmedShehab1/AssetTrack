@@ -7,11 +7,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
-
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import com.assettrack.domain.asset.Asset;
 import com.assettrack.domain.asset.AssetStatus;
@@ -20,6 +26,8 @@ import com.assettrack.domain.asset.ConditionReport;
 import com.assettrack.domain.user.Role;
 import com.assettrack.domain.user.User;
 import com.assettrack.dto.asset.ConditionReportResponse;
+import com.assettrack.dto.asset.AssetSummaryResponse;
+import com.assettrack.dto.user.UserResponse;
 import com.assettrack.exception.SelfOperationException;
 import com.assettrack.mapper.asset.AssetMapper;
 import com.assettrack.repository.asset.AssetAllocationRepository;
@@ -77,6 +85,7 @@ class AssetServiceTest {
         assertThatThrownBy(() -> assetService.createConditionReport(
                 asset.getId(),
                 "Battery no longer charges",
+                com.assettrack.domain.asset.ConditionSeverity.MEDIUM,
                 authentication))
                 .isInstanceOf(SelfOperationException.class)
                 .hasMessageContaining("currently assigned");
@@ -90,10 +99,15 @@ class AssetServiceTest {
         User reporter = testUser();
         ConditionReportResponse mappedResponse = ConditionReportResponse.builder()
                 .id(UUID.fromString("00000000-0000-0000-0000-000000000010"))
-                .asset(com.assettrack.dto.asset.AssetResponse.builder().id(asset.getId()).build())
-                .reportedBy(com.assettrack.dto.user.UserResponse.builder().id(reporter.getId()).build())
-                .issueDescription("Battery no longer charges")
-                .status("OPEN")
+                .asset(AssetSummaryResponse.builder().id(asset.getId()).type(AssetType.LAPTOP).brand("Dell")
+                        .model("Latitude").serialNumber("SN-OWN-001").build())
+                .assetId(asset.getId())
+                .reportedBy(com.assettrack.dto.user.UserSummary.builder()
+                        .email(reporter.getEmail()).fullName("Developer").build())
+                .description("Battery no longer charges")
+                .severity(com.assettrack.domain.asset.ConditionSeverity.MEDIUM)
+                .reportedAt(LocalDateTime.now())
+                .status(com.assettrack.domain.asset.ConditionReportStatus.OPEN)
                 .build();
 
         when(securityUtils.getCurrentUserId(authentication)).thenReturn(reporter.getId());
@@ -102,12 +116,14 @@ class AssetServiceTest {
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(false);
         when(assetAllocationRepository.existsByAssetIdAndUserIdAndReturnDateIsNull(asset.getId(), reporter.getId()))
                 .thenReturn(true);
-        when(conditionReportRepository.save(any(ConditionReport.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(conditionReportRepository.save(any(ConditionReport.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
         when(assetMapper.toResponse(any(ConditionReport.class))).thenReturn(mappedResponse);
 
         ConditionReportResponse response = assetService.createConditionReport(
                 asset.getId(),
                 "Battery no longer charges",
+                com.assettrack.domain.asset.ConditionSeverity.MEDIUM,
                 authentication);
 
         ArgumentCaptor<ConditionReport> reportCaptor = ArgumentCaptor.forClass(ConditionReport.class);
@@ -124,54 +140,66 @@ class AssetServiceTest {
     void getConditionReports_WhenManagerOrAdmin_ReturnsAllReports() {
         ConditionReport report = testReport(UUID.fromString("00000000-0000-0000-0000-000000000001"), testUser(UUID.fromString("00000000-0000-0000-0000-000000000007")));
         ConditionReportResponse mapped = ConditionReportResponse.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000001")).build();
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ConditionReport> page = new PageImpl<>(List.of(report));
 
-        when(securityUtils.getCurrentUserId(authentication)).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000007"));
+        when(securityUtils.getCurrentUserId(authentication))
+                .thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000007"));
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(true);
-        when(conditionReportRepository.findAllByOrderByReportDateDesc()).thenReturn(List.of(report));
+        when(conditionReportRepository.findAllByOrderByReportDateDesc(pageable)).thenReturn(page);
         when(assetMapper.toResponse(report)).thenReturn(mapped);
 
-        List<ConditionReportResponse> result = assetService.getConditionReports(authentication);
+        Page<ConditionReportResponse> result = assetService.getConditionReports(authentication, pageable);
 
-        assertThat(result).containsExactly(mapped);
-        verify(conditionReportRepository).findAllByOrderByReportDateDesc();
-        verify(conditionReportRepository, never()).findByReportedByIdOrderByReportDateDesc(any());
+        assertThat(result.getContent()).containsExactly(mapped);
+        verify(conditionReportRepository).findAllByOrderByReportDateDesc(pageable);
+        verify(conditionReportRepository, never()).findByReportedByIdOrderByReportDateDesc(any(), any());
     }
 
     @Test
     void getConditionReports_WhenRegularUser_ReturnsOnlyOwnReports() {
-        ConditionReport ownReport = testReport(UUID.fromString("00000000-0000-0000-0000-000000000001"), testUser(UUID.fromString("00000000-0000-0000-0000-000000000007")));
+        UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000007");
+        ConditionReport ownReport = testReport(UUID.fromString("00000000-0000-0000-0000-000000000001"), testUser(userId));
         ConditionReportResponse mapped = ConditionReportResponse.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000001")).build();
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ConditionReport> page = new PageImpl<>(List.of(ownReport));
 
-        when(securityUtils.getCurrentUserId(authentication)).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000007"));
+        when(securityUtils.getCurrentUserId(authentication)).thenReturn(userId);
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(false);
-        when(conditionReportRepository.findByReportedByIdOrderByReportDateDesc(UUID.fromString("00000000-0000-0000-0000-000000000007"))).thenReturn(List.of(ownReport));
+        when(conditionReportRepository.findByReportedByIdOrderByReportDateDesc(userId, pageable)).thenReturn(page);
         when(assetMapper.toResponse(ownReport)).thenReturn(mapped);
 
-        List<ConditionReportResponse> result = assetService.getConditionReports(authentication);
+        Page<ConditionReportResponse> result = assetService.getConditionReports(authentication, pageable);
 
-        assertThat(result).containsExactly(mapped);
-        verify(conditionReportRepository).findByReportedByIdOrderByReportDateDesc(UUID.fromString("00000000-0000-0000-0000-000000000007"));
-        verify(conditionReportRepository, never()).findAllByOrderByReportDateDesc();
+        assertThat(result.getContent()).containsExactly(mapped);
+        verify(conditionReportRepository).findByReportedByIdOrderByReportDateDesc(userId, pageable);
+        verify(conditionReportRepository, never()).findAllByOrderByReportDateDesc(any());
     }
 
     @Test
     void getReportsByAsset_WhenManagerOrAdmin_ReturnsAllAssetReports() {
         UUID assetId = UUID.fromString("00000000-0000-0000-0000-000000000099");
         ConditionReport report = testReport(UUID.fromString("00000000-0000-0000-0000-000000000001"), testUser(UUID.fromString("00000000-0000-0000-0000-000000000008")));
-        ConditionReportResponse mapped = ConditionReportResponse.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000001")).asset(com.assettrack.dto.asset.AssetResponse.builder().id(assetId).build()).build();
+        ConditionReportResponse mapped = ConditionReportResponse.builder()
+                .id(UUID.fromString("00000000-0000-0000-0000-000000000001"))
+                .asset(AssetSummaryResponse.builder().id(assetId).build())
+                .build();
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ConditionReport> page = new PageImpl<>(List.of(report));
 
         when(assetRepository.existsById(assetId)).thenReturn(true);
-        when(securityUtils.getCurrentUserId(authentication)).thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000007"));
+        when(securityUtils.getCurrentUserId(authentication))
+                .thenReturn(UUID.fromString("00000000-0000-0000-0000-000000000007"));
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(true);
-        when(conditionReportRepository.findByAssetIdOrderByReportDateDesc(assetId)).thenReturn(List.of(report));
+        when(conditionReportRepository.findByAssetIdOrderByReportDateDesc(assetId, pageable)).thenReturn(page);
         when(assetMapper.toResponse(report)).thenReturn(mapped);
 
-        List<ConditionReportResponse> result = assetService.getReportsByAsset(assetId, authentication);
+        Page<ConditionReportResponse> result = assetService.getReportsByAsset(assetId, authentication, pageable);
 
-        assertThat(result).containsExactly(mapped);
-        verify(conditionReportRepository).findByAssetIdOrderByReportDateDesc(assetId);
+        assertThat(result.getContent()).containsExactly(mapped);
+        verify(conditionReportRepository).findByAssetIdOrderByReportDateDesc(assetId, pageable);
         verify(conditionReportRepository, never())
-                .findByAssetIdAndReportedByIdOrderByReportDateDesc(any(), any());
+                .findByAssetIdAndReportedByIdOrderByReportDateDesc(any(), any(), any());
     }
 
     @Test
@@ -179,26 +207,32 @@ class AssetServiceTest {
         UUID assetId = UUID.fromString("00000000-0000-0000-0000-000000000099");
         UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000007");
         ConditionReport ownReport = testReport(UUID.fromString("00000000-0000-0000-0000-000000000001"), testUser(userId));
-        ConditionReportResponse mapped = ConditionReportResponse.builder().id(UUID.fromString("00000000-0000-0000-0000-000000000001")).asset(com.assettrack.dto.asset.AssetResponse.builder().id(assetId).build()).build();
+        ConditionReportResponse mapped = ConditionReportResponse.builder()
+                .id(UUID.fromString("00000000-0000-0000-0000-000000000001"))
+                .asset(AssetSummaryResponse.builder().id(assetId).build())
+                .build();
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<ConditionReport> page = new PageImpl<>(List.of(ownReport));
 
         when(assetRepository.existsById(assetId)).thenReturn(true);
         when(securityUtils.getCurrentUserId(authentication)).thenReturn(userId);
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(false);
-        when(conditionReportRepository.findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId))
-                .thenReturn(List.of(ownReport));
+        when(conditionReportRepository.findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId, pageable))
+                .thenReturn(page);
         when(assetMapper.toResponse(ownReport)).thenReturn(mapped);
 
-        List<ConditionReportResponse> result = assetService.getReportsByAsset(assetId, authentication);
+        Page<ConditionReportResponse> result = assetService.getReportsByAsset(assetId, authentication, pageable);
 
-        assertThat(result).containsExactly(mapped);
-        verify(conditionReportRepository).findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId);
-        verify(conditionReportRepository, never()).findByAssetIdOrderByReportDateDesc(any());
+        assertThat(result.getContent()).containsExactly(mapped);
+        verify(conditionReportRepository).findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId, pageable);
+        verify(conditionReportRepository, never()).findByAssetIdOrderByReportDateDesc(any(), any());
     }
 
     @Test
     void getReportById_WhenManagerOrAdmin_CanViewAnyReport() {
         UUID reportId = UUID.fromString("00000000-0000-0000-0000-000000000044");
-        ConditionReport report = testReport(reportId, testUser(UUID.fromString("00000000-0000-0000-0000-000000000099")));
+        ConditionReport report = testReport(reportId,
+                testUser(UUID.fromString("00000000-0000-0000-0000-000000000099")));
         ConditionReportResponse mapped = ConditionReportResponse.builder().id(reportId).build();
 
         when(conditionReportRepository.findById(reportId)).thenReturn(Optional.of(report));
@@ -216,7 +250,10 @@ class AssetServiceTest {
         UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000007");
         UUID reportId = UUID.fromString("00000000-0000-0000-0000-000000000045");
         ConditionReport ownReport = testReport(reportId, testUser(userId));
-        ConditionReportResponse mapped = ConditionReportResponse.builder().id(reportId).reportedBy(com.assettrack.dto.user.UserResponse.builder().id(userId).build()).build();
+        ConditionReportResponse mapped = ConditionReportResponse.builder().id(reportId)
+                .reportedBy(com.assettrack.dto.user.UserSummary.builder().email("developer@assettrack.com")
+                        .fullName("Developer").build())
+                .build();
 
         when(conditionReportRepository.findById(reportId)).thenReturn(Optional.of(ownReport));
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(false);
@@ -232,7 +269,8 @@ class AssetServiceTest {
     void getReportById_WhenRegularUserViewsAnotherUsersReport_ThrowsForbidden() {
         UUID userId = UUID.fromString("00000000-0000-0000-0000-000000000007");
         UUID reportId = UUID.fromString("00000000-0000-0000-0000-000000000046");
-        ConditionReport othersReport = testReport(reportId, testUser(UUID.fromString("00000000-0000-0000-0000-000000000008")));
+        ConditionReport othersReport = testReport(reportId,
+                testUser(UUID.fromString("00000000-0000-0000-0000-000000000008")));
 
         when(conditionReportRepository.findById(reportId)).thenReturn(Optional.of(othersReport));
         when(securityUtils.isManagerOrAdmin(authentication)).thenReturn(false);
@@ -262,7 +300,9 @@ class AssetServiceTest {
                 .asset(testAsset())
                 .reportedBy(reporter)
                 .issueDescription("Battery no longer charges")
-                .reportDate(LocalDate.now())
+                .reportDate(LocalDateTime.now())
+                .severity(com.assettrack.domain.asset.ConditionSeverity.MEDIUM)
+                .status(com.assettrack.domain.asset.ConditionReportStatus.OPEN)
                 .build();
     }
 
