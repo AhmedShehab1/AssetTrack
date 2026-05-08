@@ -7,8 +7,8 @@ spring:
     name: AssetTrack
   datasource:
     url: jdbc:postgresql://localhost:5432/assettrack
-    username: username
-    password: password
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -19,8 +19,8 @@ spring:
   mail:
     host: ${MAILTRAP_HOST:sandbox.smtp.mailtrap.io}
     port: ${MAILTRAP_PORT:2525}
-    username: ${MAILTRAP_USERNAME}
-    password: ${MAILTRAP_PASSWORD}
+    username: ${MAILTRAP_USERNAME:}
+    password: ${MAILTRAP_PASSWORD:}
     properties:
       mail:
         smtp:
