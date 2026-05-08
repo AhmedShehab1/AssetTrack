@@ -14,8 +14,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "asset_allocations")
@@ -26,13 +26,15 @@ import java.time.LocalDateTime;
 public class AssetAllocation {
 
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
-    private java.util.UUID id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
+    // Many allocations → one asset
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "asset_id", nullable = false)
     private Asset asset;
 
+    // Many allocations → one user
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -40,5 +42,6 @@ public class AssetAllocation {
     @Column(nullable = false)
     private LocalDateTime checkoutDate;
 
+    // null = currently active allocation
     private LocalDateTime returnDate;
 }

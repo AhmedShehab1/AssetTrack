@@ -18,6 +18,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 /**
  * Represents a condition/issue report filed against an asset.
@@ -32,13 +33,15 @@ import java.time.LocalDate;
 public class ConditionReport {
 
     @Id
-    @GeneratedValue(strategy = jakarta.persistence.GenerationType.UUID)
-    private java.util.UUID id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
+    // Many reports → one asset
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "asset_id", nullable = false)
     private Asset asset;
 
+    // Many reports → one user (the reporter)
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "reported_by", nullable = false)
     private User reportedBy;

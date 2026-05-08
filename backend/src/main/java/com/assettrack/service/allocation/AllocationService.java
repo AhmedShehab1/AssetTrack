@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -62,6 +63,15 @@ public class AllocationService implements IAllocationService {
         return allocationMapper.toResponseDto(allocation);
     }
 
+    public AllocationResponseDto getAllocationById(UUID allocationId,UUID assetId){
+        AssetAllocation assetAllocation = allocationRepository.findById(allocationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Allocation not found"));
+        if(!assetAllocation.getAsset().getId().equals(assetId)){
+            throw new ResourceNotFoundException("Allocation not found");
+        }
+        return allocationMapper.toResponseDto(assetAllocation);
+    }
+
     /**
      * Deallocates a currently allocated asset, marking it as available.
      * Sets the returnDate on the active allocation record.
@@ -98,6 +108,7 @@ public class AllocationService implements IAllocationService {
      * @throws ResourceNotFoundException if the asset does not exist
      */
     @Override
+    @Transactional(readOnly = true)
     public List<AllocationHistoryDto> getAllocationHistory(java.util.UUID assetId) {
         assetRepository.findById(assetId)
                 .orElseThrow(() -> new ResourceNotFoundException("Asset is not found"));

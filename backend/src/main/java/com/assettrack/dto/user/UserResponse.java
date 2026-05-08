@@ -18,5 +18,9 @@ public class UserResponse {
     private boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private String fullName;
+    private String firstName;
+    private String lastName;
+    
+    @Builder.Default
+    private String fullName = firstName + " " + lastName;
 }

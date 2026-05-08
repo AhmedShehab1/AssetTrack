@@ -1,5 +1,6 @@
 package com.assettrack.dto.asset;
 
+import com.assettrack.dto.user.UserResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,5 +25,6 @@ public class AssetResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private boolean warrantyExpired;
-    private String currentOwner;
+    private UserResponse currentOwner;
+    private String notes;
 }

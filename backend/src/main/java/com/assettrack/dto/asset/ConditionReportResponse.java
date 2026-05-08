@@ -1,5 +1,6 @@
 package com.assettrack.dto.asset;
 
+import com.assettrack.domain.asset.ConditionReport;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class ConditionReportResponse {
     private java.util.UUID id;
-    private AssetResponse asset;
+    private AssetSummaryResponse asset;
     private UserResponse reportedBy;
     private String issueDescription;
     private LocalDate reportDate;

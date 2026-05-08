@@ -6,12 +6,13 @@ import com.assettrack.domain.asset.AssetType;
 import com.assettrack.domain.asset.ConditionReport;
 import com.assettrack.domain.asset.ReportStatus;
 import com.assettrack.domain.user.User;
-import com.assettrack.dto.asset.AssetResponse;
-import com.assettrack.dto.asset.ConditionReportResponse;
-import com.assettrack.dto.asset.CreateConditionReportRequest;
+import com.assettrack.dto.asset.*;
+import com.assettrack.exception.ConflictException;
+import com.assettrack.exception.DuplicateSerialNumberException;
 import com.assettrack.exception.ResourceNotFoundException;
 import com.assettrack.exception.SelfOperationException;
 import com.assettrack.mapper.asset.AssetMapper;
+import com.assettrack.mapper.user.UserMapper;
 import com.assettrack.repository.asset.AssetAllocationRepository;
 import com.assettrack.repository.asset.AssetRepository;
 import com.assettrack.repository.asset.AssetSpecifications;
@@ -19,6 +20,8 @@ import com.assettrack.repository.asset.ConditionReportRepository;
 import com.assettrack.repository.user.UserRepository;
 import com.assettrack.security.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -27,7 +30,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Service layer for asset search and condition reporting.
@@ -42,7 +47,8 @@ public class AssetService {
     private final UserRepository userRepository;
     private final AssetMapper assetMapper;
     private final SecurityUtils securityUtils;
-
+    private static final Logger log = LoggerFactory.getLogger(AssetService.class);
+    private final UserMapper userMapper;
     // ──────────────────────────── Asset Search ────────────────────────────
 
     /**
@@ -171,6 +177,71 @@ public class AssetService {
                         "Condition report not found with id: " + reportId));
         report.setStatus(ReportStatus.RESOLVED);
         return assetMapper.toResponse(conditionReportRepository.save(report));
+    }
+
+    @Transactional
+    public AssetResponse registerAsset(CreateAssetRequest request){
+        log.info("Registering asset: {}", request);
+        if(assetRepository.existsBySerialNumber(request.getSerialNumber())){
+            log.warn("Asset already registered");
+            throw new DuplicateSerialNumberException("Asset already registered");
+        }
+        Asset asset = Asset.builder()
+                .type(request.getType())
+                .brand(request.getBrand())
+                .model(request.getModel())
+                .serialNumber(request.getSerialNumber())
+                .status(AssetStatus.AVAILABLE)
+                .warrantyExpirationDate(request.getWarrantyExpirationDate())
+                .purchaseDate(request.getPurchaseDate())
+                .createdAt(LocalDateTime.now())
+                .build();
+        log.info("Saving asset: {}", asset);
+        return assetMapper.toResponse(assetRepository.save(asset));
+    }
+
+    @Transactional(readOnly = true)
+    public AssetResponse getAssetById(UUID id){
+        Asset asset = assetRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found with id: " + id));
+        AssetResponse response = assetMapper.toResponse(asset);
+
+        return response;
+    }
+
+    @Transactional
+    public AssetResponse updateAsset(UUID id, UpdateAssetRequest request) {
+        log.info("Updating asset with id {}: {}", id, request);
+        Asset asset = assetRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found with id: " + id));
+
+        if (request.getSerialNumber() != null
+                && !request.getSerialNumber().equals(asset.getSerialNumber())
+                && assetRepository.existsBySerialNumber(request.getSerialNumber())) {
+            log.warn("Asset with serial number {} already exists", request.getSerialNumber());
+            throw new DuplicateSerialNumberException(
+                    "Asset with serial number " + request.getSerialNumber() + " already exists");
+        }
+        assetMapper.updateAssetFromRequest(request, asset);
+        return assetMapper.toResponse(assetRepository.save(asset));
+    }
+
+    @Transactional
+    public void deleteAsset(UUID id){
+        log.info("Deleting asset with id {}", id);
+        Asset asset = assetRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found with id: " + id));
+        if(asset.getStatus() != AssetStatus.AVAILABLE){
+            log.warn("Asset is currently allocated");
+            throw new ConflictException("Asset cannot be deleted because its status is: " + asset.getStatus());
+        }
+        assetRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void expireWarrantiedAssets(){
+        int count = assetRepository.markExpiredAssets(LocalDate.now());
+        log.info("Marked {} assets as expired", count);
     }
 
     private void ensureCanSubmitConditionReport(java.util.UUID assetId, java.util.UUID userId, Authentication authentication) {
