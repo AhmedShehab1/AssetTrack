@@ -63,7 +63,7 @@ class AssetRepositoryTest {
     @Test
     void save_AssetWithAllFields_PersistsCorrectly() {
         Asset asset = Asset.builder()
-                .type(AssetType.SCREEN)
+                .type(AssetType.MONITOR)
                 .brand("LG")
                 .model("27UK850")
                 .serialNumber("SN-SCREEN-001")
@@ -75,7 +75,7 @@ class AssetRepositoryTest {
         Asset saved = assetRepository.save(asset);
 
         assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getType()).isEqualTo(AssetType.SCREEN);
+        assertThat(saved.getType()).isEqualTo(AssetType.MONITOR);
         assertThat(saved.getBrand()).isEqualTo("LG");
         assertThat(saved.getModel()).isEqualTo("27UK850");
         assertThat(saved.getStatus()).isEqualTo(AssetStatus.ALLOCATED);
@@ -87,13 +87,13 @@ class AssetRepositoryTest {
     void save_AssetWithEnumStrings_PersistsCorrectly() {
         Asset asset = buildAsset("SN-ENUM-TEST");
         asset.setStatus(AssetStatus.EXPIRED);
-        asset.setType(AssetType.ACCESSORY);
+        asset.setType(AssetType.OTHER);
 
         Asset saved = assetRepository.saveAndFlush(asset);
 
         Optional<Asset> retrieved = assetRepository.findById(saved.getId());
         assertThat(retrieved).isPresent();
         assertThat(retrieved.get().getStatus()).isEqualTo(AssetStatus.EXPIRED);
-        assertThat(retrieved.get().getType()).isEqualTo(AssetType.ACCESSORY);
+        assertThat(retrieved.get().getType()).isEqualTo(AssetType.OTHER);
     }
 }

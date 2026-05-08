@@ -1,7 +1,7 @@
 package com.assettrack.controller.notification;
 
 import com.assettrack.dto.notification.NotificationResponse;
-import com.assettrack.service.notification.NotificationService;
+import com.assettrack.service.notification.INotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -25,7 +25,7 @@ import java.util.List;
 @Tag(name = "Notifications", description = "In-app notification endpoints")
 public class NotificationController {
 
-    private final NotificationService notificationService;
+    private final INotificationService notificationService;
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
@@ -38,8 +38,7 @@ public class NotificationController {
     @PatchMapping("/{notificationId}/read")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Mark notification as read", description = "Marks one of the authenticated user's notifications as read.")
-    @ApiResponse(responseCode = "200", description = "Notification marked as read",
-            content = @Content(schema = @Schema(implementation = NotificationResponse.class)))
+    @ApiResponse(responseCode = "200", description = "Notification marked as read", content = @Content(schema = @Schema(implementation = NotificationResponse.class)))
     @ApiResponse(responseCode = "404", description = "Notification not found")
     public ResponseEntity<NotificationResponse> markAsRead(
             @PathVariable java.util.UUID notificationId,

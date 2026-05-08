@@ -1,6 +1,6 @@
 package com.assettrack.dto.asset;
 
-import com.assettrack.domain.asset.ConditionReport;
+import com.assettrack.domain.asset.ConditionSeverity;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -15,12 +15,8 @@ import lombok.NoArgsConstructor;
 public class ReportConditionRequest {
 
     @NotBlank(message = "Issue description is required")
-    private String issueDescription;
+    private String description;
 
     @NotNull(message = "Severity is required")
-    private Severity severity;
-
-    private ConditionReport conditionReport;
-
-    
+    private ConditionSeverity severity;
 }

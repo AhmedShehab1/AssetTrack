@@ -44,4 +44,7 @@ public class AssetAllocation {
 
     // null = currently active allocation
     private LocalDateTime returnDate;
+
+    @Column(length = 500)
+    private String notes;
 }

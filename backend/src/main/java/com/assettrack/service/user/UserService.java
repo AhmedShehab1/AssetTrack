@@ -16,11 +16,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-
 @Service
 @RequiredArgsConstructor
-public class UserService {
-    private final UserMapper userMapper ;
+public class UserService implements IUserService {
+    private final UserMapper userMapper;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SecurityUtils securityUtils;
@@ -45,7 +44,7 @@ public class UserService {
      * @param pageable pagination and sorting parameters
      * @return a page of {@link UserResponse} DTOs
      */
-    public Page<UserResponse> getAllUsers(Pageable pageable){
+    public Page<UserResponse> getAllUsers(Pageable pageable) {
         Page<User> users = userRepository.findAll(pageable);
         return users.map(userMapper::toResponse);
     }
@@ -57,7 +56,7 @@ public class UserService {
      * @param pageable pagination and sorting parameters
      * @return a page of {@link UserResponse} DTOs representing inactive users
      */
-    public Page<UserResponse> getInactiveUsers(Pageable pageable){
+    public Page<UserResponse> getInactiveUsers(Pageable pageable) {
         Page<User> users = userRepository.findAllByIsActiveFalse(pageable);
         return users.map(userMapper::toResponse);
     }
@@ -69,7 +68,7 @@ public class UserService {
      * @return the {@link UserResponse} DTO
      * @throws ResourceNotFoundException if no user exists with the given ID
      */
-    public UserResponse getUserById(java.util.UUID id){
+    public UserResponse getUserById(java.util.UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         return userMapper.toResponse(user);
@@ -79,21 +78,23 @@ public class UserService {
      * Updates the email address of the currently authenticated user.
      * Requires password confirmation before applying the change.
      *
-     * @param request contains the new email and current password for verification
+     * @param request        contains the new email and current password for
+     *                       verification
      * @param authentication the current user's authentication token
      * @return the updated {@link UserResponse} DTO
-     * @throws ResourceNotFoundException if the authenticated user no longer exists
-     * @throws InvalidPasswordException if the provided password does not match
+     * @throws ResourceNotFoundException   if the authenticated user no longer
+     *                                     exists
+     * @throws InvalidPasswordException    if the provided password does not match
      * @throws EmailAlreadyExistsException if the new email is already in use
      */
-    public UserResponse updateEmail(UpdateEmailRequest request, Authentication authentication){
+    public UserResponse updateEmail(UpdateEmailRequest request, Authentication authentication) {
         java.util.UUID currentId = securityUtils.getCurrentUserId(authentication);
-        User user =  userRepository.findById(currentId)
+        User user = userRepository.findById(currentId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentId));
-        if(!passwordEncoder.matches(request.getPassword(),user.getPasswordHash())){
+        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
             throw new InvalidPasswordException("Invalid password");
         }
-        if(userRepository.existsByEmail(request.getNewEmail())){
+        if (userRepository.existsByEmail(request.getNewEmail())) {
             throw new EmailAlreadyExistsException("Email already exists");
         }
         user.setEmail(request.getNewEmail());
@@ -106,16 +107,16 @@ public class UserService {
      * Requires the current password for verification before applying the change.
      * The new password is encoded before storage.
      *
-     * @param request contains the current password and the new password
+     * @param request        contains the current password and the new password
      * @param authentication the current user's authentication token
      * @throws ResourceNotFoundException if the authenticated user no longer exists
-     * @throws InvalidPasswordException if the current password does not match
+     * @throws InvalidPasswordException  if the current password does not match
      */
-    public void updatePassword(UpdatePasswordRequest request, Authentication authentication){
+    public void updatePassword(UpdatePasswordRequest request, Authentication authentication) {
         java.util.UUID currentId = securityUtils.getCurrentUserId(authentication);
-        User user =  userRepository.findById(currentId)
+        User user = userRepository.findById(currentId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentId));
-        if(!passwordEncoder.matches(request.getCurrentPassword(),user.getPasswordHash())){
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
             throw new InvalidPasswordException("Invalid password");
         }
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
@@ -126,23 +127,25 @@ public class UserService {
      * Updates the role of a target user.
      * Admin cannot change their own role.
      *
-     * @param id the target user's ID
-     * @param role the new role as a string (case-insensitive)
+     * @param id             the target user's ID
+     * @param role           the new role as a string (case-insensitive)
      * @param authentication the current admin's authentication token
      * @return the updated {@link UserResponse} DTO
      * @throws ResourceNotFoundException if no user exists with the given ID
-     * @throws InvalidRoleException if the provided role string is not a valid {@link Role}
-     * @throws SelfOperationException if the admin attempts to change their own role
+     * @throws InvalidRoleException      if the provided role string is not a valid
+     *                                   {@link Role}
+     * @throws SelfOperationException    if the admin attempts to change their own
+     *                                   role
      */
-    public UserResponse updateUserRole(java.util.UUID id, String role, Authentication authentication){
+    public UserResponse updateUserRole(java.util.UUID id, String role, Authentication authentication) {
 
-        User user =  userRepository.findById(id)
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         java.util.UUID currentId = securityUtils.getCurrentUserId(authentication);
         Role roleEnum;
         try {
             roleEnum = Role.valueOf(role.toUpperCase());
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             throw new InvalidRoleException("Invalid role");
         }
         if (id.equals(currentId)) {
@@ -158,15 +161,16 @@ public class UserService {
      * Admin cannot change their own status.
      * Deactivating a user prevents them from logging in.
      *
-     * @param id the target user's ID
-     * @param active the new status — true to activate, false to deactivate
+     * @param id             the target user's ID
+     * @param active         the new status — true to activate, false to deactivate
      * @param authentication the current admin's authentication token
      * @return the updated {@link UserResponse} DTO
      * @throws ResourceNotFoundException if no user exists with the given ID
-     * @throws SelfOperationException if the admin attempts to change their own status
+     * @throws SelfOperationException    if the admin attempts to change their own
+     *                                   status
      */
-    public UserResponse updateUserStatus(java.util.UUID id, boolean active, Authentication authentication){
-        User user =  userRepository.findById(id)
+    public UserResponse updateUserStatus(java.util.UUID id, boolean active, Authentication authentication) {
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         java.util.UUID currentId = securityUtils.getCurrentUserId(authentication);
         if (id.equals(currentId)) {
@@ -185,9 +189,9 @@ public class UserService {
      * @param authentication the current user's authentication token
      * @throws ResourceNotFoundException if the authenticated user no longer exists
      */
-    public void deleteSelf(Authentication authentication){
+    public void deleteSelf(Authentication authentication) {
         java.util.UUID currentId = securityUtils.getCurrentUserId(authentication);
-        User user =  userRepository.findById(currentId)
+        User user = userRepository.findById(currentId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + currentId));
         user.setActive(false);
         userRepository.save(user);
@@ -198,14 +202,15 @@ public class UserService {
      * Only inactive users can be hard-deleted.
      * Admin cannot delete their own account via this method.
      *
-     * @param id the target user's ID
+     * @param id             the target user's ID
      * @param authentication the current admin's authentication token
-     * @throws ResourceNotFoundException if no user exists with the given ID
-     * @throws SelfOperationException if the admin attempts to delete their own account
+     * @throws ResourceNotFoundException   if no user exists with the given ID
+     * @throws SelfOperationException      if the admin attempts to delete their own
+     *                                     account
      * @throws ActiveUserDeletionException if the target user is still active
      */
-    public void deleteUser(java.util.UUID id, Authentication authentication){
-        User user =  userRepository.findById(id)
+    public void deleteUser(java.util.UUID id, Authentication authentication) {
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         java.util.UUID currentId = securityUtils.getCurrentUserId(authentication);
         if (id.equals(currentId)) {

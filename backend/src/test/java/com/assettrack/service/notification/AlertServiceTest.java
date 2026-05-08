@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 class AlertServiceTest {
 
     @Mock
-    private EmailNotificationService emailNotificationService;
+    private IEmailNotificationService emailNotificationService;
 
     @Mock
     private InventoryCheckPort inventoryCheckPort;
@@ -38,12 +38,12 @@ class AlertServiceTest {
     @Test
     void checkLowStockAndAlert_SendsEmail_WhenLowStock() {
         when(inventoryCheckPort.getLowStockItems(5)).thenReturn(List.of(
-                new InventoryCheckPort.LowStockItem("Item 1", 2)
-        ));
+                new InventoryCheckPort.LowStockItem("Item 1", 2)));
 
         alertService.checkLowStockAndAlert();
 
-        verify(emailNotificationService).sendEmail(eq("admin@assettrack.com"), eq("Low Stock Alert"), anyString(), eq(true));
+        verify(emailNotificationService).sendEmail(eq("admin@assettrack.com"), eq("Low Stock Alert"), anyString(),
+                eq(true));
     }
 
     @Test

@@ -2,9 +2,10 @@ package com.assettrack.domain.notification;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Column;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,12 +30,16 @@ public class Notification {
     private String messageBody;
 
     @Column(nullable = false)
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private NotificationType type;
+
+    @Column
+    private java.util.UUID assetId;
 
     @Column(nullable = false)
     @Builder.Default
     private boolean isRead = false;
-    
+
     @Column(nullable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();

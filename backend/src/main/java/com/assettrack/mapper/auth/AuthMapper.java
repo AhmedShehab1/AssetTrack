@@ -7,12 +7,12 @@ import org.mapstruct.Mapper;
 import com.assettrack.mapper.user.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
-@Mapper(componentModel = "spring", uses = {UserMapper.class})
+@Mapper(componentModel = "spring", uses = { UserMapper.class })
 public abstract class AuthMapper {
     @Autowired
     protected UserMapper userMapper;
 
     public AuthResponse toResponse(String token, User user) {
-        return new AuthResponse(token, "Bearer", 86400, userMapper.toResponse(user));
+        return new AuthResponse(token, "Bearer", 86400, userMapper.toSummary(user));
     }
 }

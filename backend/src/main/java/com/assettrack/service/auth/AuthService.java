@@ -21,7 +21,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class AuthService implements IAuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -31,12 +31,11 @@ public class AuthService {
     private String generateToken(User user) {
         return jwtService.generateToken(
                 Map.of(
-                        "role",   "ROLE_" + user.getRole().name(),
-                        "userId", user.getId()
-                ),
-                Duration.ofHours(24)
-        );
+                        "role", "ROLE_" + user.getRole().name(),
+                        "userId", user.getId()),
+                Duration.ofHours(24));
     }
+
     public AuthResponse register(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new EmailAlreadyExistsException("Email already in use");
@@ -45,12 +44,15 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRole(Role.DEVELOPER);
-        User saved = userRepository.save(user);;
+        User saved = userRepository.save(user);
+        ;
         String token = generateToken(saved);
         return authMapper.toResponse(token, user);
     }
+
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(),request.getPassword()));
+        authenticationManager
+                .authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         String token = generateToken(user);

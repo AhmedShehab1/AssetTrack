@@ -1,11 +1,10 @@
 package com.assettrack.service.dashboard;
 
-import java.util.UUID;
 import com.assettrack.domain.asset.Asset;
 import com.assettrack.domain.asset.AssetStatus;
 import com.assettrack.domain.asset.AssetType;
 import com.assettrack.dto.dashboard.DashboardSummaryDto;
-import com.assettrack.dto.dashboard.QuickSpareAssetDto;
+import com.assettrack.dto.asset.SpareAssetResponse;
 import com.assettrack.exception.ResourceNotFoundException;
 import com.assettrack.repository.asset.AssetRepository;
 import com.nimbusds.jose.jwk.JWK;
@@ -34,10 +33,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest(properties = {
-    "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
-    "spring.datasource.driverClassName=org.h2.Driver",
-    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
-    "spring.main.allow-bean-definition-overriding=true"
+        "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
+        "spring.datasource.driverClassName=org.h2.Driver",
+        "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
+        "spring.main.allow-bean-definition-overriding=true"
 })
 @ActiveProfiles("test")
 public class DashboardIntegrationTest {
@@ -94,45 +93,57 @@ public class DashboardIntegrationTest {
     void testDashboardSummaryAggregation() {
         assetRepository.save(testAsset("SN-DASH-001", AssetType.LAPTOP, AssetStatus.AVAILABLE));
         assetRepository.save(testAsset("SN-DASH-002", AssetType.LAPTOP, AssetStatus.ALLOCATED));
-        assetRepository.save(testAsset("SN-DASH-003", AssetType.SCREEN, AssetStatus.AVAILABLE));
+        assetRepository.save(testAsset("SN-DASH-003", AssetType.MONITOR, AssetStatus.AVAILABLE));
 
         DashboardSummaryDto summary = dashboardService.getSummary();
 
         assertThat(summary.getTotalAssets()).isEqualTo(3L);
 
-        List<String> statusLabels = summary.getByStatus().stream().map(DashboardSummaryDto.StatusCountDto::getStatus).toList();
-        List<Long> statusData = summary.getByStatus().stream().map(DashboardSummaryDto.StatusCountDto::getCount).toList();
-        assertThat(statusLabels).containsExactly("AVAILABLE", "ALLOCATED", "EXPIRED");
-        assertThat(statusData.get(statusLabels.indexOf("AVAILABLE"))).isEqualTo(2L);
-        assertThat(statusData.get(statusLabels.indexOf("ALLOCATED"))).isEqualTo(1L);
-        assertThat(statusData.get(statusLabels.indexOf("EXPIRED"))).isEqualTo(0L);
+        List<AssetStatus> statusLabels = summary.getByStatus().stream()
+                .map(DashboardSummaryDto.StatusCountDto::getStatus).toList();
+        List<Long> statusData = summary.getByStatus().stream().map(DashboardSummaryDto.StatusCountDto::getCount)
+                .toList();
+        assertThat(statusLabels).containsExactly(AssetStatus.AVAILABLE, AssetStatus.ALLOCATED, AssetStatus.UNDER_REPAIR,
+                AssetStatus.DECOMMISSIONED, AssetStatus.SPARE, AssetStatus.EXPIRED);
+        assertThat(statusData.get(statusLabels.indexOf(AssetStatus.AVAILABLE))).isEqualTo(2L);
+        assertThat(statusData.get(statusLabels.indexOf(AssetStatus.ALLOCATED))).isEqualTo(1L);
+        assertThat(statusData.get(statusLabels.indexOf(AssetStatus.UNDER_REPAIR))).isEqualTo(0L);
+        assertThat(statusData.get(statusLabels.indexOf(AssetStatus.DECOMMISSIONED))).isEqualTo(0L);
+        assertThat(statusData.get(statusLabels.indexOf(AssetStatus.SPARE))).isEqualTo(0L);
+        assertThat(statusData.get(statusLabels.indexOf(AssetStatus.EXPIRED))).isEqualTo(0L);
 
-        List<String> typeLabels = summary.getByType().stream().map(DashboardSummaryDto.TypeCountDto::getType).toList();
+        List<AssetType> typeLabels = summary.getByType().stream().map(DashboardSummaryDto.TypeCountDto::getType)
+                .toList();
         List<Long> typeData = summary.getByType().stream().map(DashboardSummaryDto.TypeCountDto::getCount).toList();
-        assertThat(typeLabels).containsExactly("LAPTOP", "SCREEN", "ACCESSORY");
-        assertThat(typeData.get(typeLabels.indexOf("LAPTOP"))).isEqualTo(2L);
-        assertThat(typeData.get(typeLabels.indexOf("SCREEN"))).isEqualTo(1L);
-        assertThat(typeData.get(typeLabels.indexOf("ACCESSORY"))).isEqualTo(0L);
+        assertThat(typeLabels).containsExactly(AssetType.LAPTOP, AssetType.MONITOR, AssetType.KEYBOARD, AssetType.MOUSE,
+                AssetType.HEADSET, AssetType.DOCKING_STATION, AssetType.OTHER);
+        assertThat(typeData.get(typeLabels.indexOf(AssetType.LAPTOP))).isEqualTo(2L);
+        assertThat(typeData.get(typeLabels.indexOf(AssetType.MONITOR))).isEqualTo(1L);
+        assertThat(typeData.get(typeLabels.indexOf(AssetType.KEYBOARD))).isEqualTo(0L);
+        assertThat(typeData.get(typeLabels.indexOf(AssetType.MOUSE))).isEqualTo(0L);
+        assertThat(typeData.get(typeLabels.indexOf(AssetType.HEADSET))).isEqualTo(0L);
+        assertThat(typeData.get(typeLabels.indexOf(AssetType.DOCKING_STATION))).isEqualTo(0L);
+        assertThat(typeData.get(typeLabels.indexOf(AssetType.OTHER))).isEqualTo(0L);
     }
 
     @Test
     void testGetQuickSpareLaptop_Found() {
         Asset laptop1 = testAsset("SN-SPARE-001", AssetType.LAPTOP, AssetStatus.AVAILABLE);
         Asset laptop2 = testAsset("SN-SPARE-002", AssetType.LAPTOP, AssetStatus.AVAILABLE);
-        
+
         assetRepository.save(laptop1);
         assetRepository.save(laptop2);
 
-        QuickSpareAssetDto found = dashboardService.getQuickSpareLaptop();
+        SpareAssetResponse found = dashboardService.getQuickSpareLaptop();
         assertThat(found).isNotNull();
-        assertThat(found.getType()).isEqualTo("LAPTOP");
-        assertThat(found.getStatus()).isEqualTo("AVAILABLE");
+        assertThat(found.getAsset().getType()).isEqualTo(AssetType.LAPTOP);
+        assertThat(found.getAsset().getStatus()).isEqualTo(AssetStatus.AVAILABLE);
     }
 
     @Test
     void testGetQuickSpareLaptop_NotFound() {
         assetRepository.save(testAsset("SN-NO-SPARE-001", AssetType.LAPTOP, AssetStatus.ALLOCATED));
-        assetRepository.save(testAsset("SN-NO-SPARE-002", AssetType.SCREEN, AssetStatus.AVAILABLE));
+        assetRepository.save(testAsset("SN-NO-SPARE-002", AssetType.MONITOR, AssetStatus.AVAILABLE));
 
         assertThatThrownBy(() -> dashboardService.getQuickSpareLaptop())
                 .isInstanceOf(ResourceNotFoundException.class);

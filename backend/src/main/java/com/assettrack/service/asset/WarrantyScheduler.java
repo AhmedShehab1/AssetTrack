@@ -9,14 +9,14 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class WarrantyScheduler {
-    private final AssetService assetService;
+    private final IAssetService assetService;
     private static final Logger log = LoggerFactory.getLogger(WarrantyScheduler.class);
+
     @Scheduled(cron = "0 0 0 * * *")
     public void checkWarrantyExpirations() {
         try {
             assetService.expireWarrantiedAssets();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("Warranty expiration job failed", e);
         }
     }

@@ -3,7 +3,7 @@ package com.assettrack.controller.auth;
 import com.assettrack.dto.auth.AuthResponse;
 import com.assettrack.dto.auth.LoginRequest;
 import com.assettrack.dto.auth.SignupRequest;
-import com.assettrack.service.auth.AuthService;
+import com.assettrack.service.auth.IAuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,12 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 @Tag(name = "Authentication", description = "User registration and login endpoints")
 public class AuthController {
-    private final AuthService authService;
+    private final IAuthService authService;
 
     @PostMapping("/signup")
     @Operation(summary = "Register a new user", description = "Creates a new user account and returns a JWT token")
-    @ApiResponse(responseCode = "201", description = "User registered successfully",
-            content = @Content(schema = @Schema(implementation = AuthResponse.class)))
+    @ApiResponse(responseCode = "201", description = "User registered successfully", content = @Content(schema = @Schema(implementation = AuthResponse.class)))
     @ApiResponse(responseCode = "422", description = "Validation error")
     @ApiResponse(responseCode = "409", description = "Email already exists")
     public ResponseEntity<AuthResponse> register(@RequestBody @Validated SignupRequest request) {
@@ -37,8 +36,7 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "Login", description = "Authenticates a user and returns a JWT token")
-    @ApiResponse(responseCode = "200", description = "Login successful",
-            content = @Content(schema = @Schema(implementation = AuthResponse.class)))
+    @ApiResponse(responseCode = "200", description = "Login successful", content = @Content(schema = @Schema(implementation = AuthResponse.class)))
     @ApiResponse(responseCode = "401", description = "Invalid credentials")
     public ResponseEntity<AuthResponse> login(@RequestBody @Validated LoginRequest request) {
         AuthResponse response = authService.login(request);

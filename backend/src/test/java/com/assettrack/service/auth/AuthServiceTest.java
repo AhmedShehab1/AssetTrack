@@ -10,6 +10,7 @@ import com.assettrack.exception.ResourceNotFoundException;
 import com.assettrack.mapper.auth.AuthMapper;
 import com.assettrack.repository.user.UserRepository;
 import com.assettrack.security.service.JwtService;
+import com.assettrack.dto.user.UserSummary;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -27,13 +28,19 @@ import static org.mockito.Mockito.*;
 @DisplayName("AuthService")
 class AuthServiceTest {
 
-    @Mock UserRepository userRepository;
-    @Mock PasswordEncoder passwordEncoder;
-    @Mock JwtService jwtService;
-    @Mock AuthenticationManager authenticationManager;
-    @Mock AuthMapper authMapper;
+    @Mock
+    UserRepository userRepository;
+    @Mock
+    PasswordEncoder passwordEncoder;
+    @Mock
+    JwtService jwtService;
+    @Mock
+    AuthenticationManager authenticationManager;
+    @Mock
+    AuthMapper authMapper;
 
-    @InjectMocks AuthService authService;
+    @InjectMocks
+    AuthService authService;
 
     private User buildUser(java.util.UUID id, String email) {
         User u = new User();
@@ -69,7 +76,8 @@ class AuthServiceTest {
         @DisplayName("saves user with encoded password and DEVELOPER role")
         void success() {
             SignupRequest req = signupRequest("alice@example.com", "Password1");
-            AuthResponse expected = new AuthResponse("jwt-token", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().role("DEVELOPER").build());
+            AuthResponse expected = new AuthResponse("jwt-token", "Bearer", 3600L,
+                    UserSummary.builder().role(Role.DEVELOPER).build());
 
             when(userRepository.existsByEmail(req.getEmail())).thenReturn(false);
             when(passwordEncoder.encode(req.getPassword())).thenReturn("hashed");
@@ -117,7 +125,8 @@ class AuthServiceTest {
                 return u;
             });
             when(jwtService.generateToken(anyMap(), any())).thenReturn("tok");
-            when(authMapper.toResponse(any(), any())).thenReturn(new AuthResponse("tok", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().role("DEVELOPER").build()));
+            when(authMapper.toResponse(any(), any())).thenReturn(
+                    new AuthResponse("tok", "Bearer", 3600L, UserSummary.builder().role(Role.DEVELOPER).build()));
 
             authService.register(req);
 
@@ -141,7 +150,8 @@ class AuthServiceTest {
                 return u;
             });
             when(jwtService.generateToken(anyMap(), any())).thenReturn("tok");
-            when(authMapper.toResponse(any(), any())).thenReturn(new AuthResponse("tok", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().role("DEVELOPER").build()));
+            when(authMapper.toResponse(any(), any())).thenReturn(
+                    new AuthResponse("tok", "Bearer", 3600L, UserSummary.builder().role(Role.DEVELOPER).build()));
 
             authService.register(req);
 
@@ -154,7 +164,8 @@ class AuthServiceTest {
         @DisplayName("returns token from jwtService")
         void returnsToken() {
             SignupRequest req = signupRequest("dave@example.com", "Password1");
-            AuthResponse expected = new AuthResponse("my-special-token", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().role("DEVELOPER").build());
+            AuthResponse expected = new AuthResponse("my-special-token", "Bearer", 3600L,
+                    UserSummary.builder().role(Role.DEVELOPER).build());
 
             when(userRepository.existsByEmail(any())).thenReturn(false);
             when(passwordEncoder.encode(any())).thenReturn("hashed");
@@ -183,7 +194,8 @@ class AuthServiceTest {
         void success() {
             LoginRequest req = loginRequest("alice@example.com", "Password1");
             User user = buildUser(java.util.UUID.randomUUID(), "alice@example.com");
-            AuthResponse expected = new AuthResponse("jwt-token", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().role("DEVELOPER").build());
+            AuthResponse expected = new AuthResponse("jwt-token", "Bearer", 3600L,
+                    UserSummary.builder().role(Role.DEVELOPER).build());
 
             when(userRepository.findByEmail(req.getEmail())).thenReturn(Optional.of(user));
             when(jwtService.generateToken(anyMap(), any())).thenReturn("jwt-token");
@@ -228,7 +240,8 @@ class AuthServiceTest {
 
             when(userRepository.findByEmail("bob@example.com")).thenReturn(Optional.of(user));
             when(jwtService.generateToken(anyMap(), any())).thenReturn("tok");
-            when(authMapper.toResponse(any(), any())).thenReturn(new AuthResponse("tok", "Bearer", 3600L, com.assettrack.dto.user.UserResponse.builder().role("DEVELOPER").build()));
+            when(authMapper.toResponse(any(), any())).thenReturn(
+                    new AuthResponse("tok", "Bearer", 3600L, UserSummary.builder().role(Role.DEVELOPER).build()));
 
             authService.login(req);
 

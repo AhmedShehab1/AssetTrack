@@ -1,7 +1,7 @@
 package com.assettrack.repository.asset;
 
 import com.assettrack.domain.asset.ConditionReport;
-import com.assettrack.domain.asset.ReportStatus;
+import com.assettrack.domain.asset.ConditionReportStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -14,9 +14,10 @@ public interface ConditionReportRepository extends JpaRepository<ConditionReport
 
     List<ConditionReport> findByAssetIdOrderByReportDateDesc(java.util.UUID assetId);
 
-    List<ConditionReport> findByAssetIdAndReportedByIdOrderByReportDateDesc(java.util.UUID assetId, java.util.UUID userId);
+    List<ConditionReport> findByAssetIdAndReportedByIdOrderByReportDateDesc(java.util.UUID assetId,
+            java.util.UUID userId);
 
     List<ConditionReport> findByReportedByIdOrderByReportDateDesc(java.util.UUID userId);
 
-    List<ConditionReport> findByStatus(ReportStatus status);
+    List<ConditionReport> findByStatus(ConditionReportStatus status);
 }

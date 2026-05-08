@@ -16,7 +16,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class NotificationService {
+public class NotificationService implements INotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
@@ -50,13 +50,12 @@ public class NotificationService {
     }
 
     private NotificationResponse toResponse(Notification notification) {
-        return NotificationResponse.builder()
-                .id(notification.getId())
-                .recipient(notification.getRecipient())
-                .messageBody(notification.getMessageBody())
-                .type(notification.getType())
-                .read(notification.isRead())
-                .createdAt(notification.getCreatedAt())
-                .build();
+        return new NotificationResponse(
+                notification.getId(),
+                notification.getType(),
+                notification.getMessageBody(),
+                notification.isRead(),
+                notification.getAssetId(),
+                notification.getCreatedAt());
     }
 }

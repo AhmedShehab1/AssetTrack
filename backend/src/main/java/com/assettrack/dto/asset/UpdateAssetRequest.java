@@ -1,7 +1,7 @@
 package com.assettrack.dto.asset;
 
 import com.assettrack.domain.asset.AssetStatus;
-import com.assettrack.domain.asset.AssetType;
+
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Pattern;

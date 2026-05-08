@@ -2,7 +2,6 @@ package com.assettrack.dto.auth;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -13,18 +12,11 @@ public class SignupRequest {
     @Email(message = "Email must be valid")
     private String email;
 
-    @NotBlank(message = "First name is required")
-    @Size(max = 50)
-    private String firstName;
-
-    @NotBlank(message = "Last name is required")
-    @Size(max = 50)
-    private String lastName;
+    @NotBlank(message = "Full name is required")
+    @Size(min = 2, max = 120, message = "Full name must be between 2 and 120 characters")
+    private String fullName;
 
     @NotBlank(message = "Password is required")
-    @Pattern(
-            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,}$",
-            message = "Password must be at least 8 characters, contain uppercase, lowercase, and a number"
-    )
+    @Size(min = 8, max = 128, message = "Password must be between 8 and 128 characters")
     private String password;
 }

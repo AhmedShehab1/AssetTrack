@@ -1,6 +1,8 @@
 package com.assettrack.dto.asset;
 
-import com.assettrack.dto.user.UserResponse;
+import com.assettrack.domain.asset.AssetStatus;
+import com.assettrack.domain.asset.AssetType;
+import com.assettrack.dto.user.UserSummary;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,16 +17,17 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class AssetResponse {
     private java.util.UUID id;
-    private String type;
+    private AssetType type;
     private String brand;
     private String model;
     private String serialNumber;
     private LocalDate purchaseDate;
     private LocalDate warrantyExpirationDate;
-    private String status;
+    private AssetStatus status;
+    private boolean warrantyExpired;
+    private Integer warrantyExpiresInDays;
+    private UserSummary currentOwner;
+    private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private boolean warrantyExpired;
-    private UserResponse currentOwner;
-    private String notes;
 }

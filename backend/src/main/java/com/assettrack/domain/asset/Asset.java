@@ -1,9 +1,6 @@
 package com.assettrack.domain.asset;
 
-import com.assettrack.domain.asset.AssetAllocation;
-import com.assettrack.domain.asset.AssetStatus;
-import com.assettrack.domain.asset.AssetType;
-import com.assettrack.domain.asset.ConditionReport;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

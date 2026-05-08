@@ -36,13 +36,13 @@ class AssetSpecificationsTest {
                 .build());
 
         assetRepository.save(Asset.builder()
-                .type(AssetType.SCREEN).brand("Dell").model("U2723QE")
+                .type(AssetType.MONITOR).brand("Dell").model("U2723QE")
                 .serialNumber("SN-SPEC-003").status(AssetStatus.AVAILABLE)
                 .purchaseDate(LocalDate.of(2025, 3, 1))
                 .build());
 
         assetRepository.save(Asset.builder()
-                .type(AssetType.ACCESSORY).brand("Logitech").model("MX Master 3")
+                .type(AssetType.OTHER).brand("Logitech").model("MX Master 3")
                 .serialNumber("SN-SPEC-004").status(AssetStatus.EXPIRED)
                 .purchaseDate(LocalDate.of(2023, 6, 1))
                 .build());
@@ -112,7 +112,7 @@ class AssetSpecificationsTest {
     void combinedFilters_AllFilters() {
         Specification<Asset> spec = Specification
                 .where(AssetSpecifications.hasStatus(AssetStatus.AVAILABLE))
-                .and(AssetSpecifications.hasType(AssetType.SCREEN))
+                .and(AssetSpecifications.hasType(AssetType.MONITOR))
                 .and(AssetSpecifications.hasBrand("dell"))
                 .and(AssetSpecifications.hasSerialNumber("SN-SPEC-003"));
 

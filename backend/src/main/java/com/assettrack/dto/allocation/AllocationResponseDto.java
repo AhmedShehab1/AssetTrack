@@ -1,8 +1,6 @@
 package com.assettrack.dto.allocation;
 
-import com.assettrack.domain.asset.AssetType;
-import com.assettrack.dto.asset.AssetSummaryResponse;
-import com.assettrack.dto.user.UserResponse;
+import com.assettrack.dto.user.UserSummary;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,11 +15,15 @@ public class AllocationResponseDto {
 
     private java.util.UUID id;
 
-    private UserResponse user;
+    private java.util.UUID assetId;
 
-    private AssetSummaryResponse asset;
+    private UserSummary assignedTo;
 
-    private LocalDateTime checkoutDate;
+    private LocalDateTime allocatedAt;
 
-    private LocalDateTime returnDate;
+    private LocalDateTime deallocatedAt;
+
+    private String notes;
+
+    private boolean active;
 }

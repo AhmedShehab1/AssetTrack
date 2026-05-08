@@ -9,10 +9,10 @@ import java.util.UUID;
 
 public interface IAllocationService {
 
-    AllocationResponseDto allocate(AllocationRequestDto dto);
+    AllocationResponseDto allocate(java.util.UUID assetId, AllocationRequestDto dto);
 
-    AllocationResponseDto getAllocationById(UUID allocationId,UUID assetId);
-    
+    AllocationResponseDto getAllocationById(UUID allocationId, UUID assetId);
+
     void deallocate(java.util.UUID assetId);
 
     List<AllocationHistoryDto> getAllocationHistory(java.util.UUID assetId);

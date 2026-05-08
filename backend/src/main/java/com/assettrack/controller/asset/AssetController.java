@@ -5,7 +5,7 @@ import com.assettrack.domain.asset.AssetType;
 import com.assettrack.dto.asset.AssetResponse;
 import com.assettrack.dto.asset.CreateAssetRequest;
 import com.assettrack.dto.asset.UpdateAssetRequest;
-import com.assettrack.service.asset.AssetService;
+import com.assettrack.service.asset.IAssetService;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -23,27 +23,22 @@ import java.util.UUID;
 @RestController
 public class AssetController {
 
-    private final AssetService assetService;
+    private final IAssetService assetService;
 
     @GetMapping("")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<AssetResponse>> getAssets(
-            @Parameter(description = "Filter by status (AVAILABLE, ALLOCATED, EXPIRED)")
-            @RequestParam(required = false) AssetStatus status,
-            @Parameter(description = "Filter by type (LAPTOP, SCREEN, ACCESSORY)")
-            @RequestParam(required = false) AssetType type,
-            @Parameter(description = "Filter by brand (case-insensitive partial match)")
-            @RequestParam(required = false) String brand,
-            @Parameter(description = "Filter by exact serial number")
-            @RequestParam(required = false) String serialNumber,
-            Pageable pageable){
+            @Parameter(description = "Filter by status (AVAILABLE, ALLOCATED, UNDER_REPAIR, DECOMMISSIONED, SPARE)") @RequestParam(required = false) AssetStatus status,
+            @Parameter(description = "Filter by type (LAPTOP, MONITOR, KEYBOARD, MOUSE, HEADSET, DOCKING_STATION, OTHER)") @RequestParam(required = false) AssetType type,
+            @Parameter(description = "Filter by brand (case-insensitive partial match)") @RequestParam(required = false) String brand,
+            @Parameter(description = "Filter by exact serial number") @RequestParam(required = false) String serialNumber,
+            Pageable pageable) {
         return ResponseEntity.ok(assetService.searchAssets(status, type, brand, serialNumber, pageable));
     }
 
-
     @PostMapping("")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<AssetResponse> createAsset(@RequestBody @Validated CreateAssetRequest request){
+    public ResponseEntity<AssetResponse> createAsset(@RequestBody @Validated CreateAssetRequest request) {
         AssetResponse response = assetService.registerAsset(request);
         URI location = URI.create("/api/assets/" + response.getId());
         return ResponseEntity.created(location).body(response);
@@ -51,19 +46,20 @@ public class AssetController {
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<AssetResponse> getAssetById(@Parameter(description = "Asset ID") @PathVariable UUID id ){
+    public ResponseEntity<AssetResponse> getAssetById(@Parameter(description = "Asset ID") @PathVariable UUID id) {
         return ResponseEntity.ok(assetService.getAssetById(id));
     }
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<AssetResponse> updateAsset(@Parameter(description = "Asset ID") @PathVariable UUID id, @RequestBody @Validated UpdateAssetRequest request){
+    public ResponseEntity<AssetResponse> updateAsset(@Parameter(description = "Asset ID") @PathVariable UUID id,
+            @RequestBody @Validated UpdateAssetRequest request) {
         return ResponseEntity.ok(assetService.updateAsset(id, request));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<Void> deleteAsset(@Parameter(description = "Asset ID") @PathVariable UUID id){
+    public ResponseEntity<Void> deleteAsset(@Parameter(description = "Asset ID") @PathVariable UUID id) {
         assetService.deleteAsset(id);
         return ResponseEntity.noContent().build();
     }
