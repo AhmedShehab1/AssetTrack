@@ -1,0 +1,2082 @@
+openapi: 3.0.3
+
+info:
+  title: AssetTrack API
+  description: |
+    Production-grade REST API for AssetTrack — a hardware asset management system
+    for software development teams. Handles asset registration, allocation, expiration
+    tracking, condition reporting, dashboards, and advanced search.
+
+    ## Role-Based Access Control
+    | Role      | Description                                              |
+    |-----------|----------------------------------------------------------|
+    | ADMIN     | Full access: manage users, roles, assets, and reports    |
+    | MANAGER   | Read/write assets, view reports, manage allocations      |
+    | DEVELOPER | View own assets, submit condition reports                |
+
+    ## Error Response Format
+    All error responses follow the `ApiError` schema defined in the components section.
+  version: 1.0.0
+  contact:
+    name: AssetTrack Team
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+  - url: https://assettrack.internal/api/v1
+    description: Production server
+
+# ─────────────────────────────────────────────
+# SECURITY SCHEME
+# ─────────────────────────────────────────────
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT access token obtained from POST /auth/login.
+        Include as: `Authorization: Bearer <token>`
+
+  # ─────────────────────────────────────────────
+  # REUSABLE PARAMETERS
+  # ─────────────────────────────────────────────
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Zero-based page index (0..N)
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    SizeParam:
+      name: size
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    SortParam:
+      name: sort
+      in: query
+      description: "Sort expression: `field,asc` or `field,desc`. Repeatable."
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+      example: ["purchaseDate,desc"]
+    AssetIdParam:
+      name: assetId
+      in: path
+      required: true
+      description: Unique asset identifier (UUID)
+      schema:
+        type: string
+        format: uuid
+    UserIdParam:
+      name: userId
+      in: path
+      required: true
+      description: Unique user identifier (UUID)
+      schema:
+        type: string
+        format: uuid
+    AllocationIdParam:
+      name: allocationId
+      in: path
+      required: true
+      description: Unique allocation record identifier (UUID)
+      schema:
+        type: string
+        format: uuid
+    ReportIdParam:
+      name: reportId
+      in: path
+      required: true
+      description: Unique condition report identifier (UUID)
+      schema:
+        type: string
+        format: uuid
+
+  # ─────────────────────────────────────────────
+  # REUSABLE RESPONSE OBJECTS
+  # ─────────────────────────────────────────────
+  responses:
+    Unauthorized:
+      description: Missing or invalid JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            timestamp: "2024-06-01T10:00:00Z"
+            status: 401
+            error: Unauthorized
+            message: "JWT token is missing or invalid"
+            path: "/api/v1/assets"
+
+    Forbidden:
+      description: Authenticated user lacks the required role
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            timestamp: "2024-06-01T10:00:00Z"
+            status: 403
+            error: Forbidden
+            message: "Access denied: insufficient role"
+            path: "/api/v1/assets"
+
+    NotFound:
+      description: Requested resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            timestamp: "2024-06-01T10:00:00Z"
+            status: 404
+            error: Not Found
+            message: "Asset with id '3fa85f64' not found"
+            path: "/api/v1/assets/3fa85f64"
+
+    BadRequest:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            timestamp: "2024-06-01T10:00:00Z"
+            status: 400
+            error: Bad Request
+            message: "Validation failed for field 'serialNumber': must match pattern"
+            path: "/api/v1/assets"
+
+    Conflict:
+      description: Resource state conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            timestamp: "2024-06-01T10:00:00Z"
+            status: 409
+            error: Conflict
+            message: "Asset is already allocated to another user"
+            path: "/api/v1/assets/3fa85f64/allocations"
+
+  # ─────────────────────────────────────────────
+  # SCHEMAS
+  # ─────────────────────────────────────────────
+  schemas:
+
+    # ── Error ──────────────────────────────────
+    ApiError:
+      type: object
+      description: Standard error envelope returned on all 4xx/5xx responses
+      required: [timestamp, status, error, message, path]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: UTC timestamp when the error occurred (ISO-8601)
+          example: "2024-06-01T10:00:00Z"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
+        error:
+          type: string
+          description: Short HTTP status phrase
+          example: "Bad Request"
+        message:
+          type: string
+          description: Human-readable explanation of the error
+          example: "Validation failed for field 'serialNumber'"
+        path:
+          type: string
+          description: Request URI that produced the error
+          example: "/api/v1/assets"
+        fieldErrors:
+          type: array
+          description: Per-field validation errors (present on 400 only)
+          items:
+            $ref: '#/components/schemas/FieldError'
+
+    FieldError:
+      type: object
+      required: [field, rejectedValue, message]
+      properties:
+        field:
+          type: string
+          example: "serialNumber"
+        rejectedValue:
+          type: string
+          example: "ABC!@#"
+        message:
+          type: string
+          example: "must match '^[A-Z0-9\\-]{4,30}$'"
+
+    # ── Pagination Envelope ─────────────────────
+    PageMeta:
+      type: object
+      description: Pagination metadata included in all paginated responses
+      required: [page, size, totalElements, totalPages]
+      properties:
+        page:
+          type: integer
+          example: 0
+        size:
+          type: integer
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          example: 157
+        totalPages:
+          type: integer
+          example: 8
+
+    # ── Auth ────────────────────────────────────
+    SignUpRequest:
+      type: object
+      required: [email, password, fullName]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: "jane.doe@company.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+          description: Plain-text password; stored as BCrypt hash server-side
+          example: "Str0ng!Pass"
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 120
+          example: "Jane Doe"
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: "jane.doe@company.com"
+        password:
+          type: string
+          format: password
+          example: "Str0ng!Pass"
+
+    AuthResponse:
+      type: object
+      required: [accessToken, tokenType, expiresIn, user]
+      properties:
+        accessToken:
+          type: string
+          description: JWT Bearer token to include in subsequent requests
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        tokenType:
+          type: string
+          enum: [Bearer]
+          example: "Bearer"
+        expiresIn:
+          type: integer
+          description: Token lifetime in seconds
+          example: 86400
+        user:
+          $ref: '#/components/schemas/UserSummary'
+
+    # ── User ────────────────────────────────────
+    UserRole:
+      type: string
+      enum: [ADMIN, MANAGER, DEVELOPER]
+      description: Role governing API access and permissions
+
+    UserSummary:
+      type: object
+      description: Compact user representation used in nested responses
+      required: [id, email, fullName, role]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        email:
+          type: string
+          format: email
+          example: "jane.doe@company.com"
+        fullName:
+          type: string
+          example: "Jane Doe"
+        role:
+          $ref: '#/components/schemas/UserRole'
+
+    UserResponse:
+      allOf:
+        - $ref: '#/components/schemas/UserSummary'
+        - type: object
+          required: [createdAt, updatedAt, active]
+          properties:
+            createdAt:
+              type: string
+              format: date-time
+              example: "2024-01-15T09:30:00Z"
+            updatedAt:
+              type: string
+              format: date-time
+              example: "2024-05-01T14:00:00Z"
+            active:
+              type: boolean
+              description: Whether the account is enabled
+              example: true
+
+    PagedUserResponse:
+      type: object
+      required: [content, meta]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserResponse'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+
+    UpdateRoleRequest:
+      type: object
+      required: [role]
+      properties:
+        role:
+          $ref: '#/components/schemas/UserRole'
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 120
+          example: "Jane A. Doe"
+        active:
+          type: boolean
+          description: "Admins only: enable or disable the account"
+
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+
+    # ── Asset ───────────────────────────────────
+    AssetType:
+      type: string
+      enum: [LAPTOP, MONITOR, KEYBOARD, MOUSE, HEADSET, DOCKING_STATION, OTHER]
+      description: Hardware category of the asset
+
+    AssetStatus:
+      type: string
+      enum: [AVAILABLE, ALLOCATED, UNDER_REPAIR, DECOMMISSIONED, SPARE]
+      description: |
+        Lifecycle status of the asset.
+        - AVAILABLE: In stock, not assigned
+        - ALLOCATED: Assigned to a team member
+        - UNDER_REPAIR: Sent for repair following a condition report
+        - DECOMMISSIONED: End-of-life, no longer in service
+        - SPARE: Designated spare pool
+
+    CreateAssetRequest:
+      type: object
+      required: [type, brand, model, serialNumber, purchaseDate, warrantyExpirationDate]
+      properties:
+        type:
+          $ref: '#/components/schemas/AssetType'
+        brand:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Dell"
+        model:
+          type: string
+          minLength: 1
+          maxLength: 150
+          example: "XPS 15 9530"
+        serialNumber:
+          type: string
+          pattern: '^[A-Z0-9\-]{4,30}$'
+          description: Uppercase alphanumeric with hyphens, 4–30 characters
+          example: "DL-XPS15-20240512"
+        purchaseDate:
+          type: string
+          format: date
+          description: ISO-8601 local date (YYYY-MM-DD)
+          example: "2024-01-10"
+        warrantyExpirationDate:
+          type: string
+          format: date
+          description: ISO-8601 local date (YYYY-MM-DD)
+          example: "2027-01-10"
+        notes:
+          type: string
+          maxLength: 1000
+          example: "Purchased for new-hire batch Q1 2024"
+
+    UpdateAssetRequest:
+      type: object
+      description: Partial update — omit fields that should remain unchanged
+      properties:
+        brand:
+          type: string
+          minLength: 1
+          maxLength: 100
+        model:
+          type: string
+          minLength: 1
+          maxLength: 150
+        serialNumber:
+          type: string
+          pattern: '^[A-Z0-9\-]{4,30}$'
+        purchaseDate:
+          type: string
+          format: date
+        warrantyExpirationDate:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/AssetStatus'
+        notes:
+          type: string
+          maxLength: 1000
+
+    AssetResponse:
+      type: object
+      required: [id, type, brand, model, serialNumber, purchaseDate, warrantyExpirationDate,
+                 status, warrantyExpired, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+        type:
+          $ref: '#/components/schemas/AssetType'
+        brand:
+          type: string
+          example: "Dell"
+        model:
+          type: string
+          example: "XPS 15 9530"
+        serialNumber:
+          type: string
+          example: "DL-XPS15-20240512"
+        purchaseDate:
+          type: string
+          format: date
+          example: "2024-01-10"
+        warrantyExpirationDate:
+          type: string
+          format: date
+          example: "2027-01-10"
+        status:
+          $ref: '#/components/schemas/AssetStatus'
+        warrantyExpired:
+          type: boolean
+          description: Computed flag — true when warrantyExpirationDate is before today
+          example: false
+        warrantyExpiresInDays:
+          type: integer
+          description: Days until warranty expires; negative if already expired
+          example: 1042
+        currentOwner:
+          $ref: '#/components/schemas/UserSummary'
+        notes:
+          type: string
+          example: "Purchased for new-hire batch Q1 2024"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T09:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-05-01T14:00:00Z"
+
+    PagedAssetResponse:
+      type: object
+      required: [content, meta]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetResponse'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+
+    # ── Allocation ──────────────────────────────
+    CreateAllocationRequest:
+      type: object
+      required: [assignedToUserId]
+      properties:
+        assignedToUserId:
+          type: string
+          format: uuid
+          description: The user to whom the asset is being allocated
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        notes:
+          type: string
+          maxLength: 500
+          example: "Temporary allocation while primary laptop is repaired"
+
+    AllocationResponse:
+      type: object
+      required: [id, assetId, assignedTo, allocatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        assetId:
+          type: string
+          format: uuid
+          example: "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+        assignedTo:
+          $ref: '#/components/schemas/UserSummary'
+        allocatedAt:
+          type: string
+          format: date-time
+          description: UTC timestamp when the allocation was created
+          example: "2024-03-01T08:00:00Z"
+        deallocatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: UTC timestamp when returned; null if still active
+          example: null
+        notes:
+          type: string
+          example: "Temporary allocation while primary laptop is repaired"
+        active:
+          type: boolean
+          description: True when deallocatedAt is null
+          example: true
+
+    PagedAllocationResponse:
+      type: object
+      required: [content, meta]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AllocationResponse'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+
+    DeallocateRequest:
+      type: object
+      properties:
+        notes:
+          type: string
+          maxLength: 500
+          description: Optional reason or note for deallocation
+          example: "Employee leaving the company"
+
+    # ── Condition Report ────────────────────────
+    ConditionSeverity:
+      type: string
+      enum: [LOW, MEDIUM, HIGH, CRITICAL]
+      description: |
+        Urgency level of the reported issue.
+        - LOW: Minor cosmetic issue
+        - MEDIUM: Functional degradation but usable
+        - HIGH: Significantly impairs productivity
+        - CRITICAL: Asset unusable; immediate action required
+
+    ConditionReportStatus:
+      type: string
+      enum: [OPEN, IN_PROGRESS, RESOLVED, CLOSED]
+
+    CreateConditionReportRequest:
+      type: object
+      required: [description, severity]
+      properties:
+        description:
+          type: string
+          minLength: 10
+          maxLength: 2000
+          example: "Battery drains within 2 hours under normal workload"
+        severity:
+          $ref: '#/components/schemas/ConditionSeverity'
+
+    UpdateConditionReportRequest:
+      type: object
+      description: |
+        Admin/Manager only. Update the status and optionally add resolution notes.
+      properties:
+        status:
+          $ref: '#/components/schemas/ConditionReportStatus'
+        resolutionNotes:
+          type: string
+          maxLength: 2000
+          example: "Battery replacement scheduled for 2024-06-10"
+
+    ConditionReportResponse:
+      type: object
+      required: [id, assetId, reportedBy, description, severity, status, reportedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        assetId:
+          type: string
+          format: uuid
+          example: "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+        asset:
+          description: Compact asset info for context
+          type: object
+          properties:
+            serialNumber:
+              type: string
+            brand:
+              type: string
+            model:
+              type: string
+            type:
+              $ref: '#/components/schemas/AssetType'
+        reportedBy:
+          $ref: '#/components/schemas/UserSummary'
+        description:
+          type: string
+          example: "Battery drains within 2 hours under normal workload"
+        severity:
+          $ref: '#/components/schemas/ConditionSeverity'
+        status:
+          $ref: '#/components/schemas/ConditionReportStatus'
+        resolutionNotes:
+          type: string
+          nullable: true
+        reportedAt:
+          type: string
+          format: date-time
+          example: "2024-05-20T11:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-05-21T09:00:00Z"
+
+    PagedConditionReportResponse:
+      type: object
+      required: [content, meta]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConditionReportResponse'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+
+    # ── Notifications ───────────────────────────
+    NotificationType:
+      type: string
+      enum: [WARRANTY_EXPIRY, LOW_STOCK, ASSET_ALLOCATED, ASSET_RETURNED,
+             CONDITION_REPORT_OPENED, CONDITION_REPORT_RESOLVED]
+
+    NotificationResponse:
+      type: object
+      required: [id, type, message, read, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/NotificationType'
+        message:
+          type: string
+          example: "Warranty for Dell XPS 15 (DL-XPS15-20240512) expires in 30 days"
+        read:
+          type: boolean
+          example: false
+        assetId:
+          type: string
+          format: uuid
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    PagedNotificationResponse:
+      type: object
+      required: [content, meta]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationResponse'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+
+    NotificationPreferencesRequest:
+      type: object
+      properties:
+        warrantyExpiryDaysThreshold:
+          type: integer
+          minimum: 1
+          maximum: 365
+          description: Trigger alert N days before warranty expiration
+          example: 30
+        lowStockThreshold:
+          type: integer
+          minimum: 0
+          description: Alert when available accessories count falls below this value
+          example: 5
+        emailNotificationsEnabled:
+          type: boolean
+          example: true
+        inAppNotificationsEnabled:
+          type: boolean
+          example: true
+
+    NotificationPreferencesResponse:
+      allOf:
+        - $ref: '#/components/schemas/NotificationPreferencesRequest'
+        - type: object
+          required: [userId, updatedAt]
+          properties:
+            userId:
+              type: string
+              format: uuid
+            updatedAt:
+              type: string
+              format: date-time
+
+    # ── Dashboard & Analytics ───────────────────
+    AssetStatusDistribution:
+      type: object
+      description: Count of assets grouped by status
+      required: [status, count]
+      properties:
+        status:
+          $ref: '#/components/schemas/AssetStatus'
+        count:
+          type: integer
+          example: 42
+
+    AssetTypeDistribution:
+      type: object
+      description: Count of assets grouped by type
+      required: [type, count]
+      properties:
+        type:
+          $ref: '#/components/schemas/AssetType'
+        count:
+          type: integer
+          example: 18
+
+    ExpiringAssetSummary:
+      type: object
+      required: [assetId, serialNumber, brand, model, type, warrantyExpirationDate,
+                 warrantyExpiresInDays, currentOwner]
+      properties:
+        assetId:
+          type: string
+          format: uuid
+        serialNumber:
+          type: string
+        brand:
+          type: string
+        model:
+          type: string
+        type:
+          $ref: '#/components/schemas/AssetType'
+        warrantyExpirationDate:
+          type: string
+          format: date
+        warrantyExpiresInDays:
+          type: integer
+          description: Negative if already expired
+        currentOwner:
+          $ref: '#/components/schemas/UserSummary'
+        suggestedAction:
+          type: string
+          enum: [REASSIGN_AS_SPARE, DECOMMISSION, RENEW_WARRANTY, REVIEW]
+          description: System-suggested follow-up action
+
+    InventoryDashboardResponse:
+      type: object
+      required: [totalAssets, byStatus, byType, expiringWithin30Days,
+                 alreadyExpired, openConditionReports, unallocatedLaptops]
+      properties:
+        totalAssets:
+          type: integer
+          example: 132
+        byStatus:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetStatusDistribution'
+        byType:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetTypeDistribution'
+        expiringWithin30Days:
+          type: integer
+          description: Assets whose warranty expires within the next 30 days
+          example: 7
+        alreadyExpired:
+          type: integer
+          description: Assets whose warranty has already lapsed
+          example: 3
+        openConditionReports:
+          type: integer
+          example: 5
+        unallocatedLaptops:
+          type: integer
+          description: Laptops with AVAILABLE or SPARE status
+          example: 4
+
+    AllocationHistoryEntry:
+      type: object
+      required: [allocationId, assetId, assignedTo, allocatedAt]
+      properties:
+        allocationId:
+          type: string
+          format: uuid
+        assetId:
+          type: string
+          format: uuid
+        assetSerialNumber:
+          type: string
+        assetBrand:
+          type: string
+        assetModel:
+          type: string
+        assignedTo:
+          $ref: '#/components/schemas/UserSummary'
+        allocatedAt:
+          type: string
+          format: date-time
+        deallocatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        durationDays:
+          type: integer
+          description: Calendar days the asset was/has been allocated
+          example: 90
+
+    PagedAllocationHistoryResponse:
+      type: object
+      required: [content, meta]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/AllocationHistoryEntry'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+
+    SpareAssetResponse:
+      type: object
+      required: [asset]
+      properties:
+        asset:
+          $ref: '#/components/schemas/AssetResponse'
+        lastOwner:
+          $ref: '#/components/schemas/UserSummary'
+        lastDeallocatedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+# ─────────────────────────────────────────────
+# GLOBAL SECURITY (all endpoints require JWT unless overridden)
+# ─────────────────────────────────────────────
+security:
+  - BearerAuth: []
+
+# ─────────────────────────────────────────────
+# TAGS
+# ─────────────────────────────────────────────
+tags:
+  - name: Authentication
+    description: Sign-up, login, and password management
+  - name: Users
+    description: User account and role management (Admin-focused)
+  - name: Assets
+    description: Hardware asset CRUD and lifecycle management
+  - name: Allocations
+    description: Asset assignment and transfer to team members
+  - name: Condition Reports
+    description: Issue reporting on assigned assets
+  - name: Notifications
+    description: In-app notification management and preferences
+  - name: Dashboard
+    description: Inventory overview and analytics
+  - name: Reports
+    description: Detailed usage statistics and allocation history
+  - name: Search
+    description: Advanced multi-field asset and user search
+
+# ─────────────────────────────────────────────
+# PATHS
+# ─────────────────────────────────────────────
+paths:
+
+  # ════════════════════════════════════════════
+  # AUTHENTICATION
+  # ════════════════════════════════════════════
+  /auth/signup:
+    post:
+      tags: [Authentication]
+      summary: Register a new user account
+      description: |
+        Creates a new user with the DEVELOPER role by default.
+        Password is hashed with BCrypt before persistence.
+        No JWT required.
+      security: []
+      operationId: signUp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpRequest'
+      responses:
+        '201':
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email address is already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /auth/login:
+    post:
+      tags: [Authentication]
+      summary: Authenticate and obtain a JWT
+      description: Validates credentials and returns a signed JWT access token.
+      security: []
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid email or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get the currently authenticated user's profile
+      operationId: getCurrentUser
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/me/password:
+    patch:
+      tags: [Authentication]
+      summary: Change own password
+      operationId: changePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Password changed successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Current password is incorrect
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  # ════════════════════════════════════════════
+  # USERS
+  # ════════════════════════════════════════════
+  /users:
+    get:
+      tags: [Users]
+      summary: List all users
+      description: |
+        **Roles allowed:** ADMIN, MANAGER
+        Returns a paginated list of user accounts.
+      operationId: listUsers
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - $ref: '#/components/parameters/SortParam'
+        - name: role
+          in: query
+          description: Filter by role
+          schema:
+            $ref: '#/components/schemas/UserRole'
+        - name: active
+          in: query
+          description: Filter by active status
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          description: Full-text search against name and email
+          schema:
+            type: string
+            maxLength: 100
+      responses:
+        '200':
+          description: Paginated user list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedUserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /users/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserIdParam'
+    get:
+      tags: [Users]
+      summary: Get a user by ID
+      description: |
+        **Roles allowed:** ADMIN, MANAGER
+        Developers may only fetch their own profile via `/auth/me`.
+      operationId: getUserById
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Users]
+      summary: Update a user's profile or active status
+      description: |
+        **Roles allowed:** ADMIN
+        Supports partial updates. Setting `active: false` disables the account without deletion.
+      operationId: updateUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Updated user details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags: [Users]
+      summary: Delete a user account
+      description: |
+        **Roles allowed:** ADMIN
+        Hard-deletes the account. Active asset allocations must be resolved first.
+      operationId: deleteUser
+      responses:
+        '204':
+          description: User deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: User has active asset allocations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /users/{userId}/role:
+    parameters:
+      - $ref: '#/components/parameters/UserIdParam'
+    put:
+      tags: [Users]
+      summary: Update a user's role
+      description: |
+        **Roles allowed:** ADMIN only
+        Replaces the user's current role with the specified one.
+      operationId: updateUserRole
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoleRequest'
+      responses:
+        '200':
+          description: Role updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /users/{userId}/assets:
+    parameters:
+      - $ref: '#/components/parameters/UserIdParam'
+    get:
+      tags: [Users]
+      summary: List assets currently allocated to a user
+      description: |
+        **Roles allowed:** ADMIN, MANAGER — any user for their own ID
+      operationId: getUserAssets
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+      responses:
+        '200':
+          description: Assets assigned to the user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedAssetResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ════════════════════════════════════════════
+  # ASSETS
+  # ════════════════════════════════════════════
+  /assets:
+    get:
+      tags: [Assets]
+      summary: List all assets
+      description: |
+        **Roles allowed:** ADMIN, MANAGER, DEVELOPER (read-only)
+        Supports filtering by type, status, warranty expiration window, and free-text.
+      operationId: listAssets
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - $ref: '#/components/parameters/SortParam'
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/AssetType'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/AssetStatus'
+        - name: warrantyExpiringWithinDays
+          in: query
+          description: Return assets whose warranty expires within N days
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 365
+        - name: warrantyExpired
+          in: query
+          description: Filter to already-expired assets
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Paginated asset list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedAssetResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Assets]
+      summary: Register a new asset
+      description: |
+        **Roles allowed:** ADMIN only
+        Creates a new asset record. Initial status is AVAILABLE.
+      operationId: createAsset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAssetRequest'
+      responses:
+        '201':
+          description: Asset created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: An asset with the same serial number already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /assets/{assetId}:
+    parameters:
+      - $ref: '#/components/parameters/AssetIdParam'
+    get:
+      tags: [Assets]
+      summary: Get asset details by ID
+      description: |
+        **Roles allowed:** ADMIN, MANAGER, DEVELOPER
+      operationId: getAssetById
+      responses:
+        '200':
+          description: Asset details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Assets]
+      summary: Update asset details or status
+      description: |
+        **Roles allowed:** ADMIN only
+        Partial update. Status transitions are validated server-side
+        (e.g., cannot set DECOMMISSIONED while ALLOCATED).
+      operationId: updateAsset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAssetRequest'
+      responses:
+        '200':
+          description: Updated asset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Invalid status transition for the asset's current state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+    delete:
+      tags: [Assets]
+      summary: Delete an asset record
+      description: |
+        **Roles allowed:** ADMIN only
+        Hard delete. Fails if the asset is currently ALLOCATED.
+        Consider setting status to DECOMMISSIONED instead for audit trail preservation.
+      operationId: deleteAsset
+      responses:
+        '204':
+          description: Asset deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Asset is currently allocated and cannot be deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  # ── Allocation sub-resource ─────────────────
+  /assets/{assetId}/allocations:
+    parameters:
+      - $ref: '#/components/parameters/AssetIdParam'
+    get:
+      tags: [Allocations]
+      summary: Get full allocation history for an asset
+      description: |
+        **Roles allowed:** ADMIN, MANAGER
+        Returns the complete chronological allocation history, newest first.
+        Use `active=true` to return only the current active allocation.
+      operationId: getAssetAllocationHistory
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - name: active
+          in: query
+          description: When true, returns only the currently active allocation record
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Paginated allocation history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedAllocationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Allocations]
+      summary: Allocate an asset to a user
+      description: |
+        **Roles allowed:** ADMIN, MANAGER
+        Assigns the asset to the specified user. Fails with 409 if
+        the asset is currently ALLOCATED, UNDER_REPAIR, or DECOMMISSIONED.
+        Automatically transitions asset status to ALLOCATED.
+      operationId: allocateAsset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAllocationRequest'
+      responses:
+        '201':
+          description: Asset allocated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllocationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Asset or target user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '409':
+          description: Asset is not in an allocatable state (already allocated, decommissioned, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /assets/{assetId}/allocations/{allocationId}:
+    parameters:
+      - $ref: '#/components/parameters/AssetIdParam'
+      - $ref: '#/components/parameters/AllocationIdParam'
+    get:
+      tags: [Allocations]
+      summary: Get a specific allocation record
+      description: |
+        **Roles allowed:** ADMIN, MANAGER
+      operationId: getAllocationById
+      responses:
+        '200':
+          description: Allocation record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllocationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /assets/{assetId}/allocations/{allocationId}/deallocate:
+    parameters:
+      - $ref: '#/components/parameters/AssetIdParam'
+      - $ref: '#/components/parameters/AllocationIdParam'
+    post:
+      tags: [Allocations]
+      summary: Deallocate (return) an asset
+      description: |
+        **Roles allowed:** ADMIN, MANAGER
+        Marks the allocation as ended (sets `deallocatedAt` to now).
+        Asset status transitions back to AVAILABLE.
+        Fails with 409 if the allocation is already closed.
+      operationId: deallocateAsset
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeallocateRequest'
+      responses:
+        '200':
+          description: Allocation closed; updated record returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllocationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Allocation is already closed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  # ── Condition Reports sub-resource ──────────
+  /assets/{assetId}/condition-reports:
+    parameters:
+      - $ref: '#/components/parameters/AssetIdParam'
+    get:
+      tags: [Condition Reports]
+      summary: List condition reports for an asset
+      description: |
+        **Roles allowed:** ADMIN, MANAGER — DEVELOPER for their own asset
+      operationId: listAssetConditionReports
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - $ref: '#/components/parameters/SortParam'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ConditionReportStatus'
+        - name: severity
+          in: query
+          schema:
+            $ref: '#/components/schemas/ConditionSeverity'
+      responses:
+        '200':
+          description: Paginated condition reports
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedConditionReportResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      tags: [Condition Reports]
+      summary: Submit a condition report for an asset
+      description: |
+        **Roles allowed:** ADMIN, MANAGER, DEVELOPER (for their own assigned asset)
+        A DEVELOPER may only report on assets currently allocated to them.
+      operationId: createConditionReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConditionReportRequest'
+      responses:
+        '201':
+          description: Condition report created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConditionReportResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Asset is not allocated to this developer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /assets/{assetId}/condition-reports/{reportId}:
+    parameters:
+      - $ref: '#/components/parameters/AssetIdParam'
+      - $ref: '#/components/parameters/ReportIdParam'
+    get:
+      tags: [Condition Reports]
+      summary: Get a specific condition report
+      description: |
+        **Roles allowed:** ADMIN, MANAGER — DEVELOPER for their own submissions
+      operationId: getConditionReport
+      responses:
+        '200':
+          description: Condition report details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConditionReportResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Condition Reports]
+      summary: Update report status and add resolution notes
+      description: |
+        **Roles allowed:** ADMIN, MANAGER
+        Used to progress the report through OPEN → IN_PROGRESS → RESOLVED → CLOSED.
+      operationId: updateConditionReport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateConditionReportRequest'
+      responses:
+        '200':
+          description: Updated condition report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConditionReportResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ════════════════════════════════════════════
+  # NOTIFICATIONS
+  # ════════════════════════════════════════════
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List in-app notifications for the current user
+      description: |
+        **Roles allowed:** ALL authenticated users
+        Returns the caller's own notifications, newest first.
+      operationId: listNotifications
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - name: read
+          in: query
+          description: Filter by read status
+          schema:
+            type: boolean
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/NotificationType'
+      responses:
+        '200':
+          description: Paginated notifications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedNotificationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /notifications/{notificationId}/read:
+    parameters:
+      - name: notificationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    patch:
+      tags: [Notifications]
+      summary: Mark a notification as read
+      description: |
+        **Roles allowed:** ALL authenticated users (own notifications only)
+      operationId: markNotificationRead
+      responses:
+        '204':
+          description: Notification marked as read
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Notification belongs to another user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /notifications/read-all:
+    post:
+      tags: [Notifications]
+      summary: Mark all notifications as read for the current user
+      description: |
+        **Roles allowed:** ALL authenticated users
+      operationId: markAllNotificationsRead
+      responses:
+        '204':
+          description: All notifications marked as read
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /notifications/preferences:
+    get:
+      tags: [Notifications]
+      summary: Get current user's notification preferences
+      description: |
+        **Roles allowed:** ALL authenticated users
+      operationId: getNotificationPreferences
+      responses:
+        '200':
+          description: Notification preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferencesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags: [Notifications]
+      summary: Update notification preferences
+      description: |
+        **Roles allowed:** ALL authenticated users (own preferences only)
+      operationId: updateNotificationPreferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationPreferencesRequest'
+      responses:
+        '200':
+          description: Updated preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationPreferencesResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ════════════════════════════════════════════
+  # DASHBOARD & ANALYTICS
+  # ════════════════════════════════════════════
+  /dashboard/inventory:
+    get:
+      tags: [Dashboard]
+      summary: Inventory overview dashboard
+      description: |
+        **Roles allowed:** ADMIN, MANAGER
+        Returns aggregated counts by status/type, expiration alerts,
+        open condition reports, and available spare laptops — suitable for
+        powering charts and KPI cards on the main dashboard.
+      operationId: getInventoryDashboard
+      responses:
+        '200':
+          description: Inventory dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryDashboardResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /dashboard/expiring-warranties:
+    get:
+      tags: [Dashboard]
+      summary: List assets with upcoming or lapsed warranties
+      description: |
+        **Roles allowed:** ADMIN, MANAGER
+        Returns flagged laptops with system-suggested actions
+        (e.g., REASSIGN_AS_SPARE, DECOMMISSION).
+      operationId: getExpiringWarranties
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - name: withinDays
+          in: query
+          description: Return assets expiring within this many days (0 = already expired only)
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 365
+            default: 30
+      responses:
+        '200':
+          description: Paginated expiring assets with suggested actions
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [content, meta]
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExpiringAssetSummary'
+                  meta:
+                    $ref: '#/components/schemas/PageMeta'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ════════════════════════════════════════════
+  # REPORTS (Usage Statistics)
+  # ════════════════════════════════════════════
+  /reports/allocations:
+    get:
+      tags: [Reports]
+      summary: Global allocation history across all assets
+      description: |
+        **Roles allowed:** ADMIN, MANAGER
+        Supports date-range filtering and chronological ordering for
+        audit-trail and usage reporting.
+      operationId: getAllocationReport
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - $ref: '#/components/parameters/SortParam'
+        - name: userId
+          in: query
+          description: Filter to a specific user's allocation history
+          schema:
+            type: string
+            format: uuid
+        - name: assetType
+          in: query
+          schema:
+            $ref: '#/components/schemas/AssetType'
+        - name: from
+          in: query
+          description: Allocations starting on or after this date (ISO-8601)
+          schema:
+            type: string
+            format: date
+          example: "2024-01-01"
+        - name: to
+          in: query
+          description: Allocations starting on or before this date (ISO-8601)
+          schema:
+            type: string
+            format: date
+          example: "2024-12-31"
+        - name: activeOnly
+          in: query
+          description: When true, only active (not yet returned) allocations
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Paginated allocation history report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedAllocationHistoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /reports/condition-reports:
+    get:
+      tags: [Reports]
+      summary: Aggregated condition reports across all assets
+      description: |
+        **Roles allowed:** ADMIN, MANAGER
+        Full searchable history of condition reports for follow-up and auditing.
+      operationId: getConditionReportSummary
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - $ref: '#/components/parameters/SortParam'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/ConditionReportStatus'
+        - name: severity
+          in: query
+          schema:
+            $ref: '#/components/schemas/ConditionSeverity'
+        - name: assetType
+          in: query
+          schema:
+            $ref: '#/components/schemas/AssetType'
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Paginated condition reports report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedConditionReportResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ════════════════════════════════════════════
+  # SEARCH
+  # ════════════════════════════════════════════
+  /search/assets:
+    get:
+      tags: [Search]
+      summary: Advanced multi-field asset search
+      description: |
+        **Roles allowed:** ADMIN, MANAGER, DEVELOPER
+        Any combination of parameters may be used together.
+        All string parameters support partial, case-insensitive matching.
+      operationId: searchAssets
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - $ref: '#/components/parameters/SortParam'
+        - name: serialNumber
+          in: query
+          description: Partial or full serial number match
+          schema:
+            type: string
+            maxLength: 30
+        - name: brand
+          in: query
+          schema:
+            type: string
+            maxLength: 100
+        - name: model
+          in: query
+          schema:
+            type: string
+            maxLength: 150
+        - name: type
+          in: query
+          schema:
+            $ref: '#/components/schemas/AssetType'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/AssetStatus'
+        - name: assignedUserId
+          in: query
+          description: Filter by the UUID of the currently assigned user
+          schema:
+            type: string
+            format: uuid
+        - name: assignedUserName
+          in: query
+          description: Filter by partial name of the currently assigned user
+          schema:
+            type: string
+            maxLength: 120
+        - name: warrantyExpired
+          in: query
+          schema:
+            type: boolean
+        - name: purchasedFrom
+          in: query
+          description: Filter by purchase date range start (inclusive)
+          schema:
+            type: string
+            format: date
+        - name: purchasedTo
+          in: query
+          description: Filter by purchase date range end (inclusive)
+          schema:
+            type: string
+            format: date
+        - name: q
+          in: query
+          description: Full-text query matched against brand, model, serial number, and notes
+          schema:
+            type: string
+            maxLength: 200
+      responses:
+        '200':
+          description: Matching assets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedAssetResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /search/assets/spare-laptop:
+    get:
+      tags: [Search]
+      summary: Find an available spare laptop
+      description: |
+        **Roles allowed:** ADMIN, MANAGER, DEVELOPER
+        Returns the first available laptop (status AVAILABLE or SPARE)
+        along with its last owner and last deallocation timestamp.
+        Useful for quick spare provisioning.
+      operationId: findSpareLaptop
+      responses:
+        '200':
+          description: An available spare laptop was found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpareAssetResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: No spare laptops are currently available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                timestamp: "2024-06-01T10:00:00Z"
+                status: 404
+                error: Not Found
+                message: "No spare laptops are currently available"
+                path: "/api/v1/search/assets/spare-laptop"
+
+  /search/users:
+    get:
+      tags: [Search]
+      summary: Search users by name or email
+      description: |
+        **Roles allowed:** ADMIN, MANAGER
+        Used in allocation workflows to locate team members quickly.
+      operationId: searchUsers
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - name: q
+          in: query
+          required: true
+          description: Partial match against full name or email
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+        - name: role
+          in: query
+          schema:
+            $ref: '#/components/schemas/UserRole'
+        - name: active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Matching users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedUserResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
