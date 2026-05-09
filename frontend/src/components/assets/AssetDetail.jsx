@@ -173,7 +173,7 @@ const AssetDetail = ({ asset, isOpen, onClose, onRefresh, onEdit }) => {
                       loading={deallocating}
                       disabled={deallocating}
                     >
-                      Return to Inventory (Deallocate)
+                      Deallocate Asset
                     </Button>
                   ) : (
                     <Button variant="outline" icon={ArrowLeftRight} className="w-full !justify-start text-primary">
@@ -181,19 +181,6 @@ const AssetDetail = ({ asset, isOpen, onClose, onRefresh, onEdit }) => {
                     </Button>
                   )}
                 </>
-              )}
-
-              {currentUser?.role === 'ADMIN' && (
-                <div className="pt-4 mt-4 border-t border-outline-variant">
-                  <Button 
-                    variant="outline" 
-                    icon={Trash2} 
-                    className="w-full !justify-start text-danger hover:bg-danger-bg"
-                    onClick={handleDecommission}
-                  >
-                    Decommission Asset
-                  </Button>
-                </div>
               )}
             </div>
           </div>

@@ -104,7 +104,7 @@ const AssetEditModal = ({ isOpen, onClose, asset, onRefresh }) => {
                     value={s}
                     disabled={s === 'DECOMMISSIONED' && asset.status === 'ALLOCATED'}
                   >
-                    {s.replace('_', ' ')} {s === 'DECOMMISSIONED' && asset.status === 'ALLOCATED' ? '(Return to inventory first)' : ''}
+                    {s.replace('_', ' ')} {s === 'DECOMMISSIONED' && asset.status === 'ALLOCATED' ? '(Deallocate first)' : ''}
                   </option>
                 ))}
               </select>

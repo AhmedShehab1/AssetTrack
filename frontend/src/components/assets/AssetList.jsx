@@ -384,7 +384,7 @@ const AssetList = () => {
                                 onClick={() => handleDeallocate(asset)}
                                 className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-info hover:bg-blue-50 rounded-xl transition-colors"
                               >
-                                <Undo2 size={16} /> Return to Inventory
+                                <Undo2 size={16} /> Deallocate Asset
                               </button>
                             )}
 
@@ -403,18 +403,6 @@ const AssetList = () => {
                             >
                               <ShieldAlert size={16} /> Report Issue
                             </button>
-
-                            {currentUser?.role === 'ADMIN' && (
-                              <>
-                                <div className="my-1 border-t border-outline-variant/50"></div>
-                                <button 
-                                  onClick={() => handleQuickStatusUpdate(asset, 'DECOMMISSIONED')}
-                                  className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-danger hover:bg-danger-bg rounded-xl transition-colors"
-                                >
-                                  <Trash2 size={16} /> Decommission
-                                </button>
-                              </>
-                            )}
                           </div>
                         </div>
                       )}
