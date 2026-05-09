@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   UserPlus, 
@@ -21,7 +22,7 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Badge from '../components/common/Badge';
-import UserModal from '../components/users/UserModal';
+import ActionModal from '../components/common/ActionModal';
 import GlobalErrorAlert from '../components/errors/GlobalErrorAlert';
 
 const UsersPage = () => {
@@ -294,10 +295,11 @@ const UsersPage = () => {
         </div>
       </Card>
 
-      <UserModal 
+      <ActionModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        user={selectedUser}
+        type="USER"
+        payload={selectedUser}
         onRefresh={fetchUsers}
       />
     </div>
