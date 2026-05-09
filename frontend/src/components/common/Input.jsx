@@ -6,12 +6,12 @@ const Input = forwardRef(({ label, rightLabel, icon: Icon, error, className = ''
       {(label || rightLabel) && (
         <div className="flex justify-between items-center mb-0.5">
           {label && (
-            <label htmlFor={props.name} className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.05em]">
+            <label htmlFor={props.name} className="text-[11px] text-gray-400 font-bold uppercase tracking-[0.08em]">
               {label}
             </label>
           )}
           {rightLabel && (
-            <span className="text-[11px] text-[#3F51B5] font-semibold hover:underline cursor-pointer">
+            <span className="text-[11px] text-[#253B95] font-bold hover:underline cursor-pointer">
               {rightLabel}
             </span>
           )}
@@ -24,17 +24,19 @@ const Input = forwardRef(({ label, rightLabel, icon: Icon, error, className = ''
           </div>
         )}
         <input
+          {...props}
           id={props.name}
           ref={ref}
           className={`
-            w-full bg-white border border-gray-200 rounded-lg py-2.5 text-gray-700
-            focus:outline-none focus:ring-2 focus:ring-[#3F51B5]/10 focus:border-[#3F51B5]
-            transition-all duration-200 placeholder:text-gray-300 text-sm
-            ${Icon ? 'pl-11' : 'pl-4'}
-            ${error ? 'border-red-500 focus:ring-red-100' : ''}
+            block w-full pl-10 pr-4 py-3.5 
+            bg-white border border-gray-200 
+            rounded-xl text-gray-900 text-sm
+            placeholder:text-gray-400
+            focus:outline-none focus:ring-4 focus:ring-[#253B95]/5 focus:border-[#253B95]
+            transition-all duration-200
+            ${error ? 'border-red-500 focus:ring-red-500/10' : ''}
             ${className}
           `}
-          {...props}
         />
       </div>
       {error && <p className="text-[11px] text-red-500 mt-1 font-medium">{error}</p>}

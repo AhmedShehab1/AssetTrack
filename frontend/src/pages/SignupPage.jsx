@@ -3,10 +3,7 @@ import AuthLayout from '../components/auth/AuthLayout';
 
 const SignupPage = () => {
   return (
-    <AuthLayout
-      title="Join your team and get started today."
-      subtitle="Set up your account to start managing assets with absolute precision and ease."
-    >
+    <AuthLayout>
       <SignupCard />
     </AuthLayout>
   );

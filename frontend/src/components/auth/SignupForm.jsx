@@ -5,8 +5,8 @@ import { z } from 'zod';
 import { Mail, Lock, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/axios';
-import Input from '../ui/Input';
-import Button from '../ui/Button';
+import Input from '../common/Input';
+import Button from '../common/Button';
 
 const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
@@ -108,7 +108,11 @@ const SignupForm = () => {
         error={formState.errors.confirmPassword?.message}
       />
 
-      <Button type="submit" disabled={formState.isSubmitting}>
+      <Button 
+        type="submit" 
+        disabled={formState.isSubmitting}
+        className="w-full py-4 mt-6 shadow-lg shadow-[#253B95]/20 text-[15px] font-bold tracking-wide"
+      >
         {formState.isSubmitting ? 'Creating Account...' : 'Sign Up'}
       </Button>
     </form>

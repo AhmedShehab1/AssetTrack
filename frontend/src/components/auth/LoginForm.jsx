@@ -6,8 +6,8 @@ import { Mail, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/axios';
 import { useAuth } from '../../hooks/useAuth';
-import Input from '../ui/Input';
-import Button from '../ui/Button';
+import Input from '../common/Input';
+import Button from '../common/Button';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -66,7 +66,11 @@ const LoginForm = () => {
         error={formState.errors.password?.message}
       />
 
-      <Button type="submit" disabled={formState.isSubmitting}>
+      <Button 
+        type="submit" 
+        disabled={formState.isSubmitting}
+        className="w-full py-4 mt-6 shadow-lg shadow-[#253B95]/20 text-[15px] font-bold tracking-wide"
+      >
         {formState.isSubmitting ? 'Signing in...' : 'Sign In'}
       </Button>
     </form>
