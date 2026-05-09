@@ -14,6 +14,7 @@ import SpareLaptopsPage from './pages/SpareLaptopsPage';
 import SettingsPage from './pages/SettingsPage';
 import SupportPage from './pages/SupportPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import RoleProtectedRoute from './components/auth/RoleProtectedRoute';
 
 const AxiosSandboxPage = import.meta.env.DEV
   ? lazy(() => import('./pages/AxiosSandboxPage'))
@@ -45,12 +46,26 @@ export default function App() {
 
         {/* Internal pages that require auth */}
         <Route element={<ProtectedRoute><Layout><Outlet /></Layout></ProtectedRoute>}>
-          <Route path="/" element={<DashboardPage/>} />
+          
+          {/* Users: ADMIN only */}
+          <Route element={<RoleProtectedRoute allowedRoles={['ADMIN']} />}>
+            <Route path="/users" element={<UsersPage/>} />
+          </Route>
+
+          {/* Dashboard, Allocations, and Spare Laptops: ADMIN, MANAGER */}
+          <Route element={<RoleProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />}>
+            <Route path="/" element={<DashboardPage/>} />
+            <Route path="/spare-laptops" element={<SpareLaptopsPage/>} />
+            <Route path="/allocations" element={<AllocationsPage/>} />
+          </Route>
+
           <Route path="/assets" element={<AssetsPage/>} />
-          <Route path="/assets/register" element={<AssetRegistrationPage/>} />
-          <Route path="/allocations" element={<AllocationsPage/>} />
-          <Route path="/users" element={<UsersPage/>} />
-          <Route path="/spare-laptops" element={<SpareLaptopsPage/>} />
+
+          {/* Registration: ADMIN only */}
+          <Route element={<RoleProtectedRoute allowedRoles={['ADMIN']} />}>
+            <Route path="/assets/register" element={<AssetRegistrationPage/>} />
+          </Route>
+
           <Route path="/settings" element={<SettingsPage/>} />
           <Route path="/support" element={<SupportPage/>} />
         </Route>

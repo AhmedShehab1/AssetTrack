@@ -28,7 +28,12 @@ const LoginForm = () => {
   const onSubmit = async (data) => {
     const result = await login(data);
     if (result) {
-      navigate('/');
+      // Role-based redirection
+      if (result.user?.role === 'DEVELOPER') {
+        navigate('/assets');
+      } else {
+        navigate('/');
+      }
     }
   };
 

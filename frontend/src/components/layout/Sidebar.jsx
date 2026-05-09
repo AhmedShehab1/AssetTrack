@@ -15,16 +15,18 @@ import { useAuth } from '../../hooks/useAssetTrack';
 import Button from '../common/Button';
 
 const Sidebar = () => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-    { icon: Package, label: 'Assets', path: '/assets' },
-    { icon: History, label: 'Allocation', path: '/allocations' },
-    { icon: Laptop, label: 'Spare Laptops', path: '/spare-laptops' },
-    { icon: Users, label: 'Users', path: '/users' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
+  const allMenuItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/', roles: ['ADMIN', 'MANAGER'] },
+    { icon: Package, label: 'Assets', path: '/assets', roles: ['ADMIN', 'MANAGER', 'DEVELOPER'] },
+    { icon: History, label: 'Allocation', path: '/allocations', roles: ['ADMIN', 'MANAGER'] },
+    { icon: Laptop, label: 'Spare Laptops', path: '/spare-laptops', roles: ['ADMIN', 'MANAGER'] },
+    { icon: Users, label: 'Users', path: '/users', roles: ['ADMIN'] },
+    { icon: Settings, label: 'Settings', path: '/settings', roles: ['ADMIN', 'MANAGER', 'DEVELOPER'] },
   ];
+
+  const menuItems = allMenuItems.filter(item => item.roles.includes(user?.role));
 
   const bottomItems = [
     { icon: HelpCircle, label: 'Support', path: '/support' },
@@ -33,7 +35,7 @@ const Sidebar = () => {
 
   return (
     <aside className="w-[var(--sidebar-width)] h-screen bg-white border-r border-outline-variant fixed left-0 top-0 flex flex-col py-8 z-50">
-      {/* Brand */}
+      {/* Brand ... */}
       <div className="px-6 mb-10">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
@@ -47,13 +49,15 @@ const Sidebar = () => {
       </div>
 
       {/* Action */}
-      <div className="px-4 mb-8">
-        <Link to="/assets/register" className="block w-full">
-          <Button variant="primary" className="w-full !justify-start px-4 py-3">
-            <Plus size={20} /> Add New Asset
-          </Button>
-        </Link>
-      </div>
+      {user?.role === 'ADMIN' && (
+        <div className="px-4 mb-8">
+          <Link to="/assets/register" className="block w-full">
+            <Button variant="primary" className="w-full !justify-start px-4 py-3">
+              <Plus size={20} /> Add New Asset
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto">

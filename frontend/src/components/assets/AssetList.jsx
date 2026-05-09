@@ -22,6 +22,7 @@ import {
 import { assetService } from '../../api/services/assets';
 import { userService } from '../../api/services/users';
 import { allocationService } from '../../api/services/allocations';
+import { useAuth } from '../../hooks/useAssetTrack';
 import StatusBadge from '../common/StatusBadge';
 import Button from '../common/Button';
 import Input from '../common/Input';
@@ -32,6 +33,7 @@ import AssetDetail from './AssetDetail';
 import ConditionReportModal from './ConditionReportModal';
 
 const AssetList = () => {
+  const { user: currentUser } = useAuth();
   const [assets, setAssets] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,6 +80,7 @@ const AssetList = () => {
   };
 
   const fetchUsers = async () => {
+    if (currentUser?.role === 'DEVELOPER') return;
     try {
       const response = await userService.list({ size: 100 });
       setUsers(response.content);
@@ -92,7 +95,7 @@ const AssetList = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -112,8 +115,6 @@ const AssetList = () => {
   const handleDeallocate = async (asset) => {
     if (!asset.currentOwner) return;
     
-    // In a real app, you'd fetch the active allocation ID first
-    // For now, assume the backend handles it or we'd need to fetch /history?active=true
     try {
       const history = await allocationService.history(asset.id, { active: true });
       const activeAlloc = history.content?.[0];
@@ -248,7 +249,8 @@ const AssetList = () => {
                 name="assignedTo"
                 value={filters.assignedTo}
                 onChange={handleFilterChange}
-                className="w-full bg-white border border-gray-200 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary appearance-none transition-all"
+                disabled={currentUser?.role === 'DEVELOPER'}
+                className="w-full bg-white border border-gray-200 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary appearance-none transition-all disabled:opacity-50"
               >
                 <option value="">All Users</option>
                 {users.map(u => (
@@ -361,34 +363,53 @@ const AssetList = () => {
                               <Eye size={16} /> View Details & History
                             </button>
                             
-                            {(asset.status === 'AVAILABLE' || asset.status === 'SPARE') ? (
+                            {(currentUser?.role === 'ADMIN' || currentUser?.role === 'MANAGER') && (
+                              <>
+                                {(asset.status === 'AVAILABLE' || asset.status === 'SPARE') ? (
+                                  <button 
+                                    onClick={() => { setSelectedAsset(asset); setIsAllocModalOpen(true); setActiveMenuId(null); }}
+                                    className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-primary hover:bg-primary-light/30 rounded-xl transition-colors"
+                                  >
+                                    <UserPlus size={16} /> Assign to Member
+                                  </button>
+                                ) : (
+                                  <button 
+                                    onClick={() => handleDeallocate(asset)}
+                                    className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-info hover:bg-blue-50 rounded-xl transition-colors"
+                                  >
+                                    <Undo2 size={16} /> Return to Inventory
+                                  </button>
+                                )}
+                              </>
+                            )}
+
+                            {/* Report issue: Developers can only report if they own the asset */}
+                            {(currentUser?.role !== 'DEVELOPER' || asset.currentOwner?.id === currentUser?.id) && (
                               <button 
-                                onClick={() => { setSelectedAsset(asset); setIsAllocModalOpen(true); setActiveMenuId(null); }}
-                                className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-primary hover:bg-primary-light/30 rounded-xl transition-colors"
+                                onClick={() => { setSelectedAsset(asset); setIsReportModalOpen(true); setActiveMenuId(null); }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-warning hover:bg-warning-bg rounded-xl transition-colors"
                               >
-                                <UserPlus size={16} /> Assign to Member
-                              </button>
-                            ) : (
-                              <button 
-                                onClick={() => handleDeallocate(asset)}
-                                className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-info hover:bg-blue-50 rounded-xl transition-colors"
-                              >
-                                <Undo2 size={16} /> Return to Inventory
+                                <ShieldAlert size={16} /> Report Issue
                               </button>
                             )}
 
-                            <button 
-                              onClick={() => { setSelectedAsset(asset); setIsReportModalOpen(true); setActiveMenuId(null); }}
-                              className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-warning hover:bg-warning-bg rounded-xl transition-colors"
-                            >
-                              <ShieldAlert size={16} /> Report Issue
-                            </button>
-
-                            <div className="my-1 border-t border-outline-variant/50"></div>
-                            
-                            <button className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-danger hover:bg-danger-bg rounded-xl transition-colors">
-                              <Trash2 size={16} /> Decommission
-                            </button>
+                            {currentUser?.role === 'ADMIN' && (
+                              <>
+                                <div className="my-1 border-t border-outline-variant/50"></div>
+                                <button 
+                                  onClick={async () => {
+                                    if (window.confirm('Decommission this asset?')) {
+                                      await assetService.update(asset.id, { status: 'DECOMMISSIONED' });
+                                      fetchAssets();
+                                    }
+                                    setActiveMenuId(null);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-danger hover:bg-danger-bg rounded-xl transition-colors"
+                                >
+                                  <Trash2 size={16} /> Decommission
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       )}

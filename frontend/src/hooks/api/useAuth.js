@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { authService } from '../../api/services/auth';
-import { storeToken } from '../../api/client';
+import { storeToken, clearToken } from '../../api/client';
 import useAuthStore from '../../store/useAuthStore';
 import useAsyncOperation from './useAsyncOperation';
 
@@ -50,7 +50,14 @@ export const useAuth = () => {
   const user = useAuthStore((state) => state.user);
   const token = useAuthStore((state) => state.token);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const logout = useAuthStore((state) => state.logout);
+  const logoutStore = useAuthStore((state) => state.logout);
+
+  const logout = useCallback(() => {
+    clearToken();
+    logoutStore();
+    // Force immediate redirection and page reset to clear all state
+    window.location.replace('/login');
+  }, [logoutStore]);
 
   return { user, token, isAuthenticated, logout };
 };

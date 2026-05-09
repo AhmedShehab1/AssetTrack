@@ -1,11 +1,16 @@
-import { get, patch, put, del } from '../client';
+import { get, post, patch, put, del } from '../client';
 
 export const userService = {
   list: (params) => get('/users', { params }),
+  create: (body) => post('/auth/signup', body),
   getById: (userId) => get(`/users/${userId}`),
-  update: (userId, body) => patch(`/users/${userId}`, body),
+  
+  // Note: Backend doesn't support partial PATCH for generic info yet.
+  // It has specific endpoints for status and role.
+  updateStatus: (userId, active) => put(`/users/${userId}/status`, null, { params: { active } }),
+  updateRole: (userId, role) => put(`/users/${userId}/role`, null, { params: { role } }),
+  
   delete: (userId) => del(`/users/${userId}`),
-  updateRole: (userId, body) => put(`/users/${userId}/role`, body),
   getAssets: (userId, params) => get(`/users/${userId}/assets`, { params }),
 };
 

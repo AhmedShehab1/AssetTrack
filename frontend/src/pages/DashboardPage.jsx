@@ -19,9 +19,11 @@ import Modal from '../components/common/Modal';
 import AllocationModalContent from '../components/common/AllocationModalContent';
 import ConditionReportModal from '../components/assets/ConditionReportModal';
 import { dashboardService, assetService } from '../api/services';
+import { useAuth } from '../hooks/useAssetTrack';
 import GlobalErrorAlert from '../components/errors/GlobalErrorAlert';
 
 const DashboardPage = () => {
+  const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
@@ -200,14 +202,16 @@ const DashboardPage = () => {
               >
                 Find Available Spare Laptop
               </Button>
-              <Button 
-                variant="outline" 
-                icon={Truck} 
-                className="w-full !justify-start"
-                onClick={() => navigate('/assets/register')}
-              >
-                Log New Delivery
-              </Button>
+              {currentUser?.role === 'ADMIN' && (
+                <Button 
+                  variant="outline" 
+                  icon={Truck} 
+                  className="w-full !justify-start"
+                  onClick={() => navigate('/assets/register')}
+                >
+                  Log New Delivery
+                </Button>
+              )}
             </div>
           </Card>
         </div>

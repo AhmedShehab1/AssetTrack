@@ -16,8 +16,11 @@ import StatusBadge from '../common/StatusBadge';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import { allocationService } from '../../api/services/allocations';
+import { assetService } from '../../api/services/assets';
+import { useAuth } from '../../hooks/useAssetTrack';
 
 const AssetDetail = ({ asset, isOpen, onClose, onRefresh }) => {
+  const { user: currentUser } = useAuth();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deallocating, setDeallocating] = useState(false);
@@ -144,35 +147,49 @@ const AssetDetail = ({ asset, isOpen, onClose, onRefresh }) => {
             </h3>
             
             <div className="grid grid-cols-1 gap-3">
-              <Button variant="outline" icon={Edit3} className="w-full !justify-start">
-                Edit Asset Details
-              </Button>
+              {currentUser?.role === 'ADMIN' && (
+                <Button variant="outline" icon={Edit3} className="w-full !justify-start">
+                  Edit Asset Details
+                </Button>
+              )}
+              
               <Button variant="outline" icon={ShieldAlert} className="w-full !justify-start text-warning">
                 Report Condition Issue
               </Button>
               
-              {isAllocated ? (
-                <Button 
-                  variant="outline" 
-                  icon={Undo2} 
-                  className="w-full !justify-start text-info"
-                  onClick={handleDeallocate}
-                  loading={deallocating}
-                  disabled={deallocating}
-                >
-                  Return to Inventory (Deallocate)
-                </Button>
-              ) : (
-                <Button variant="outline" icon={ArrowLeftRight} className="w-full !justify-start text-primary">
-                  Manage Allocation
-                </Button>
+              {(currentUser?.role === 'ADMIN' || currentUser?.role === 'MANAGER') && (
+                <>
+                  {isAllocated ? (
+                    <Button 
+                      variant="outline" 
+                      icon={Undo2} 
+                      className="w-full !justify-start text-info"
+                      onClick={handleDeallocate}
+                      loading={deallocating}
+                      disabled={deallocating}
+                    >
+                      Return to Inventory (Deallocate)
+                    </Button>
+                  ) : (
+                    <Button variant="outline" icon={ArrowLeftRight} className="w-full !justify-start text-primary">
+                      Manage Allocation
+                    </Button>
+                  )}
+                </>
               )}
 
-              <div className="pt-4 mt-4 border-t border-outline-variant">
-                <Button variant="outline" icon={Trash2} className="w-full !justify-start text-danger hover:bg-danger-bg">
-                  Decommission Asset
-                </Button>
-              </div>
+              {currentUser?.role === 'ADMIN' && (
+                <div className="pt-4 mt-4 border-t border-outline-variant">
+                  <Button 
+                    variant="outline" 
+                    icon={Trash2} 
+                    className="w-full !justify-start text-danger hover:bg-danger-bg"
+                    onClick={handleDecommission}
+                  >
+                    Decommission Asset
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
