@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/axios';
 import Input from '../ui/Input';
@@ -11,6 +11,8 @@ import Button from '../ui/Button';
 const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 const signupSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Please enter a valid email address'),
   password: z
     .string()
@@ -48,7 +50,7 @@ const SignupForm = () => {
       await api.post('/auth/register', payload);
       navigate('/login'); // Redirect to login on successful signup
     } catch (err) {
-      setApiError(err.response?.data?.message || 'This email is already in use.');
+      setApiError(err.response?.data?.message || 'Something went wrong. Please try again.');
     }
   };
 
@@ -59,6 +61,23 @@ const SignupForm = () => {
           {apiError}
         </div>
       )}
+
+      <div className="flex gap-4">
+        <Input
+          label="FIRST NAME"
+          placeholder="Jane"
+          icon={User}
+          {...register('firstName')}
+          error={formState.errors.firstName?.message}
+        />
+        <Input
+          label="LAST NAME"
+          placeholder="Doe"
+          icon={User}
+          {...register('lastName')}
+          error={formState.errors.lastName?.message}
+        />
+      </div>
       
       <Input
         label="WORK EMAIL"

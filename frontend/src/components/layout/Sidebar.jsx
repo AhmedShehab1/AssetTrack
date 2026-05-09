@@ -1,8 +1,11 @@
 import React from 'react';
 import { LayoutDashboard, Package, History, Users, Settings, HelpCircle, LogOut, Plus } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 import Button from '../common/Button';
 
 const Sidebar = () => {
+  const { logout } = useAuth();
+  
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', active: true },
     { icon: Package, label: 'Assets' },
@@ -13,7 +16,7 @@ const Sidebar = () => {
 
   const bottomItems = [
     { icon: HelpCircle, label: 'Support' },
-    { icon: LogOut, label: 'Logout' },
+    { icon: LogOut, label: 'Logout', onClick: logout },
   ];
 
   return (
@@ -71,16 +74,20 @@ const Sidebar = () => {
 
       <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
         {bottomItems.map((item, index) => (
-          <div key={index} style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px 24px',
-            color: 'var(--text-secondary)',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500'
-          }}>
+          <div 
+            key={index} 
+            onClick={item.onClick}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 24px',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
             <item.icon size={20} />
             {item.label}
           </div>
@@ -90,4 +97,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default Sidebar;

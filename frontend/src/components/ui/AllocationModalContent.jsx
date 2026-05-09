@@ -4,7 +4,7 @@ import Card from './Card';
 import SearchableDropdown from './SearchableDropdown';
 import Button from './Button';
 import ConfirmationStep from './ConfirmationStep';
-import axios from 'axios';
+import api from '../../lib/axios';
 
 const StatusBadge = ({ text, active }) => (
   <div style={{
@@ -42,8 +42,13 @@ const AllocationModalContent = ({ assetName, assetSN, onComplete }) => {
   React.useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get('http://localhost:3001/users');
-        setUsers(res.data);
+        const res = await api.get('/users?size=100');
+        // Map backend fullName to name for SearchableDropdown compatibility
+        const mappedUsers = (res.data.content || []).map(user => ({
+          ...user,
+          name: user.fullName || user.email // Fallback to email as backend lacks fullName
+        }));
+        setUsers(mappedUsers);
       } catch (error) {
         console.error('Error fetching users:', error);
       } finally {
