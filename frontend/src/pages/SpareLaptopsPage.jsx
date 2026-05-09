@@ -3,7 +3,6 @@ import {
   Laptop, 
   Search, 
   User as UserIcon, 
-  Calendar, 
   ChevronRight,
   Zap,
   CheckCircle2,
@@ -14,14 +13,15 @@ import { assetService } from '../api/services/assets';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import StatusBadge from '../components/common/StatusBadge';
-import AllocationModal from '../components/assets/AllocationModal';
+import ActionModal from '../components/common/ActionModal';
 
 const SpareLaptopsPage = () => {
   const { findSpare, loading: finding, spare, error: findError } = useFindSpareLaptop();
   const [allSpares, setAllSpares] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
-  const [selectedAsset, setSelectedAsset] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Unified Modal state
+  const [modalConfig, setModalConfig] = useState({ isOpen: false, type: null, payload: null });
 
   const fetchAllSpares = async () => {
     setLoadingList(true);
@@ -51,8 +51,7 @@ const SpareLaptopsPage = () => {
   }, []);
 
   const handleProvision = (asset) => {
-    setSelectedAsset(asset);
-    setIsModalOpen(true);
+    setModalConfig({ isOpen: true, type: 'ALLOCATE', payload: asset });
   };
 
   const formatDate = (dateString) => {
@@ -65,22 +64,22 @@ const SpareLaptopsPage = () => {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4 space-y-8">
+    <div className="container mx-auto py-8 px-4 space-y-8 font-sans">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold text-text-heading">Spare Laptop Inventory</h1>
-        <p className="text-text-body mt-2">Locate and provision available hardware for team members quickly.</p>
+        <h1 className="text-3xl font-extrabold text-text-heading tracking-tight">Spare Laptop Inventory</h1>
+        <p className="text-text-body mt-2 font-medium opacity-70">Locate and provision available hardware for team members quickly.</p>
       </div>
 
       {/* Quick Find Recommendation */}
-      <Card className="bg-primary-light border-primary/20 overflow-hidden relative">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 p-2">
+      <Card className="bg-primary-light border-primary/20 overflow-hidden relative shadow-sm">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 p-2 relative z-10">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center text-white shadow-lg shadow-primary/30">
               <Zap size={28} />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-primary">Quick Provisioning</h3>
+              <h3 className="text-xl font-extrabold text-primary">Quick Provisioning</h3>
               <p className="text-text-body text-sm font-medium">Let the system find the most suitable spare laptop for you.</p>
             </div>
           </div>
@@ -89,7 +88,7 @@ const SpareLaptopsPage = () => {
             onClick={findSpare} 
             loading={finding}
             icon={Search}
-            className="shadow-xl px-8"
+            className="shadow-xl px-10 py-3.5"
           >
             Find Next Available
           </Button>
@@ -107,18 +106,18 @@ const SpareLaptopsPage = () => {
                     <span className="font-bold text-lg text-text-heading">{spare.asset.brand} {spare.asset.model}</span>
                     <StatusBadge status={spare.asset.status} />
                   </div>
-                  <div className="text-sm text-text-body font-mono">SN: {spare.asset.serialNumber}</div>
+                  <div className="text-sm text-text-body font-mono font-bold opacity-60">SN: {spare.asset.serialNumber}</div>
                 </div>
               </div>
               <div className="flex flex-col text-right">
-                <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Last Owner</div>
+                <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Last Custodian</div>
                 <div className="flex items-center gap-1.5 justify-end text-sm font-bold text-text-heading">
                   <UserIcon size={14} className="text-primary" />
                   {spare.lastOwner?.fullName || 'N/A'}
                 </div>
-                <div className="text-xs text-text-body">Returned: {formatDate(spare.lastDeallocatedAt)}</div>
+                <div className="text-[11px] text-text-body font-medium opacity-60">Returned: {formatDate(spare.lastDeallocatedAt)}</div>
               </div>
-              <Button variant="primary" onClick={() => handleProvision(spare.asset)}>
+              <Button variant="primary" onClick={() => handleProvision(spare.asset)} className="shadow-lg">
                 Provision Now
               </Button>
             </div>
@@ -143,32 +142,30 @@ const SpareLaptopsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loadingList ? (
             Array(3).fill(0).map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <div className="h-24 bg-slate-100 rounded-xl"></div>
-              </Card>
+              <Card key={i} className="animate-pulse h-48 bg-slate-50 border-none"></Card>
             ))
           ) : allSpares.length === 0 ? (
-            <div className="col-span-full py-20 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-outline-variant text-text-body font-medium">
+            <div className="col-span-full py-20 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-outline-variant text-text-body font-medium italic opacity-60">
               No spare laptops found in inventory.
             </div>
           ) : (
             allSpares.map(asset => (
-              <Card key={asset.id} className="hover:border-primary/30 transition-all group">
+              <Card key={asset.id} className="hover:border-primary/30 transition-all group hover:shadow-xl hover:shadow-primary/5">
                 <div className="flex justify-between items-start mb-4">
-                  <div className="bg-slate-50 p-2.5 rounded-lg text-text-body group-hover:bg-primary-light group-hover:text-primary transition-colors">
+                  <div className="bg-slate-50 p-2.5 rounded-xl text-text-body group-hover:bg-primary-light group-hover:text-primary transition-colors border border-outline-variant/30">
                     <Laptop size={20} />
                   </div>
                   <StatusBadge status={asset.status} />
                 </div>
                 
-                <h4 className="font-bold text-text-heading mb-1">{asset.brand}</h4>
-                <p className="text-sm text-text-body mb-4">{asset.model}</p>
+                <h4 className="font-extrabold text-text-heading mb-1">{asset.brand}</h4>
+                <p className="text-sm text-text-body font-medium opacity-70 mb-4">{asset.model}</p>
                 
                 <div className="flex items-center justify-between pt-4 border-t border-outline-variant">
-                  <span className="text-[11px] font-mono text-gray-400 uppercase tracking-tighter">SN: {asset.serialNumber}</span>
+                  <span className="text-[10px] font-mono text-gray-400 font-bold uppercase tracking-tighter">SN: {asset.serialNumber}</span>
                   <button 
                     onClick={() => handleProvision(asset)}
-                    className="text-primary hover:text-primary-dark font-bold text-xs flex items-center gap-1 transition-colors"
+                    className="text-primary hover:text-primary-dark font-black text-xs flex items-center gap-1 transition-all group-hover:translate-x-1"
                   >
                     Provision <ChevronRight size={14} />
                   </button>
@@ -179,14 +176,15 @@ const SpareLaptopsPage = () => {
         </div>
       </div>
 
-      <AllocationModal 
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedAsset(null);
+      <ActionModal 
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        type={modalConfig.type}
+        payload={modalConfig.payload}
+        onSuccess={() => {
           fetchAllSpares();
+          setModalConfig({ ...modalConfig, isOpen: false });
         }}
-        asset={selectedAsset}
       />
     </div>
   );
