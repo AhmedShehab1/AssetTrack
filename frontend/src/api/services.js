@@ -1,7 +1,14 @@
 /**
  * @fileoverview
  * AssetTrack — API service layer proxy.
- * Re-exports from modular domain services.
  */
 
-export * from './services/index';
+export * from './services/auth';
+export * from './services/users';
+export * from './services/assets';
+export * from './services/allocations';
+export * from './services/conditions';
+export * from './services/dashboard';
+export * from './services/notifications';
+export * from './services/search';
+export * from './services/reports';

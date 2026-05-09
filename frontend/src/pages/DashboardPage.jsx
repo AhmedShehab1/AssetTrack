@@ -100,7 +100,7 @@ const DashboardPage = () => {
           valueColor="var(--success)"
         />
         <MetricCard 
-          title="Under Repair" 
+          title="Pending Issues" 
           value={getStatusCount('UNDER_REPAIR')} 
           badgeText="URGENT" 
           badgeVariant="danger"
@@ -198,6 +198,7 @@ const DashboardPage = () => {
         subtitle={`SN: ${selectedAsset?.serialNumber}`}
       >
         <AllocationModalContent 
+          assetId={selectedAsset?.id}
           assetName={`${selectedAsset?.brand} ${selectedAsset?.model}`}
           assetSN={selectedAsset?.serialNumber}
           onComplete={() => setIsModalOpen(false)}

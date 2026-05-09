@@ -1,3 +1,8 @@
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+/**
+ * Centralised API base URL configuration.
+ * Using a simple constant to avoid parsing issues in test environments.
+ */
+
+const apiBaseUrl = '/api/v1';
 
 export default apiBaseUrl;
