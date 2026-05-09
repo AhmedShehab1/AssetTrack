@@ -11,7 +11,9 @@ import {
   Edit3,
   ChevronLeft,
   ChevronRight,
-  AlertCircle
+  AlertCircle,
+  CheckCircle2,
+  RefreshCcw
 } from 'lucide-react';
 import { userService } from '../api/services/users';
 import { useAuth, useDeleteUser } from '../hooks/useAssetTrack';
@@ -27,13 +29,14 @@ const UsersPage = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
   // Delete hook
-  const { deleteUser, loading: deleting, error: deleteError } = useDeleteUser();
+  const { deleteUser, loading: deleting, error: deleteError, clearError: clearDeleteError } = useDeleteUser();
 
   // Pagination & Filtering state
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,6 +46,7 @@ const UsersPage = () => {
 
   const fetchUsers = async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await userService.list({ 
         page, 
@@ -80,9 +84,25 @@ const UsersPage = () => {
     }
 
     if (window.confirm(`Are you sure you want to permanently delete user ${userEmail}? This action cannot be undone.`)) {
-      await deleteUser(userId);
-      // fetchUsers is safe to call here because useDeleteUser handles its own error state
-      fetchUsers();
+      clearDeleteError();
+      setSuccessMessage(null);
+      
+      const result = await deleteUser(userId);
+      
+      // Since delete returns 204 (undefined in our client), 
+      // we check the result of the hook execution.
+      // If result is undefined BUT there's no error, it succeeded.
+      // Wait, useAsyncOperation returns result OR undefined on error.
+      
+      // Let's check for deleteError instead
+      setTimeout(async () => {
+        // Use a small delay to ensure the error state has updated
+        if (!deleteError) {
+          setSuccessMessage(`User ${userEmail} deleted successfully.`);
+          fetchUsers();
+          setTimeout(() => setSuccessMessage(null), 5000);
+        }
+      }, 100);
     }
   };
 
@@ -114,7 +134,27 @@ const UsersPage = () => {
         )}
       </div>
 
-      {deleteError && <GlobalErrorAlert error={deleteError} className="mb-4" />}
+      {deleteError && (
+        <div className="bg-red-50 border border-red-200 p-4 rounded-xl flex items-start gap-3 text-red-800 animate-in slide-in-from-top-2">
+          <AlertCircle className="mt-0.5 flex-shrink-0" size={18} />
+          <div>
+            <p className="font-bold text-sm">Could not delete user</p>
+            <p className="text-sm opacity-90">
+              {deleteError.status === 409 
+                ? "This user has active or historical asset allocations and cannot be deleted. Try deactivating the account instead." 
+                : deleteError.message || "An unexpected error occurred."}
+            </p>
+            <button onClick={clearDeleteError} className="mt-2 text-xs font-bold uppercase tracking-widest hover:underline">Dismiss</button>
+          </div>
+        </div>
+      )}
+
+      {successMessage && (
+        <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl flex items-center gap-3 text-emerald-800 animate-in slide-in-from-top-2">
+          <CheckCircle2 size={18} />
+          <p className="font-bold text-sm">{successMessage}</p>
+        </div>
+      )}
 
       {/* Filter Bar */}
       <Card padding="p-6">
@@ -128,7 +168,10 @@ const UsersPage = () => {
               onKeyDown={(e) => e.key === 'Enter' && fetchUsers()}
             />
           </div>
-          <Button variant="outline" onClick={fetchUsers} className="px-10">Apply Search</Button>
+          <Button variant="outline" onClick={fetchUsers} className="px-10">
+            <RefreshCcw size={16} className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh List
+          </Button>
         </div>
       </Card>
 
@@ -139,14 +182,14 @@ const UsersPage = () => {
             <thead>
               <tr className="bg-slate-50 border-b border-outline-variant">
                 <th className="py-5 px-8 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest">Employee</th>
-                <th className="py-5 px-4 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest">Role</th>
+                <th className="py-5 px-4 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest text-center">Role</th>
                 <th className="py-5 px-4 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest text-center">Status</th>
                 <th className="py-5 px-4 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest">Date Joined</th>
                 <th className="py-5 px-8 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
-              {loading ? (
+              {loading && users.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="py-24 text-center">
                     <div className="flex flex-col items-center gap-3">
@@ -175,10 +218,10 @@ const UsersPage = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="py-5 px-4">
+                    <td className="py-5 px-4 text-center">
                       {getRoleBadge(u.role)}
                     </td>
-                    <td className="py-5 px-4">
+                    <td className="py-5 px-4 text-center">
                       <div className="flex justify-center">
                         {u.active ? (
                           <div className="flex items-center gap-1.5 text-[#28A745] font-black text-[10px] uppercase tracking-widest bg-[#EAF7ED] px-2.5 py-1 rounded-full border border-[#28A745]/10">
@@ -198,7 +241,7 @@ const UsersPage = () => {
                     </td>
                     <td className="py-5 px-8 text-right">
                       {currentUser?.role === 'ADMIN' && (
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button 
                             onClick={() => handleEditUser(u)}
                             className="p-2.5 text-gray-400 hover:text-primary transition-all hover:bg-white rounded-xl hover:shadow-md border border-transparent hover:border-outline-variant"
@@ -227,7 +270,7 @@ const UsersPage = () => {
         {/* Footer / Pagination */}
         <div className="bg-slate-50 border-t border-outline-variant px-8 py-5 flex items-center justify-between">
           <span className="text-sm text-text-body font-bold opacity-70">
-            Showing <span className="text-text-heading">{users.length > 0 ? page * 10 + 1 : 0}</span> — <span className="text-text-heading">{Math.min((page + 1) * 10, totalItems)}</span> of <span className="text-text-heading">{totalItems}</span> members
+            Showing <span className="text-text-heading">{users.length > 0 ? page * 10 + 1 : 0}</span> — <span className="text-text-heading">{Math.min((page + 1) * 10, totalItems)}</span> of <span className="font-bold text-text-heading">{totalItems}</span> members
           </span>
           <div className="flex items-center gap-2">
             <button 
