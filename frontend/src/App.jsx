@@ -11,6 +11,8 @@ import AssetRegistrationPage from './pages/AssetRegistrationPage';
 import AllocationsPage from './pages/AllocationsPage';
 import UsersPage from './pages/UsersPage';
 import SpareLaptopsPage from './pages/SpareLaptopsPage';
+import SettingsPage from './pages/SettingsPage';
+import SupportPage from './pages/SupportPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 const AxiosSandboxPage = import.meta.env.DEV
@@ -49,6 +51,8 @@ export default function App() {
           <Route path="/allocations" element={<AllocationsPage/>} />
           <Route path="/users" element={<UsersPage/>} />
           <Route path="/spare-laptops" element={<SpareLaptopsPage/>} />
+          <Route path="/settings" element={<SettingsPage/>} />
+          <Route path="/support" element={<SupportPage/>} />
         </Route>
 
         {import.meta.env.DEV && AxiosSandboxPage && (

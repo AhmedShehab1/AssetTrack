@@ -191,14 +191,31 @@ const AllocationList = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-4">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-widest uppercase border ${
-                        !allocation.deallocatedAt 
-                          ? 'bg-success-bg text-success border-success/20' 
-                          : 'bg-slate-100 text-text-body border-slate-200'
-                      }`}>
-                        {!allocation.deallocatedAt ? 'ACTIVE' : 'RETURNED'}
-                      </span>
+                    <td className="py-4 px-4 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-widest uppercase border ${
+                          !allocation.deallocatedAt 
+                            ? 'bg-success-bg text-success border-success/20' 
+                            : 'bg-slate-100 text-text-body border-slate-200'
+                        }`}>
+                          {!allocation.deallocatedAt ? 'ACTIVE' : 'RETURNED'}
+                        </span>
+                        {!allocation.deallocatedAt && (
+                          <button 
+                            onClick={async () => {
+                              try {
+                                await allocationService.deallocate(allocation.assetId, allocation.allocationId, { notes: 'Marked as returned from history' });
+                                fetchAllocations();
+                              } catch (e) {
+                                console.error(e);
+                              }
+                            }}
+                            className="text-[10px] font-bold text-primary hover:underline uppercase tracking-tight"
+                          >
+                            Mark as Returned
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="py-4 px-6 text-right font-mono text-sm font-bold text-text-heading">
                       {allocation.durationDays}d

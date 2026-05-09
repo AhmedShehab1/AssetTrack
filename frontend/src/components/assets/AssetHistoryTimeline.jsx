@@ -1,45 +1,81 @@
 import React from 'react';
+import { Calendar, User as UserIcon, Clock, CheckCircle2 } from 'lucide-react';
 
-const AssetHistoryTimeline = () => {
-  return (
-    <div className="bg-surface-card rounded-lg shadow-sm border border-outline-variant p-spacing-lg">
-      <h3 className="font-headline-sm text-headline-sm text-on-surface mb-spacing-md">Allocation History</h3>
-      <div className="relative pl-6 space-y-6 before:absolute before:inset-0 before:ml-2.5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-outline-variant">
-        {/* Current Assignment */}
-        <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-          <div className="flex items-center justify-center w-5 h-5 rounded-full border-2 border-primary bg-surface-card absolute left-0 -translate-x-1.5 shadow">
-            <div className="w-2 h-2 rounded-full bg-primary"></div>
-          </div>
-          <div className="w-full ml-4">
-            <div className="flex flex-col p-4 bg-primary-fixed/30 border border-primary-fixed-dim rounded-lg shadow-sm">
-              <div className="flex justify-between items-center mb-1">
-                <div className="font-body-lg text-body-lg font-semibold text-on-surface">Sarah Chen</div>
-                <span className="font-label-caps text-label-caps text-primary">CURRENT</span>
-              </div>
-              <div className="font-body-md text-body-md text-text-body mb-2">Developer</div>
-              <div className="font-data-mono text-data-mono text-outline flex items-center gap-1">
-                <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-                March 2024 - Present
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Previous Assignment */}
-        <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-          <div className="flex items-center justify-center w-5 h-5 rounded-full border-2 border-outline-variant bg-surface-card absolute left-0 -translate-x-1.5 shadow">
-          </div>
-          <div className="w-full ml-4">
-            <div className="flex flex-col p-4 bg-surface-container-low border border-outline-variant rounded-lg">
-              <div className="font-body-lg text-body-lg font-medium text-on-surface mb-1">Mike Ross</div>
-              <div className="font-body-md text-body-md text-text-body mb-2">Manager</div>
-              <div className="font-data-mono text-data-mono text-outline flex items-center gap-1">
-                <span className="material-symbols-outlined text-[14px]">history</span>
-                Jan 2023 - March 2024
-              </div>
-            </div>
-          </div>
-        </div>
+const AssetHistoryTimeline = ({ history = [], loading = false }) => {
+  if (loading) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        {[1, 2].map((i) => (
+          <div key={i} className="h-24 bg-slate-50 rounded-xl border border-outline-variant"></div>
+        ))}
       </div>
+    );
+  }
+
+  if (history.length === 0) {
+    return (
+      <div className="py-10 text-center bg-slate-50 rounded-2xl border border-dashed border-outline-variant">
+        <p className="text-sm text-text-body font-medium">No assignment history found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative pl-6 space-y-8 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-outline-variant">
+      {history.map((entry, index) => (
+        <div key={entry.id || index} className="relative">
+          {/* Dot */}
+          <div className={`
+            absolute -left-[27px] top-2 w-3.5 h-3.5 rounded-full border-2 bg-white shadow-sm transition-colors
+            ${!entry.deallocatedAt ? 'border-primary' : 'border-outline-variant'}
+          `}>
+            {!entry.deallocatedAt && (
+              <div className="w-1.5 h-1.5 rounded-full bg-primary m-auto mt-0.5 animate-pulse"></div>
+            )}
+          </div>
+
+          <div className={`
+            p-4 rounded-xl border transition-all duration-200
+            ${!entry.deallocatedAt 
+              ? 'bg-primary-light/30 border-primary shadow-sm' 
+              : 'bg-white border-outline-variant opacity-70'}
+          `}>
+            <div className="flex justify-between items-start mb-1">
+              <div className="text-sm font-bold text-text-heading flex items-center gap-2">
+                <UserIcon size={14} className={!entry.deallocatedAt ? 'text-primary' : 'text-text-body'} />
+                {entry.assignedTo?.fullName || 'Unknown User'}
+              </div>
+              {!entry.deallocatedAt && (
+                <span className="text-[10px] font-extrabold tracking-widest bg-primary text-white px-2 py-0.5 rounded-full">
+                  CURRENT
+                </span>
+              )}
+            </div>
+            
+            <p className="text-xs text-text-body font-medium mb-3">
+              {entry.assignedTo?.role?.replace('ROLE_', '') || 'Member'}
+            </p>
+
+            <div className="flex flex-wrap gap-4 items-center pt-3 border-t border-outline-variant/30">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-text-body uppercase tracking-tight">
+                <Calendar size={12} className="opacity-50" />
+                {new Date(entry.allocatedAt).toLocaleDateString()} — {entry.deallocatedAt ? new Date(entry.deallocatedAt).toLocaleDateString() : 'Present'}
+              </div>
+              
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-text-body uppercase tracking-tight">
+                <Clock size={12} className="opacity-50" />
+                {entry.durationDays || 0} Days
+              </div>
+            </div>
+
+            {entry.notes && (
+              <div className="mt-3 text-[11px] text-text-body italic bg-slate-50 p-2 rounded-lg border border-outline-variant/20">
+                "{entry.notes}"
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

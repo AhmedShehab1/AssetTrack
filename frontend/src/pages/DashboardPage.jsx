@@ -200,7 +200,12 @@ const DashboardPage = () => {
               >
                 Find Available Spare Laptop
               </Button>
-              <Button variant="outline" icon={Truck} className="w-full !justify-start">
+              <Button 
+                variant="outline" 
+                icon={Truck} 
+                className="w-full !justify-start"
+                onClick={() => navigate('/assets/register')}
+              >
                 Log New Delivery
               </Button>
             </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, 
   Download, 
@@ -12,17 +12,24 @@ import {
   Headphones,
   HardDrive,
   User as UserIcon,
-  Filter,
-  UserPlus
+  UserPlus,
+  Eye,
+  ShieldAlert,
+  ArrowLeftRight,
+  Trash2,
+  Undo2
 } from 'lucide-react';
 import { assetService } from '../../api/services/assets';
 import { userService } from '../../api/services/users';
+import { allocationService } from '../../api/services/allocations';
 import StatusBadge from '../common/StatusBadge';
 import Button from '../common/Button';
 import Input from '../common/Input';
 import Card from '../common/Card';
 import { AssetType, AssetStatus } from '../../api/types';
 import AllocationModal from './AllocationModal';
+import AssetDetail from './AssetDetail';
+import ConditionReportModal from './ConditionReportModal';
 
 const AssetList = () => {
   const [assets, setAssets] = useState([]);
@@ -30,9 +37,15 @@ const AssetList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Modal state
+  // Selection/Menu state
   const [selectedAsset, setSelectedAsset] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeMenuId, setActiveMenuId] = useState(null);
+  const menuRef = useRef(null);
+
+  // Modals state
+  const [isAllocModalOpen, setIsAllocModalOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   // Pagination & Filtering state
   const [filters, setFormFilters] = useState({
@@ -53,7 +66,6 @@ const AssetList = () => {
         size: 10,
         q: filters.search || undefined,
         status: filters.status || undefined,
-        // Backend might need specific mapping for brand/user filters
       });
       setAssets(response.content);
       setTotalAssets(response.meta.totalElements);
@@ -76,10 +88,20 @@ const AssetList = () => {
 
   useEffect(() => {
     fetchAssets();
-  }, [page, filters.status]); // Simplified for now
+  }, [page, filters.status]);
 
   useEffect(() => {
     fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setActiveMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleFilterChange = (e) => {
@@ -87,15 +109,22 @@ const AssetList = () => {
     setFormFilters(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleAllocate = (asset) => {
-    setSelectedAsset(asset);
-    setIsModalOpen(true);
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setSelectedAsset(null);
-    fetchAssets(); // Refresh list after potential allocation
+  const handleDeallocate = async (asset) => {
+    if (!asset.currentOwner) return;
+    
+    // In a real app, you'd fetch the active allocation ID first
+    // For now, assume the backend handles it or we'd need to fetch /history?active=true
+    try {
+      const history = await allocationService.history(asset.id, { active: true });
+      const activeAlloc = history.content?.[0];
+      if (activeAlloc) {
+        await allocationService.deallocate(asset.id, activeAlloc.id, { notes: 'Returned via asset list' });
+        fetchAssets();
+      }
+    } catch (err) {
+      console.error("Deallocation failed", err);
+    }
+    setActiveMenuId(null);
   };
 
   const getTypeIcon = (type) => {
@@ -109,6 +138,36 @@ const AssetList = () => {
     }
   };
 
+  const handleExportCSV = () => {
+    if (assets.length === 0) return;
+    
+    const headers = ['ID', 'Type', 'Brand', 'Model', 'Serial Number', 'Status', 'Current Owner'];
+    const rows = assets.map(a => [
+      a.id,
+      a.type,
+      a.brand,
+      a.model,
+      a.serialNumber,
+      a.status,
+      a.currentOwner?.fullName || 'N/A'
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(r => r.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `asset_track_inventory_${new Date().toISOString().slice(0,10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-8">
       {/* Header Section */}
@@ -117,7 +176,13 @@ const AssetList = () => {
           <h2 className="text-2xl font-extrabold text-text-heading">Asset Master List</h2>
           <p className="text-text-body text-sm mt-1 font-medium">Manage and track all organizational hardware assets.</p>
         </div>
-        <Button variant="outline" icon={Download} className="shadow-sm">
+        <Button 
+          variant="outline" 
+          icon={Download} 
+          className="shadow-sm"
+          onClick={handleExportCSV}
+          disabled={assets.length === 0}
+        >
           Export CSV
         </Button>
       </div>
@@ -199,27 +264,26 @@ const AssetList = () => {
       </Card>
 
       {/* Table Section */}
-      <Card padding="p-0" className="overflow-hidden">
+      <Card padding="p-0" className="overflow-visible">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-outline-variant">
-                <th className="py-4 px-6 w-12">
+                <th className="py-4 px-6 w-12 text-center">
                   <input type="checkbox" className="rounded border-gray-300 text-primary focus:ring-primary" />
                 </th>
-                <th className="py-4 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Asset ID</th>
-                <th className="py-4 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Type</th>
-                <th className="py-4 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Brand & Model</th>
-                <th className="py-4 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Serial Number</th>
-                <th className="py-4 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                <th className="py-4 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Assigned To</th>
+                <th className="py-4 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest text-center">Identity</th>
+                <th className="py-4 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest text-center">Specification</th>
+                <th className="py-4 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest text-center">Tracking</th>
+                <th className="py-4 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest text-center">Status</th>
+                <th className="py-4 px-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest text-center">Current Owner</th>
                 <th className="py-4 px-6 text-[11px] font-bold text-gray-400 uppercase tracking-widest text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-outline-variant">
+            <tbody className="divide-y divide-outline-variant relative">
               {loading ? (
                 <tr>
-                  <td colSpan="8" className="py-20 text-center text-text-body font-medium">
+                  <td colSpan="7" className="py-20 text-center text-text-body font-medium">
                     <div className="flex items-center justify-center gap-3">
                       <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
                       Loading assets...
@@ -228,64 +292,106 @@ const AssetList = () => {
                 </tr>
               ) : assets.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="py-20 text-center text-text-body font-medium">
+                  <td colSpan="7" className="py-20 text-center text-text-body font-medium">
                     No assets found matching your criteria.
                   </td>
                 </tr>
               ) : (
                 assets.map((asset) => (
                   <tr key={asset.id} className="hover:bg-slate-50 transition-colors group">
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-6 text-center">
                       <input type="checkbox" className="rounded border-gray-300 text-primary focus:ring-primary" />
                     </td>
                     <td className="py-4 px-4">
-                      <span className="font-mono text-xs font-semibold text-text-body bg-slate-100 px-2 py-1 rounded">
-                        {asset.id.slice(0, 8).toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-2 text-text-body font-semibold text-sm">
-                        {getTypeIcon(asset.type)}
-                        {asset.type.charAt(0) + asset.type.slice(1).toLowerCase()}
+                      <div className="flex flex-col items-center">
+                        <span className="font-mono text-[10px] font-bold text-text-body bg-slate-100 px-2 py-0.5 rounded border border-outline-variant/30 mb-1">
+                          #{asset.id.slice(0, 8).toUpperCase()}
+                        </span>
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                          {getTypeIcon(asset.type)}
+                          {asset.type}
+                        </div>
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <div className="flex flex-col">
+                      <div className="flex flex-col text-center">
                         <span className="font-bold text-text-heading text-sm">{asset.brand}</span>
                         <span className="text-text-body text-xs">{asset.model}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-4 font-mono text-xs text-gray-400">
+                    <td className="py-4 px-4 font-mono text-[11px] text-gray-500 font-medium text-center tracking-tight">
                       {asset.serialNumber}
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="py-4 px-4 text-center">
                       <StatusBadge status={asset.status} />
                     </td>
                     <td className="py-4 px-4">
-                      {asset.assignedTo ? (
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-full bg-primary-light flex items-center justify-center text-primary text-[10px] font-bold overflow-hidden border border-primary/10">
-                            {asset.assignedTo.fullName?.split(' ').map(n => n[0]).join('') || <UserIcon size={14} />}
+                      {asset.currentOwner ? (
+                        <div className="flex items-center justify-center gap-2.5">
+                          <div className="w-7 h-7 rounded-full bg-primary-light flex items-center justify-center text-primary text-[10px] font-bold border border-primary/10">
+                            {asset.currentOwner.fullName?.split(' ').map(n => n[0]).join('') || <UserIcon size={14} />}
                           </div>
-                          <span className="text-sm font-bold text-text-heading">{asset.assignedTo.fullName}</span>
+                          <span className="text-sm font-bold text-text-heading">{asset.currentOwner.fullName}</span>
                         </div>
                       ) : (
-                        <span className="text-gray-300 text-xs font-medium">—</span>
+                        <div className="text-center">
+                          <span className="text-gray-300 text-[11px] font-bold uppercase tracking-widest">—</span>
+                        </div>
                       )}
                     </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button 
-                          onClick={() => handleAllocate(asset)}
-                          className="text-gray-400 hover:text-primary p-1.5 rounded-lg hover:bg-white border border-transparent hover:border-outline-variant transition-all"
-                          title="Assign Asset"
+                    <td className="py-4 px-6 text-right relative">
+                      <button 
+                        onClick={() => setActiveMenuId(activeMenuId === asset.id ? null : asset.id)}
+                        className={`p-2 rounded-xl transition-all border ${activeMenuId === asset.id ? 'bg-white shadow-md border-outline-variant text-primary' : 'text-gray-400 hover:text-primary hover:bg-white border-transparent hover:border-outline-variant'}`}
+                      >
+                        <MoreVertical size={18} />
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      {activeMenuId === asset.id && (
+                        <div 
+                          ref={menuRef}
+                          className="absolute right-6 top-[70%] mt-1 w-48 bg-white rounded-2xl shadow-2xl border border-outline-variant z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 origin-top-right"
                         >
-                          <UserPlus size={18} />
-                        </button>
-                        <button className="text-gray-400 hover:text-primary p-1.5 rounded-lg hover:bg-white border border-transparent hover:border-outline-variant transition-all">
-                          <MoreVertical size={18} />
-                        </button>
-                      </div>
+                          <div className="p-2 space-y-0.5">
+                            <button 
+                              onClick={() => { setSelectedAsset(asset); setIsDetailOpen(true); setActiveMenuId(null); }}
+                              className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-text-body hover:bg-slate-50 hover:text-primary rounded-xl transition-colors"
+                            >
+                              <Eye size={16} /> View Details & History
+                            </button>
+                            
+                            {(asset.status === 'AVAILABLE' || asset.status === 'SPARE') ? (
+                              <button 
+                                onClick={() => { setSelectedAsset(asset); setIsAllocModalOpen(true); setActiveMenuId(null); }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-primary hover:bg-primary-light/30 rounded-xl transition-colors"
+                              >
+                                <UserPlus size={16} /> Assign to Member
+                              </button>
+                            ) : (
+                              <button 
+                                onClick={() => handleDeallocate(asset)}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-info hover:bg-blue-50 rounded-xl transition-colors"
+                              >
+                                <Undo2 size={16} /> Return to Inventory
+                              </button>
+                            )}
+
+                            <button 
+                              onClick={() => { setSelectedAsset(asset); setIsReportModalOpen(true); setActiveMenuId(null); }}
+                              className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-warning hover:bg-warning-bg rounded-xl transition-colors"
+                            >
+                              <ShieldAlert size={16} /> Report Issue
+                            </button>
+
+                            <div className="my-1 border-t border-outline-variant/50"></div>
+                            
+                            <button className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-danger hover:bg-danger-bg rounded-xl transition-colors">
+                              <Trash2 size={16} /> Decommission
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -322,9 +428,22 @@ const AssetList = () => {
       </Card>
 
       <AllocationModal 
-        isOpen={isModalOpen} 
-        onClose={handleModalClose} 
+        isOpen={isAllocModalOpen} 
+        onClose={() => { setIsAllocModalOpen(false); fetchAssets(); }} 
         asset={selectedAsset} 
+      />
+
+      <AssetDetail 
+        asset={selectedAsset}
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        onRefresh={fetchAssets}
+      />
+
+      <ConditionReportModal 
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        asset={selectedAsset}
       />
     </div>
   );

@@ -1,86 +1,179 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { 
+  X, 
+  Calendar, 
+  BatteryMedium, 
+  History as HistoryIcon,
+  ClipboardList,
+  ShieldAlert,
+  ArrowLeftRight,
+  Trash2,
+  Edit3,
+  Undo2
+} from 'lucide-react';
 import AssetHistoryTimeline from './AssetHistoryTimeline';
+import StatusBadge from '../common/StatusBadge';
+import Button from '../common/Button';
+import Card from '../common/Card';
+import { allocationService } from '../../api/services/allocations';
 
-const AssetDetail = () => {
+const AssetDetail = ({ asset, isOpen, onClose, onRefresh }) => {
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [deallocating, setDeallocating] = useState(false);
+
+  useEffect(() => {
+    if (asset && isOpen) {
+      const fetchHistory = async () => {
+        setLoading(true);
+        try {
+          const response = await allocationService.history(asset.id, { size: 5 });
+          setHistory(response.content || []);
+        } catch (err) {
+          console.error("Failed to fetch asset history", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchHistory();
+    }
+  }, [asset, isOpen]);
+
+  const handleDeallocate = async () => {
+    if (!asset || deallocating) return;
+    setDeallocating(true);
+    try {
+      const response = await allocationService.history(asset.id, { active: true });
+      const activeAlloc = response.content?.[0];
+      if (activeAlloc) {
+        await allocationService.deallocate(asset.id, activeAlloc.id, { notes: 'Returned via details panel' });
+        onRefresh?.();
+        onClose();
+      }
+    } catch (err) {
+      console.error("Deallocation failed", err);
+    } finally {
+      setDeallocating(false);
+    }
+  };
+
+  const handleDecommission = async () => {
+    if (!asset || !window.confirm('Are you sure you want to decommission this asset? This action is permanent.')) return;
+    try {
+      await assetService.update(asset.id, { status: 'DECOMMISSIONED' });
+      onRefresh?.();
+      onClose();
+    } catch (err) {
+      console.error("Decommission failed", err);
+    }
+  };
+
+  if (!asset) return null;
+
+  const isAllocated = asset.status === 'ALLOCATED';
+
   return (
     <>
       {/* Slide-out Panel Overlay */}
-      <div className="absolute inset-0 bg-on-surface/20 backdrop-blur-sm z-40 transition-opacity"></div>
+      <div 
+        className={`fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={onClose}
+      ></div>
 
       {/* Detail Panel */}
-      <div className="absolute top-0 right-0 h-full w-[600px] bg-surface-card shadow-2xl border-l border-outline-variant z-50 flex flex-col transform transition-transform duration-300 ease-in-out">
+      <div className={`
+        fixed top-0 right-0 h-full w-full max-w-[500px] bg-white shadow-2xl z-[101] flex flex-col 
+        transform transition-transform duration-300 ease-in-out border-l border-outline-variant
+        ${isOpen ? 'translate-x-0' : 'translate-x-full'}
+      `}>
         {/* Panel Header */}
-        <div className="flex justify-between items-start p-spacing-lg border-b border-outline-variant bg-surface-container-lowest">
+        <div className="flex justify-between items-start p-8 border-b border-outline-variant bg-slate-50/50">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h2 className="font-headline-md text-headline-md text-on-surface">MacBook Pro 16"</h2>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-caps text-label-caps bg-info-assigned/10 text-info-assigned border border-info-assigned/20">
-                ASSIGNED
-              </span>
+              <h2 className="text-2xl font-extrabold text-text-heading leading-tight">{asset.brand} {asset.model}</h2>
+              <StatusBadge status={asset.status} />
             </div>
-            <div className="font-data-mono text-data-mono text-text-body">
-              SN: C02X1234ABCD
+            <div className="font-mono text-xs text-text-body font-bold tracking-wider uppercase opacity-60">
+              SN: {asset.serialNumber}
             </div>
           </div>
-          <button aria-label="Close panel" className="p-2 text-outline hover:bg-surface-container-low rounded-full transition-colors">
-            <span className="material-symbols-outlined">close</span>
+          <button 
+            onClick={onClose}
+            className="p-2 text-text-body hover:bg-white hover:shadow-md rounded-xl transition-all border border-transparent hover:border-outline-variant"
+          >
+            <X size={20} />
           </button>
         </div>
 
         {/* Panel Content (Scrollable) */}
-        <div className="flex-1 overflow-y-auto p-spacing-lg space-y-spacing-xl bg-surface-page">
+        <div className="flex-1 overflow-y-auto p-8 space-y-10 bg-white">
           {/* Quick Stats Bento */}
-          <div className="grid grid-cols-3 gap-gutter">
-            <div className="bg-surface-card p-spacing-md rounded-lg shadow-sm border border-outline-variant">
-              <div className="text-text-body font-label-caps text-label-caps mb-2">PURCHASE DATE</div>
-              <div className="font-headline-sm text-headline-sm text-on-surface">Jan 12, 2023</div>
-            </div>
-            <div className="bg-surface-card p-spacing-md rounded-lg shadow-sm border border-outline-variant">
-              <div className="text-text-body font-label-caps text-label-caps mb-2">WARRANTY EXP</div>
-              <div className="font-headline-sm text-headline-sm text-on-surface">Jan 12, 2026</div>
-            </div>
-            <div className="bg-surface-card p-spacing-md rounded-lg shadow-sm border border-outline-variant">
-              <div className="text-text-body font-label-caps text-label-caps mb-2">BATTERY HEALTH</div>
-              <div className="font-headline-sm text-headline-sm text-success-available flex items-center gap-1">
-                <span className="material-symbols-outlined text-[18px]">battery_charging_full</span>
-                98%
-              </div>
-            </div>
+          <div className="grid grid-cols-3 gap-3">
+            <Card padding="p-4" className="text-center bg-slate-50 border-none shadow-none">
+              <p className="text-[9px] font-bold text-text-body uppercase tracking-[0.1em] mb-2">Purchased</p>
+              <p className="text-xs font-bold text-text-heading">{new Date(asset.purchaseDate).toLocaleDateString()}</p>
+            </Card>
+            <Card padding="p-4" className="text-center bg-slate-50 border-none shadow-none">
+              <p className="text-[9px] font-bold text-text-body uppercase tracking-[0.1em] mb-2">Warranty</p>
+              <p className={`text-xs font-bold ${asset.warrantyExpired ? 'text-danger' : 'text-text-heading'}`}>
+                {new Date(asset.warrantyExpirationDate).toLocaleDateString()}
+              </p>
+            </Card>
+            <Card padding="p-4" className="text-center bg-slate-50 border-none shadow-none">
+              <p className="text-[9px] font-bold text-text-body uppercase tracking-[0.1em] mb-2">Health</p>
+              <p className="text-xs font-bold text-success flex items-center justify-center gap-1">
+                <BatteryMedium size={14} /> 98%
+              </p>
+            </Card>
           </div>
 
           {/* Allocation History Timeline */}
-          <AssetHistoryTimeline />
+          <div>
+             <h3 className="text-sm font-bold text-text-heading uppercase tracking-widest flex items-center gap-2 mb-6">
+              <HistoryIcon size={16} className="text-primary" />
+              Ownership History
+            </h3>
+            <AssetHistoryTimeline history={history} loading={loading} />
+          </div>
 
-          {/* Action Section */}
-          <div className="bg-surface-card rounded-lg shadow-sm border border-outline-variant p-spacing-lg">
-            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-spacing-md border-b border-outline-variant pb-2">Actions</h3>
-            <form className="space-y-4">
-              <div>
-                <label className="block font-label-caps text-label-caps text-on-surface-variant mb-1">REASSIGN ASSET</label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">person_search</span>
-                  <select defaultValue="" className="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-body-md text-body-md text-on-surface appearance-none cursor-pointer">
-                    <option disabled value="">Search user...</option>
-                    <option value="1">Jane Doe (Design)</option>
-                    <option value="2">John Smith (Engineering)</option>
-                    <option value="3">Alice Johnson (Marketing)</option>
-                  </select>
-                  <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
-                </div>
-              </div>
+          {/* Detailed Actions Section */}
+          <div className="pt-8 border-t border-outline-variant">
+            <h3 className="text-sm font-bold text-text-heading uppercase tracking-widest flex items-center gap-2 mb-6">
+              <ClipboardList size={16} className="text-primary" />
+              Administrative Actions
+            </h3>
+            
+            <div className="grid grid-cols-1 gap-3">
+              <Button variant="outline" icon={Edit3} className="w-full !justify-start">
+                Edit Asset Details
+              </Button>
+              <Button variant="outline" icon={ShieldAlert} className="w-full !justify-start text-warning">
+                Report Condition Issue
+              </Button>
+              
+              {isAllocated ? (
+                <Button 
+                  variant="outline" 
+                  icon={Undo2} 
+                  className="w-full !justify-start text-info"
+                  onClick={handleDeallocate}
+                  loading={deallocating}
+                  disabled={deallocating}
+                >
+                  Return to Inventory (Deallocate)
+                </Button>
+              ) : (
+                <Button variant="outline" icon={ArrowLeftRight} className="w-full !justify-start text-primary">
+                  Manage Allocation
+                </Button>
+              )}
 
-              <div>
-                <label className="block font-label-caps text-label-caps text-on-surface-variant mb-1">REPORT CONDITION</label>
-                <textarea className="w-full p-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary font-body-md text-body-md text-on-surface resize-none" placeholder="Note any scratches, dents, or operational issues..." rows="3"></textarea>
+              <div className="pt-4 mt-4 border-t border-outline-variant">
+                <Button variant="outline" icon={Trash2} className="w-full !justify-start text-danger hover:bg-danger-bg">
+                  Decommission Asset
+                </Button>
               </div>
-
-              <div className="flex justify-end pt-2">
-                <button className="px-4 py-2 bg-primary text-on-primary rounded-lg font-body-md text-body-md font-medium hover:bg-surface-tint transition-colors flex items-center gap-2" type="button">
-                  <span className="material-symbols-outlined text-[18px]">save</span>
-                  Update Asset
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
         </div>
       </div>
