@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import SearchableDropdown from '../components/common/SearchableDropdown';
-import { vi } from 'vitest';
+
 
 describe('SearchableDropdown', () => {
   const mockOptions = [
@@ -9,13 +9,13 @@ describe('SearchableDropdown', () => {
   ];
 
   it('calls onSearch after delay when typing', async () => {
-    const onSearch = vi.fn();
+    const onSearch = jest.fn();
     render(
       <SearchableDropdown 
         label="Test" 
         options={mockOptions} 
         onSearch={onSearch} 
-        onSelect={vi.fn()} 
+        onSelect={jest.fn()} 
       />
     );
 
@@ -38,7 +38,7 @@ describe('SearchableDropdown', () => {
         label="Test" 
         options={[]} 
         loading={true} 
-        onSelect={vi.fn()} 
+        onSelect={jest.fn()} 
       />
     );
     // Search icon is replaced by Loader2 which has a specific class or can be found by aria-label if added

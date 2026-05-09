@@ -15,12 +15,14 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
 import AllocationModalContent from '../components/common/AllocationModalContent';
-import api from '../lib/axios';
+import { dashboardService, assetService } from '../api/services';
+import GlobalErrorAlert from '../components/errors/GlobalErrorAlert';
 
 const DashboardPage = () => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [selectedAsset, setSelectedAsset] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
   const [data, setData] = React.useState({
     summary: null,
     recentAssets: []
@@ -29,16 +31,16 @@ const DashboardPage = () => {
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const [summaryRes, assetsRes] = await Promise.all([
-          api.get('/dashboard/summary'),
-          api.get('/assets?size=5') // Get few recent assets for display
+        const [summaryData, assetsData] = await Promise.all([
+          dashboardService.inventory(),
+          assetService.list({ size: 5 })
         ]);
         setData({
-          summary: summaryRes.data,
-          recentAssets: assetsRes.data.content || []
+          summary: summaryData,
+          recentAssets: assetsData.content || []
         });
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+      } catch (err) {
+        setError(err.message || 'Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
@@ -63,6 +65,7 @@ const DashboardPage = () => {
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 0' }}>
+      {error && <GlobalErrorAlert message={error} onClose={() => setError(null)} />}
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
         <div>
