@@ -67,7 +67,7 @@ class AllocationServiceTest {
                                 .email("user" + id + "@example.com")
                                 .passwordHash("hash")
                                 .role(Role.DEVELOPER)
-                                .isActive(true)
+                                .active(true)
                                 .build();
         }
 

@@ -7,7 +7,6 @@ import com.assettrack.dto.common.PageUtils;
 import com.assettrack.dto.common.PagedResponse;
 import com.assettrack.service.allocation.IAllocationService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
