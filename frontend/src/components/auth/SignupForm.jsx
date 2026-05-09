@@ -2,10 +2,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import GlobalErrorAlert from '../errors/GlobalErrorAlert';
-import FormFieldError from '../errors/FormFieldError';
 import { useSignup } from '../../hooks/useAssetTrack';
 import Input from '../common/Input';
 import Button from '../common/Button';
@@ -13,6 +11,8 @@ import Button from '../common/Button';
 const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
 const signupSchema = z.object({
+  firstName: z.string().min(1, 'First name is required').max(60),
+  lastName: z.string().min(1, 'Last name is required').max(60),
   email: z.string().email('Please enter a valid email address'),
   password: z
     .string()
@@ -37,20 +37,19 @@ const SignupForm = () => {
     mode: 'onChange',
   });
 
-  const [apiError, setApiError] = useState(null);
+  const { signup, error: apiError, clearError } = useSignup();
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
-    setApiError(null);
-    try {
-      const payload = {
-        email: data.email,
-        password: data.password,
-      };
-      await api.post('/auth/register', payload);
-      navigate('/login'); // Redirect to login on successful signup
-    } catch (err) {
-      setApiError(err.response?.data?.message || 'This email is already in use.');
+    const payload = {
+      email: data.email,
+      password: data.password,
+      fullName: `${data.firstName} ${data.lastName}`.trim(),
+    };
+    
+    const result = await signup(payload);
+    if (result) {
+      navigate('/login');
     }
   };
 
@@ -58,17 +57,40 @@ const SignupForm = () => {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {apiError && (
         <div className="bg-error-container text-on-error-container p-3 rounded-md text-sm border border-danger-expired/20">
-          {apiError}
+          {apiError.message || 'Signup failed. Please try again.'}
         </div>
       )}
       
+      <div className="grid grid-cols-2 gap-4">
+        <Input
+          label="FIRST NAME"
+          placeholder="Jane"
+          icon={User}
+          autoComplete="given-name"
+          {...register('firstName')}
+          error={formState.errors.firstName?.message}
+          onFocus={clearError}
+        />
+        <Input
+          label="LAST NAME"
+          placeholder="Doe"
+          icon={User}
+          autoComplete="family-name"
+          {...register('lastName')}
+          error={formState.errors.lastName?.message}
+          onFocus={clearError}
+        />
+      </div>
+
       <Input
         label="WORK EMAIL"
         type="email"
         placeholder="name@company.com"
         icon={Mail}
+        autoComplete="email"
         {...register('email')}
         error={formState.errors.email?.message}
+        onFocus={clearError}
       />
       
       <Input
@@ -79,6 +101,7 @@ const SignupForm = () => {
         autoComplete="new-password"
         {...register('password')}
         error={formState.errors.password?.message}
+        onFocus={clearError}
       />
 
       <Input
@@ -89,6 +112,7 @@ const SignupForm = () => {
         autoComplete="new-password"
         {...register('confirmPassword')}
         error={formState.errors.confirmPassword?.message}
+        onFocus={clearError}
       />
 
       <Button type="submit" disabled={formState.isSubmitting}>

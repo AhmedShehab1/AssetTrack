@@ -6,6 +6,7 @@
 import { useState, useCallback } from 'react';
 import { authService, assetService } from '../api/services';
 import { storeToken } from '../api/client';
+import useAuthStore from '../store/useAuthStore';
 
 const useAsyncOperation = (serviceCall) => {
   const [loading, setLoading] = useState(false);
@@ -37,16 +38,19 @@ export const useLogin = () => {
   const { execute, loading, error, clearError } = useAsyncOperation(
     authService.login,
   );
+  const loginStore = useAuthStore((state) => state.login);
 
   const login = useCallback(
     async (credentials) => {
       const authResponse = await execute(credentials);
       if (authResponse) {
-        storeToken(authResponse.accessToken);
+        const { accessToken, user } = authResponse;
+        storeToken(accessToken);
+        loginStore(user, accessToken);
       }
       return authResponse;
     },
-    [execute],
+    [execute, loginStore],
   );
 
   return { login, loading, error, clearError };

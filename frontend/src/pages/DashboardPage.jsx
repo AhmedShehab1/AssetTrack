@@ -58,10 +58,13 @@ const DashboardPage = () => {
 
   const { summary, recentAssets } = data;
   
-  // Prepare status distribution data for chart
-  // Assuming statusDistribution labels match ['Available', 'Allocated'] or similar
-  const statusData = summary?.statusDistribution?.data || [0, 0];
-  const statusLabels = summary?.statusDistribution?.labels || [];
+  // Map byStatus to chart data
+  const statusLabels = summary?.byStatus?.map(s => s.status) || [];
+  const statusData = summary?.byStatus?.map(s => s.count) || [];
+
+  const getStatusCount = (status) => {
+    return summary?.byStatus?.find(s => s.status === status)?.count || 0;
+  };
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 0' }}>
@@ -93,8 +96,8 @@ const DashboardPage = () => {
           valueColor="var(--primary)"
         />
         <MetricCard 
-          title="Laptops Ready" 
-          value={summary?.statusDistribution?.data[0] || 0} 
+          title="Laptops Available" 
+          value={getStatusCount('AVAILABLE')} 
           badgeText="READY" 
           badgeVariant="success"
           icon={CheckCircle2} 
@@ -102,8 +105,8 @@ const DashboardPage = () => {
           valueColor="var(--success)"
         />
         <MetricCard 
-          title="In Maintenance" 
-          value={summary?.statusDistribution?.data[2] || 0} 
+          title="Under Repair" 
+          value={getStatusCount('UNDER_REPAIR')} 
           badgeText="URGENT" 
           badgeVariant="danger"
           icon={AlertTriangle} 
@@ -124,7 +127,7 @@ const DashboardPage = () => {
           <Card>
             <h3 style={{ fontSize: '18px', marginBottom: '32px', fontWeight: '700' }}>Asset Status Distribution</h3>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: '40px' }}>
-              <StatusChart data={statusData} total={summary?.totalAssets || 0} />
+              <StatusChart data={statusData} total={summary?.totalAssets || 0} labels={statusLabels} />
               
               <div style={{ flex: 1, maxWidth: '300px' }}>
                 {statusLabels.map((label, idx) => (
@@ -139,7 +142,7 @@ const DashboardPage = () => {
                         width: '10px', 
                         height: '10px', 
                         borderRadius: '50%', 
-                        backgroundColor: idx === 0 ? '#22c55e' : (idx === 1 ? '#3F51B5' : '#f59e0b') 
+                        backgroundColor: label === 'AVAILABLE' ? '#22c55e' : (label === 'ALLOCATED' ? '#3F51B5' : '#f59e0b') 
                       }}></div>
                       <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-secondary)' }}>{label}</span>
                     </div>
@@ -174,7 +177,7 @@ const DashboardPage = () => {
                       <Laptop size={20} color="var(--primary)" />
                     </div>
                     <div>
-                      <div style={{ fontWeight: '700', fontSize: '15px' }}>{asset.name}</div>
+                      <div style={{ fontWeight: '700', fontSize: '15px' }}>{asset.brand} {asset.model}</div>
                       <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>SN: {asset.serialNumber}</div>
                     </div>
                   </div>
@@ -216,11 +219,11 @@ const DashboardPage = () => {
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)}
-        title={selectedAsset?.name}
+        title={`${selectedAsset?.brand} ${selectedAsset?.model}`}
         subtitle={`SN: ${selectedAsset?.serialNumber}`}
       >
         <AllocationModalContent 
-          assetName={selectedAsset?.name}
+          assetName={`${selectedAsset?.brand} ${selectedAsset?.model}`}
           assetSN={selectedAsset?.serialNumber}
           onComplete={() => setIsModalOpen(false)}
         />
