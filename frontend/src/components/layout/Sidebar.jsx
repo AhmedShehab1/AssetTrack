@@ -9,7 +9,8 @@ import {
   HelpCircle, 
   LogOut, 
   Plus,
-  Laptop
+  Laptop,
+  User as UserIcon
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAssetTrack';
 import Button from '../common/Button';
@@ -23,6 +24,7 @@ const Sidebar = () => {
     { icon: History, label: 'Allocation', path: '/allocations', roles: ['ADMIN', 'MANAGER'] },
     { icon: Laptop, label: 'Spare Laptops', path: '/spare-laptops', roles: ['ADMIN', 'MANAGER'] },
     { icon: Users, label: 'Users', path: '/users', roles: ['ADMIN'] },
+    { icon: UserIcon, label: 'My Profile', path: '/profile', roles: ['ADMIN', 'MANAGER', 'DEVELOPER'] },
     { icon: Settings, label: 'Settings', path: '/settings', roles: ['ADMIN', 'MANAGER', 'DEVELOPER'] },
   ];
 

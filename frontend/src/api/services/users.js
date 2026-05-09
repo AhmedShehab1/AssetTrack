@@ -5,8 +5,10 @@ export const userService = {
   create: (body) => post('/auth/signup', body),
   getById: (userId) => get(`/users/${userId}`),
   
-  // Note: Backend doesn't support partial PATCH for generic info yet.
-  // It has specific endpoints for status and role.
+  // Generic update as requested and defined in OpenAPI
+  update: (userId, body) => patch(`/users/${userId}`, body),
+  
+  // Legacy/Specific endpoints from backend
   updateStatus: (userId, active) => put(`/users/${userId}/status`, null, { params: { active } }),
   updateRole: (userId, role) => put(`/users/${userId}/role`, null, { params: { role } }),
   

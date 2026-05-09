@@ -1,9 +1,11 @@
 import React from 'react';
 import { useAuth } from '../../hooks/useAssetTrack';
 import NotificationBell from './NotificationBell';
+import { useNavigate } from 'react-router-dom';
 
 const TopNav = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const getInitials = (name) => {
     if (!name) return '??';
@@ -28,8 +30,9 @@ const TopNav = () => {
             <span className="text-[10px] text-text-body font-bold uppercase tracking-tighter mt-1">{user?.role?.replace('ROLE_', '') || 'Member'}</span>
           </div>
           <div 
-            className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-primary/20 cursor-pointer hover:scale-105 transition-transform"
-            title={user?.fullName || user?.email}
+            onClick={() => navigate('/profile')}
+            className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-primary/20 cursor-pointer hover:scale-105 active:scale-95 transition-all"
+            title="View Profile"
           >
             {getInitials(user?.fullName || user?.email)}
           </div>

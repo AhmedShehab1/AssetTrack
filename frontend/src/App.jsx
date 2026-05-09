@@ -14,6 +14,7 @@ import SpareLaptopsPage from './pages/SpareLaptopsPage';
 import SettingsPage from './pages/SettingsPage';
 import SupportPage from './pages/SupportPage';
 import AssetReportsPage from './pages/AssetReportsPage';
+import ProfilePage from './pages/ProfilePage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import RoleProtectedRoute from './components/auth/RoleProtectedRoute';
 
@@ -48,7 +49,7 @@ export default function App() {
         {/* Internal pages that require auth */}
         <Route element={<ProtectedRoute><Layout><Outlet /></Layout></ProtectedRoute>}>
           
-          {/* Users: ADMIN only */}
+          {/* Users: ADMIN only for management list */}
           <Route element={<RoleProtectedRoute allowedRoles={['ADMIN']} />}>
             <Route path="/users" element={<UsersPage/>} />
           </Route>
@@ -62,6 +63,12 @@ export default function App() {
 
           <Route path="/assets" element={<AssetsPage/>} />
           <Route path="/assets/:assetId/reports" element={<AssetReportsPage/>} />
+          
+          {/* Profile: Any user for self, Admin/Manager for others */}
+          <Route path="/profile" element={<ProfilePage/>} />
+          <Route element={<RoleProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />}>
+            <Route path="/users/:userId/profile" element={<ProfilePage/>} />
+          </Route>
 
           {/* Registration: ADMIN only */}
           <Route element={<RoleProtectedRoute allowedRoles={['ADMIN']} />}>

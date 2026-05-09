@@ -203,12 +203,15 @@ const UsersPage = () => {
                 filteredUsers.map((u) => (
                   <tr key={u.id} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="py-5 px-8">
-                      <div className="flex items-center gap-4">
-                        <div className="w-11 h-11 rounded-xl bg-primary-light flex items-center justify-center text-primary font-black shadow-inner border border-primary/5">
+                      <div 
+                        className="flex items-center gap-4 cursor-pointer group/item"
+                        onClick={() => navigate(`/users/${u.id}/profile`)}
+                      >
+                        <div className="w-11 h-11 rounded-xl bg-primary-light flex items-center justify-center text-primary font-black shadow-inner border border-primary/5 group-hover/item:scale-110 transition-transform">
                           {u.fullName?.split(' ').map(n => n[0]).join('') || '?'}
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className="font-bold text-text-heading text-[15px] truncate">{u.fullName}</span>
+                          <span className="font-bold text-text-heading text-[15px] truncate group-hover/item:text-primary transition-colors">{u.fullName}</span>
                           <span className="text-xs text-text-body flex items-center gap-1 font-medium opacity-70">
                             <Mail size={12} className="opacity-40" /> {u.email}
                           </span>

@@ -35,6 +35,16 @@ export const useSignup = () => {
   return { signup, loading, error, clearError };
 };
 
+export const useUpdateEmail = () => {
+  const { execute, loading, error, clearError } = useAsyncOperation(authService.updateEmail);
+  return { updateEmail: execute, loading, error, clearError };
+};
+
+export const useChangePassword = () => {
+  const { execute, loading, error, clearError } = useAsyncOperation(authService.changePassword);
+  return { changePassword: execute, loading, error, clearError };
+};
+
 export const useForgotPassword = () => {
   const { execute, loading, error, clearError } = useAsyncOperation(authService.forgotPassword);
 
