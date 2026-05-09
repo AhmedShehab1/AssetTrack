@@ -6,8 +6,8 @@ import {
   RefreshCcw, 
   Zap, 
   Laptop, 
-  FileText,
-  Eye
+  Eye,
+  Truck
 } from 'lucide-react';
 import MetricCard from '../components/common/MetricCard';
 import StatusChart from '../components/common/StatusChart';
@@ -40,7 +40,7 @@ const DashboardPage = () => {
           recentAssets: assetsData.content || []
         });
       } catch (err) {
-        setError(err.message || 'Failed to load dashboard data');
+        setError(err);
       } finally {
         setLoading(false);
       }
@@ -50,7 +50,7 @@ const DashboardPage = () => {
   }, []);
 
   if (loading) return (
-    <div style={{ padding: '80px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+    <div className="p-20 text-center text-text-body">
       <RefreshCcw className="animate-spin inline-block mr-2" size={20} />
       Loading Dashboard...
     </div>
@@ -67,26 +67,21 @@ const DashboardPage = () => {
   };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 0' }}>
-      {error && <GlobalErrorAlert message={error} onClose={() => setError(null)} />}
+    <div className="max-w-[1200px] mx-auto py-5">
+      {error && <GlobalErrorAlert error={error} onClose={() => setError(null)} />}
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
+      <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 style={{ fontSize: '28px', marginBottom: '8px', fontWeight: '800' }}>Dashboard Overview</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Real-time inventory metrics and system status.</p>
+          <h1 className="text-3xl font-extrabold mb-2 text-text-heading">Dashboard Overview</h1>
+          <p className="text-text-body text-sm">Real-time inventory metrics and system status.</p>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '13px' }}>
+        <div className="flex items-center gap-2 text-text-body text-[13px]">
           <RefreshCcw size={14} /> Last updated: Just now
         </div>
       </div>
 
       {/* Metrics Grid */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(3, 1fr)', 
-        gap: '24px', 
-        marginBottom: '32px' 
-      }}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <MetricCard 
           title="Total Assets" 
           value={summary?.totalAssets || 0} 
@@ -116,39 +111,27 @@ const DashboardPage = () => {
       </div>
 
       {/* Main Content Grid */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: '2fr 1fr', 
-        gap: '24px' 
-      }}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Asset Inventory List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="lg:col-span-2 flex flex-col gap-6">
           {/* Chart Section */}
           <Card>
-            <h3 style={{ fontSize: '18px', marginBottom: '32px', fontWeight: '700' }}>Asset Status Distribution</h3>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: '40px' }}>
+            <h3 className="text-lg font-bold mb-8 text-text-heading">Asset Status Distribution</h3>
+            <div className="flex items-center justify-around gap-10">
               <StatusChart data={statusData} total={summary?.totalAssets || 0} labels={statusLabels} />
               
-              <div style={{ flex: 1, maxWidth: '300px' }}>
+              <div className="flex-1 max-w-[300px]">
                 {statusLabels.map((label, idx) => (
-                  <div key={idx} style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between', 
-                    marginBottom: '16px' 
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ 
-                        width: '10px', 
-                        height: '10px', 
-                        borderRadius: '50%', 
+                  <div key={idx} className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{ 
                         backgroundColor: label === 'AVAILABLE' ? '#22c55e' : (label === 'ALLOCATED' ? '#3F51B5' : '#f59e0b') 
                       }}></div>
-                      <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-secondary)' }}>{label}</span>
+                      <span className="text-sm font-medium text-text-body">{label}</span>
                     </div>
-                    <div style={{ display: 'flex', gap: '20px' }}>
-                      <span style={{ fontSize: '14px', fontWeight: '700' }}>{statusData[idx]}</span>
-                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', width: '35px', textAlign: 'right' }}>
+                    <div className="flex gap-5">
+                      <span className="text-sm font-bold text-text-heading">{statusData[idx]}</span>
+                      <span className="text-sm text-text-body w-[35px] text-right">
                         {Math.round((statusData[idx] / (summary?.totalAssets || 1)) * 100)}%
                       </span>
                     </div>
@@ -160,32 +143,24 @@ const DashboardPage = () => {
 
           {/* Inventory Section */}
           <Card>
-            <h3 style={{ fontSize: '18px', marginBottom: '20px', fontWeight: '700' }}>Recent Assets</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h3 className="text-lg font-bold mb-5 text-text-heading">Recent Assets</h3>
+            <div className="flex flex-col gap-3">
               {recentAssets.map(asset => (
-                <div key={asset.id} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '16px',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '12px',
-                  backgroundColor: 'var(--bg-page)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ backgroundColor: '#FFF', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                      <Laptop size={20} color="var(--primary)" />
+                <div key={asset.id} className="flex items-center justify-between p-4 border border-outline-variant rounded-xl bg-surface">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-white p-2.5 rounded-lg border border-outline-variant">
+                      <Laptop size={20} className="text-primary" />
                     </div>
                     <div>
-                      <div style={{ fontWeight: '700', fontSize: '15px' }}>{asset.brand} {asset.model}</div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>SN: {asset.serialNumber}</div>
+                      <div className="font-bold text-[15px] text-text-heading">{asset.brand} {asset.model}</div>
+                      <div className="text-xs text-text-body">SN: {asset.serialNumber}</div>
                     </div>
                   </div>
-                  <Button variant="secondary" onClick={() => {
+                  <Button variant="outline" onClick={() => {
                     setSelectedAsset(asset);
                     setIsModalOpen(true);
-                  }}>
-                    <Eye size={16} /> View Details
+                  }} icon={Eye}>
+                    View Details
                   </Button>
                 </div>
               ))}
@@ -194,20 +169,20 @@ const DashboardPage = () => {
         </div>
 
         {/* Quick Actions */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="flex flex-col gap-6">
           <Card>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-              <Zap size={20} color="var(--primary)" fill="var(--primary)" />
-              <h3 style={{ fontSize: '18px', fontWeight: '700' }}>Quick Actions</h3>
+            <div className="flex items-center gap-2.5 mb-3">
+              <Zap size={20} className="text-primary fill-primary" />
+              <h3 className="text-lg font-bold text-text-heading">Quick Actions</h3>
             </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5', marginBottom: '30px' }}>
+            <p className="text-text-body text-sm leading-relaxed mb-8">
               Instantly locate hardware for new hires or immediate replacements.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <Button variant="primary" icon={Laptop} style={{ width: '100%', justifyContent: 'flex-start' }}>
+            <div className="flex flex-col gap-4">
+              <Button variant="primary" icon={Laptop} className="w-full !justify-start">
                 Find Available Spare Laptop
               </Button>
-              <Button variant="secondary" icon={FileText} style={{ width: '100%', justifyContent: 'flex-start' }}>
+              <Button variant="outline" icon={Truck} className="w-full !justify-start">
                 Log New Delivery
               </Button>
             </div>

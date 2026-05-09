@@ -1,62 +1,25 @@
 import React from 'react';
 
 const Button = ({ children, variant = 'primary', className = '', icon: Icon, ...props }) => {
-  const getVariantStyles = () => {
-    switch (variant) {
-      case 'primary':
-        return {
-          backgroundColor: 'var(--primary)',
-          color: '#FFFFFF',
-          boxShadow: '0 4px 14px 0 rgba(63, 81, 181, 0.39)',
-        };
-      case 'secondary':
-        return {
-          backgroundColor: '#FFFFFF',
-          color: 'var(--primary)',
-          border: '1px solid var(--primary)',
-        };
-      case 'ghost':
-        return {
-          backgroundColor: 'transparent',
-          color: 'var(--text-secondary)',
-        };
-      case 'outline':
-        return {
-          backgroundColor: 'transparent',
-          color: 'var(--text-primary)',
-          border: '1px solid var(--border-color)',
-        };
-      default:
-        return {};
-    }
-  };
-
-  const baseStyle = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '10px',
-    padding: '10px 20px',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600',
-    transition: 'all 0.2s ease',
-    outline: 'none',
-    ...getVariantStyles()
+  const variants = {
+    primary: 'bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary-dark',
+    secondary: 'bg-white text-primary border border-primary hover:bg-slate-50',
+    ghost: 'bg-transparent text-text-body hover:bg-slate-100',
+    outline: 'bg-transparent text-text-heading border border-outline-variant hover:bg-slate-50',
   };
 
   return (
     <button 
-      className={`btn btn-${variant} ${className}`} 
-      style={baseStyle}
-      onMouseEnter={(e) => {
-        if (variant === 'primary') e.currentTarget.style.backgroundColor = 'var(--primary-dark)';
-        else e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.02)';
-      }}
-      onMouseLeave={(e) => {
-        const styles = getVariantStyles();
-        e.currentTarget.style.backgroundColor = styles.backgroundColor;
-      }}
+      className={`
+        inline-flex items-center justify-center gap-2.5 
+        px-5 py-2.5 rounded-xl
+        text-sm font-semibold 
+        transition-all duration-200 
+        active:scale-95
+        disabled:opacity-50 disabled:pointer-events-none
+        ${variants[variant] || variants.primary}
+        ${className}
+      `}
       {...props}
     >
       {Icon && <Icon size={18} />}

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Search, Bell, HelpCircle, Settings } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
+import useAuthStore from '../../store/useAuthStore';
 
 const TopNav = () => {
-  const { user } = useAuth();
+  const user = useAuthStore((state) => state.user);
 
   const getInitials = (name) => {
     if (!name) return '??';
@@ -15,37 +15,33 @@ const TopNav = () => {
   };
 
   return (
-    <header style={{
-      height: 'var(--header-height)',
-      backgroundColor: '#FFFFFF',
-      borderBottom: '1px solid var(--border-color)',
-      padding: '0 30px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      position: 'sticky',
-      top: 0,
-      zIndex: 90
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', width: '400px', backgroundColor: 'var(--bg-page)', padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-        <Search size={18} color="var(--text-secondary)" />
+    <header className="h-[var(--header-height)] bg-white border-b border-outline-variant px-8 flex items-center justify-between sticky top-0 z-40">
+      {/* Search */}
+      <div className="flex items-center w-full max-w-md bg-bg-page px-4 py-2 rounded-xl border border-outline-variant focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/5 transition-all">
+        <Search size={18} className="text-text-body" />
         <input 
           type="text" 
           placeholder="Search assets, users, or locations..." 
-          style={{ border: 'none', background: 'none', marginLeft: '10px', width: '100%', outline: 'none', fontSize: '14px' }} 
+          className="bg-transparent border-none ml-3 w-full outline-none text-sm text-text-heading placeholder:text-text-body/60"
         />
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        <div style={{ position: 'relative', cursor: 'pointer' }}>
-          <Bell size={20} color="var(--text-secondary)" />
-          <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '8px', height: '8px', backgroundColor: 'var(--danger)', borderRadius: '50%', border: '2px solid white' }}></div>
+      {/* Actions */}
+      <div className="flex items-center gap-5">
+        <div className="relative cursor-pointer p-2 hover:bg-slate-50 rounded-lg transition-colors">
+          <Bell size={20} className="text-text-body" />
+          <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full border-2 border-white"></div>
         </div>
-        <HelpCircle size={20} color="var(--text-secondary)" style={{ cursor: 'pointer' }} />
-        <Settings size={20} color="var(--text-secondary)" style={{ cursor: 'pointer' }} />
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '10px', cursor: 'pointer' }} title={user?.fullName || user?.email}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px' }}>
+        <div className="flex items-center gap-2 border-l border-outline-variant pl-5">
+          <div className="flex flex-col items-end mr-2">
+            <span className="text-sm font-bold text-text-heading leading-none">{user?.fullName || 'User'}</span>
+            <span className="text-[10px] text-text-body font-bold uppercase tracking-tighter mt-1">{user?.role || 'Member'}</span>
+          </div>
+          <div 
+            className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-primary/20 cursor-pointer hover:scale-105 transition-transform"
+            title={user?.fullName || user?.email}
+          >
             {getInitials(user?.fullName || user?.email)}
           </div>
         </div>

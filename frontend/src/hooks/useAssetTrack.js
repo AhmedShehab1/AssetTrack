@@ -1,13 +1,20 @@
-/**
+1/**
  * @fileoverview
- * AssetTrack — Example custom hooks.
+ * AssetTrack — Centralised custom hooks for API operations.
+ *
+ * Uses the `useAsyncOperation` pattern for consistent loading/error state.
  */
 
 import { useState, useCallback } from 'react';
-import { authService, assetService } from '../api/services';
+import { authService, assetService, allocationService } from '../api/services';
 import { storeToken } from '../api/client';
 import useAuthStore from '../store/useAuthStore';
 
+// ── GENERIC WRAPPER ──────────────────────────────────────────────────────────
+
+/**
+ * Normalises an API call with loading and error states.
+ */
 const useAsyncOperation = (serviceCall) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -34,10 +41,10 @@ const useAsyncOperation = (serviceCall) => {
   return { execute, loading, error, clearError };
 };
 
+// ── AUTH HOOKS ───────────────────────────────────────────────────────────────
+
 export const useLogin = () => {
-  const { execute, loading, error, clearError } = useAsyncOperation(
-    authService.login,
-  );
+  const { execute, loading, error, clearError } = useAsyncOperation(authService.login);
   const loginStore = useAuthStore((state) => state.login);
 
   const login = useCallback(
@@ -57,9 +64,7 @@ export const useLogin = () => {
 };
 
 export const useSignup = () => {
-  const { execute, loading, error, clearError } = useAsyncOperation(
-    authService.signUp,
-  );
+  const { execute, loading, error, clearError } = useAsyncOperation(authService.signUp);
 
   const signup = useCallback(
     async (credentials) => execute(credentials),
@@ -69,51 +74,31 @@ export const useSignup = () => {
   return { signup, loading, error, clearError };
 };
 
-export const useCreateAsset = () => {
-  const { execute, loading, error, clearError } = useAsyncOperation(
-    assetService.create,
-  );
+// ── ASSET HOOKS ──────────────────────────────────────────────────────────────
 
-  return {
-    createAsset: execute,
-    loading,
-    error,
-    clearError,
-  };
+export const useCreateAsset = () => {
+  const { execute, loading, error, clearError } = useAsyncOperation(assetService.create);
+  return { createAsset: execute, loading, error, clearError };
 };
 
 export const useUpdateAsset = () => {
-  const { execute, loading, error, clearError } = useAsyncOperation(
-    assetService.update,
-  );
-
-  return {
-    updateAsset: execute,
-    loading,
-    error,
-    clearError,
-  };
+  const { execute, loading, error, clearError } = useAsyncOperation(assetService.update);
+  return { updateAsset: execute, loading, error, clearError };
 };
 
+export const useDeleteAsset = () => {
+  const { execute, loading, error, clearError } = useAsyncOperation(assetService.delete);
+  return { deleteAsset: execute, loading, error, clearError };
+};
+
+// ── ALLOCATION HOOKS ─────────────────────────────────────────────────────────
+
 export const useAllocateAsset = () => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { execute, loading, error, clearError } = useAsyncOperation(allocationService.allocate);
+  return { allocate: execute, loading, error, clearError };
+};
 
-  const clearError = useCallback(() => setError(null), []);
-
-  const allocate = useCallback(async (assetId, body) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const { allocationService } = await import('../api/services');
-      return await allocationService.allocate(assetId, body);
-    } catch (apiError) {
-      setError(apiError);
-      return undefined;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  return { allocate, loading, error, clearError };
+export const useDeallocateAsset = () => {
+  const { execute, loading, error, clearError } = useAsyncOperation(allocationService.deallocate);
+  return { deallocate: execute, loading, error, clearError };
 };
