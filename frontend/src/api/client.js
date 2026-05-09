@@ -20,7 +20,19 @@ import apiBaseUrl from '../lib/apiBaseUrl.js';
 // Constants
 // ─────────────────────────────────────────────────────────────────────────────
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? apiBaseUrl;
+// Handle both Vite (import.meta) and Jest (process.env) environments
+const getApiBaseUrl = () => {
+  try {
+    // eslint-disable-next-line no-eval
+    const meta = eval('import.meta');
+    return meta.env?.VITE_API_BASE_URL;
+  } catch {
+    // Jest environment - use process.env
+    return process.env.VITE_API_BASE_URL;
+  }
+};
+
+const BASE_URL = getApiBaseUrl() ?? apiBaseUrl;
 
 const TOKEN_STORAGE_KEY = 'assettrack_access_token';
 

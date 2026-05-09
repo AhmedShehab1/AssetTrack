@@ -175,8 +175,9 @@ describe('AssetRegistrationForm', () => {
       // Should display validation banner
       expect(screen.getByText(/Please fix the highlighted fields below/)).toBeInTheDocument();
 
-      // FormFieldError components should render messages (tested via presence of IDs)
-      expect(screen.getByRole('region', { hidden: true }, { name: '' })).toBeDefined();
+      // FormFieldError components should render alert roles with error messages
+      const alerts = screen.getAllByRole('alert');
+      expect(alerts.length).toBeGreaterThan(0);
     });
 
     it('should clear error message when user starts editing after error', async () => {
@@ -199,8 +200,8 @@ describe('AssetRegistrationForm', () => {
 
       const { rerender } = render(<AssetRegistrationForm />);
 
-      // Initially error is shown
-      expect(screen.getByText(/Validation failed/)).toBeInTheDocument();
+      // Initially error banner is shown with validation message
+      expect(screen.getByText(/Please fix the highlighted fields below/)).toBeInTheDocument();
 
       // User focuses on an input
       const brandInput = screen.getByLabelText(/Brand/);
@@ -217,7 +218,7 @@ describe('AssetRegistrationForm', () => {
 
       rerender(<AssetRegistrationForm />);
 
-      expect(screen.queryByText(/Validation failed/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Please fix the highlighted fields below/)).not.toBeInTheDocument();
     });
 
     it('should display 400 field errors for invalid serial number pattern', async () => {

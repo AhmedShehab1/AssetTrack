@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import GlobalErrorAlert from '../errors/GlobalErrorAlert';
 import FormFieldError from '../errors/FormFieldError';
 import { useSignup } from '../../hooks/useAssetTrack';
+import api from '../../lib/axios';
 import Input from '../common/Input';
 import Button from '../common/Button';
 
