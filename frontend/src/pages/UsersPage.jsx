@@ -51,7 +51,7 @@ const UsersPage = () => {
       const response = await userService.list({ 
         page, 
         size: 10,
-        search: searchQuery || undefined
+        // search: searchQuery || undefined // Backend does not support search parameter
       });
       setUsers(response.content);
       setTotalItems(response.meta.totalElements);
@@ -110,6 +110,13 @@ const UsersPage = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
+  // Client-side filtering as a fallback for lack of backend search support
+  const filteredUsers = users.filter(u => 
+    !searchQuery || 
+    u.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.email?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="container mx-auto py-8 px-4 space-y-8 font-sans">
       {/* Header */}
@@ -152,11 +159,10 @@ const UsersPage = () => {
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <Input 
-              placeholder="Search by name or email..." 
+              placeholder="Search current page by name or email..." 
               icon={Search}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && fetchUsers()}
             />
           </div>
           <Button variant="outline" onClick={fetchUsers} className="px-10">
@@ -173,7 +179,7 @@ const UsersPage = () => {
             <thead>
               <tr className="bg-slate-50 border-b border-outline-variant">
                 <th className="py-5 px-8 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest">Employee</th>
-                <th className="py-5 px-4 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest">Role</th>
+                <th className="py-5 px-4 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest text-center">Role</th>
                 <th className="py-5 px-4 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest text-center">Status</th>
                 <th className="py-5 px-4 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest">Date Joined</th>
                 <th className="py-5 px-8 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest text-right">Actions</th>
@@ -189,12 +195,12 @@ const UsersPage = () => {
                     </div>
                   </td>
                 </tr>
-              ) : users.length === 0 ? (
+              ) : filteredUsers.length === 0 ? (
                 <tr>
                   <td colSpan="5" className="py-24 text-center text-text-body font-medium italic opacity-60">No members found matching your search.</td>
                 </tr>
               ) : (
-                users.map((u) => (
+                filteredUsers.map((u) => (
                   <tr key={u.id} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="py-5 px-8">
                       <div className="flex items-center gap-4">
@@ -261,7 +267,7 @@ const UsersPage = () => {
         {/* Footer / Pagination */}
         <div className="bg-slate-50 border-t border-outline-variant px-8 py-5 flex items-center justify-between">
           <span className="text-sm text-text-body font-bold opacity-70">
-            Showing <span className="text-text-heading">{users.length > 0 ? page * 10 + 1 : 0}</span> — <span className="text-text-heading">{Math.min((page + 1) * 10, totalItems)}</span> of <span className="text-text-heading">{totalItems}</span> members
+            Showing <span className="text-text-heading">{filteredUsers.length}</span> — members on this page
           </span>
           <div className="flex items-center gap-2">
             <button 
