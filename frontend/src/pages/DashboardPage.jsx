@@ -17,7 +17,7 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
 import AllocationModalContent from '../components/common/AllocationModalContent';
-import ConditionReportModal from '../components/assets/ConditionReportModal';
+import ActionModal from '../components/common/ActionModal';
 import { dashboardService, assetService } from '../api/services';
 import { useAuth } from '../hooks/useAssetTrack';
 import GlobalErrorAlert from '../components/errors/GlobalErrorAlert';
