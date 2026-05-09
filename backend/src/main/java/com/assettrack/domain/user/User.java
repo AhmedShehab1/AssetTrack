@@ -39,7 +39,7 @@ public class User {
 
     @Column(nullable = false)
     @Builder.Default
-    private boolean isActive = true;
+    private boolean active = true;
 
     // One user → many allocations (their full history)
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)

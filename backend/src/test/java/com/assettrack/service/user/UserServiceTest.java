@@ -145,7 +145,7 @@ class UserServiceTest {
             Pageable pageable = PageRequest.of(0, 10);
             Page<User> page = new PageImpl<>(List.of(inactive), pageable, 1);
 
-            when(userRepository.findAllByIsActiveFalse(pageable)).thenReturn(page);
+            when(userRepository.findAllByActiveFalse(pageable)).thenReturn(page);
             when(userMapper.toResponse(inactive)).thenReturn(response);
 
             Page<UserResponse> result = userService.getInactiveUsers(pageable);
@@ -158,7 +158,7 @@ class UserServiceTest {
         @DisplayName("returns empty page when all users are active")
         void emptyWhenAllActive() {
             Pageable pageable = PageRequest.of(0, 10);
-            when(userRepository.findAllByIsActiveFalse(pageable)).thenReturn(Page.empty(pageable));
+            when(userRepository.findAllByActiveFalse(pageable)).thenReturn(Page.empty(pageable));
 
             Page<UserResponse> result = userService.getInactiveUsers(pageable);
 

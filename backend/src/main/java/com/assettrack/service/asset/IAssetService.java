@@ -11,8 +11,6 @@ import com.assettrack.dto.asset.UpdateAssetRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
-
-import java.util.List;
 import java.util.UUID;
 
 public interface IAssetService {
