@@ -1,48 +1,100 @@
-export default function Sidebar() {
+import React from 'react';
+import { LayoutDashboard, Package, History, Users, Settings, HelpCircle, LogOut, Plus } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import Button from '../common/Button';
+
+const Sidebar = () => {
+  const { logout } = useAuth();
+  
+  const menuItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', active: true },
+    { icon: Package, label: 'Assets' },
+    { icon: History, label: 'Allocation' },
+    { icon: Users, label: 'Users' },
+    { icon: Settings, label: 'Settings' },
+  ];
+
+  const bottomItems = [
+    { icon: HelpCircle, label: 'Support' },
+    { icon: LogOut, label: 'Logout', onClick: logout },
+  ];
+
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 border-r border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex flex-col py-6 font-inter text-[13px] font-medium z-50">
-      <div className="px-6 mb-8">
-        <h1 className="text-lg font-black text-indigo-600 dark:text-indigo-400">AssetTrack</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">Enterprise Asset Mgmt</p>
+    <aside style={{
+      width: 'var(--sidebar-width)',
+      height: '100vh',
+      backgroundColor: '#FFFFFF',
+      borderRight: '1px solid var(--border-color)',
+      position: 'fixed',
+      left: 0,
+      top: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '30px 0',
+      zIndex: 100
+    }}>
+      <div style={{ padding: '0 24px', marginBottom: '40px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '32px', height: '32px', backgroundColor: 'var(--primary)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Package color="white" size={20} />
+          </div>
+          <div>
+            <h1 style={{ fontSize: '18px', fontWeight: '800', lineHeight: 1 }}>AssetTrack</h1>
+            <p style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '2px' }}>Enterprise Asset Mgmt</p>
+          </div>
+        </div>
       </div>
-      <div className="px-4 mb-6">
-        <button className="w-full bg-indigo-600 text-white rounded-md py-2 px-4 flex items-center justify-center gap-2 hover:bg-indigo-700 transition-colors">
-          <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>add</span>
-          Add New Asset
-        </button>
+
+      <div style={{ padding: '0 16px', marginBottom: '30px' }}>
+        <Button variant="primary" style={{ width: '100%', justifyContent: 'flex-start', padding: '12px 16px' }}>
+          <Plus size={20} /> Add New Asset
+        </Button>
       </div>
-      <nav className="flex-1 flex flex-col gap-1">
-        <a className="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 border-l-4 border-transparent hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-slate-200 transition-all duration-200 ease-in-out" href="#">
-          <span className="material-symbols-outlined" data-icon="dashboard">dashboard</span>
-          Dashboard
-        </a>
-        <a className="flex items-center gap-3 bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 border-l-4 border-indigo-600 px-4 py-3 shadow-sm transition-all duration-200 ease-in-out" href="#">
-          <span className="material-symbols-outlined" data-icon="inventory_2" data-weight="fill" style={{ fontVariationSettings: "'FILL' 1" }}>inventory_2</span>
-          Assets
-        </a>
-        <a className="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 border-l-4 border-transparent hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-slate-200 transition-all duration-200 ease-in-out" href="#">
-          <span className="material-symbols-outlined" data-icon="history_edu">history_edu</span>
-          Allocation
-        </a>
-        <a className="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 border-l-4 border-transparent hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-slate-200 transition-all duration-200 ease-in-out" href="#">
-          <span className="material-symbols-outlined" data-icon="group">group</span>
-          Users
-        </a>
-        <a className="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 border-l-4 border-transparent hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-slate-200 transition-all duration-200 ease-in-out" href="#">
-          <span className="material-symbols-outlined" data-icon="settings">settings</span>
-          Settings
-        </a>
+
+      <nav style={{ flex: 1 }}>
+        {menuItems.map((item, index) => (
+          <div key={index} style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '12px 24px',
+            color: item.active ? 'var(--primary)' : 'var(--text-secondary)',
+            backgroundColor: item.active ? 'var(--primary-light)' : 'transparent',
+            borderLeft: item.active ? '4px solid var(--primary)' : '4px solid transparent',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            fontSize: '14px',
+            fontWeight: item.active ? '700' : '500'
+          }}>
+            <item.icon size={20} />
+            {item.label}
+          </div>
+        ))}
       </nav>
-      <div className="mt-auto flex flex-col gap-1 border-t border-slate-200 dark:border-slate-800 pt-4">
-        <a className="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 border-l-4 border-transparent hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-slate-200 transition-all duration-200 ease-in-out" href="#">
-          <span className="material-symbols-outlined" data-icon="contact_support">contact_support</span>
-          Support
-        </a>
-        <a className="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-3 border-l-4 border-transparent hover:bg-slate-100 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-slate-200 transition-all duration-200 ease-in-out" href="#">
-          <span className="material-symbols-outlined" data-icon="logout">logout</span>
-          Logout
-        </a>
+
+      <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
+        {bottomItems.map((item, index) => (
+          <div 
+            key={index} 
+            onClick={item.onClick}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 24px',
+              color: 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}
+          >
+            <item.icon size={20} />
+            {item.label}
+          </div>
+        ))}
       </div>
     </aside>
   );
-}
+};
+
+export default Sidebar;

@@ -6,8 +6,8 @@ import { Mail, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/axios';
 import { useAuth } from '../../hooks/useAuth';
-import Input from '../ui/Input';
-import Button from '../ui/Button';
+import Input from '../common/Input';
+import Button from '../common/Button';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),

@@ -1,8 +1,8 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import useAuthStore from '../../../store/useAuthStore';
-import { useAuth } from '../../../hooks/useAuth';
+import useAuthStore from '../../store/useAuthStore';
+import { useAuth } from '../../hooks/useAuth';
 
 function TestComponent() {
   const { user, isAuthenticated, login, logout } = useAuth();

@@ -4,9 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../lib/axios';
-import Input from '../ui/Input';
-import Button from '../ui/Button';
+import GlobalErrorAlert from '../errors/GlobalErrorAlert';
+import FormFieldError from '../errors/FormFieldError';
+import { useSignup } from '../../hooks/useAssetTrack';
+import Input from '../common/Input';
+import Button from '../common/Button';
 
 const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 

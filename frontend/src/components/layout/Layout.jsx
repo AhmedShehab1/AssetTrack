@@ -1,14 +1,20 @@
-import Sidebar from "./Sidebar";
-import TopNav from "./TopNav";
+import React from 'react';
+import { Outlet } from 'react-router-dom';
+import Sidebar from './Sidebar';
+import TopNav from './TopNav';
 
-export default function Layout({ children }) {
+const Layout = ({ children }) => {
   return (
-    <div className="bg-surface-page font-body-md text-on-surface min-h-screen flex antialiased">
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar />
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
+      <div style={{ flex: 1, marginLeft: 'var(--sidebar-width)', display: 'flex', flexDirection: 'column' }}>
         <TopNav />
-        {children}
+        <main style={{ padding: '30px', flex: 1 }}>
+          {children || <Outlet />}
+        </main>
       </div>
     </div>
   );
-}
+};
+
+export default Layout;
