@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Package, 
@@ -10,11 +10,11 @@ import {
   LogOut, 
   Plus 
 } from 'lucide-react';
-import useAuthStore from '../../store/useAuthStore';
+import { useAuth } from '../../hooks/useAssetTrack';
 import Button from '../common/Button';
 
 const Sidebar = () => {
-  const logout = useAuthStore((state) => state.logout);
+  const { logout } = useAuth();
   
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
@@ -46,9 +46,11 @@ const Sidebar = () => {
 
       {/* Action */}
       <div className="px-4 mb-8">
-        <Button variant="primary" className="w-full !justify-start px-4 py-3">
-          <Plus size={20} /> Add New Asset
-        </Button>
+        <Link to="/assets/register" className="block w-full">
+          <Button variant="primary" className="w-full !justify-start px-4 py-3">
+            <Plus size={20} /> Add New Asset
+          </Button>
+        </Link>
       </div>
 
       {/* Nav */}

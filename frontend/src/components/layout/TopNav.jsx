@@ -1,9 +1,9 @@
 import React from 'react';
-import { Search, Bell, HelpCircle, Settings } from 'lucide-react';
-import useAuthStore from '../../store/useAuthStore';
+import { Search, Bell } from 'lucide-react';
+import { useAuth } from '../../hooks/useAssetTrack';
 
 const TopNav = () => {
-  const user = useAuthStore((state) => state.user);
+  const { user } = useAuth();
 
   const getInitials = (name) => {
     if (!name) return '??';
