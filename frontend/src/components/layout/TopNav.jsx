@@ -1,7 +1,19 @@
 import React from 'react';
 import { Search, Bell, HelpCircle, Settings } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 
 const TopNav = () => {
+  const { user } = useAuth();
+
+  const getInitials = (name) => {
+    if (!name) return '??';
+    const parts = name.trim().split(/[\s.@]+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.trim().slice(0, 2).toUpperCase();
+  };
+
   return (
     <header style={{
       height: 'var(--header-height)',
@@ -32,9 +44,9 @@ const TopNav = () => {
         <HelpCircle size={20} color="var(--text-secondary)" style={{ cursor: 'pointer' }} />
         <Settings size={20} color="var(--text-secondary)" style={{ cursor: 'pointer' }} />
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '10px', cursor: 'pointer' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '10px', cursor: 'pointer' }} title={user?.fullName || user?.email}>
           <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px' }}>
-            JD
+            {getInitials(user?.fullName || user?.email)}
           </div>
         </div>
       </div>

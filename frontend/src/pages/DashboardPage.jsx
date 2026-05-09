@@ -1,129 +1,227 @@
 import React from 'react';
 import { 
   Package, 
-  Laptop, 
-  AlertCircle, 
+  CheckCircle2, 
+  AlertTriangle, 
   RefreshCcw, 
-  CheckCircle2,
-  Zap,
-  Monitor
+  Zap, 
+  Laptop, 
+  FileText,
+  Eye
 } from 'lucide-react';
-import MetricCard from '../components/ui/MetricCard';
-import StatusChart from '../components/ui/StatusChart';
-import Card from '../components/ui/Card';
-import Button from '../components/ui/Button';
+import MetricCard from '../components/common/MetricCard';
+import StatusChart from '../components/common/StatusChart';
+import Card from '../components/common/Card';
+import Button from '../components/common/Button';
+import Modal from '../components/common/Modal';
+import AllocationModalContent from '../components/common/AllocationModalContent';
+import api from '../lib/axios';
 
 const DashboardPage = () => {
-  const stats = [
-    {
-      title: "Total Assets",
-      value: "1,240",
-      badgeText: "ALL",
-      icon: <Package className="text-indigo-600" size={24} />,
-      iconBg: "bg-indigo-50",
-    },
-    {
-      title: "Allocated Assets",
-      value: "980",
-      badgeText: "ASSIGNED",
-      badgeVariant: "info",
-      icon: <RefreshCcw className="text-sky-600" size={24} />,
-      iconBg: "bg-sky-50",
-    },
-    {
-      title: "Laptops Available",
-      value: "210",
-      badgeText: "READY",
-      badgeVariant: "success",
-      icon: <CheckCircle2 className="text-emerald-600" size={24} />,
-      iconBg: "bg-emerald-50",
-    },
-    {
-      title: "Pending Issues",
-      value: "50",
-      badgeText: "< 30 DAYS",
-      badgeVariant: "danger",
-      icon: <AlertCircle className="text-rose-600" size={24} />,
-      iconBg: "bg-rose-50",
-      valueColor: "text-rose-600",
-    },
-  ];
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [selectedAsset, setSelectedAsset] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [data, setData] = React.useState({
+    summary: null,
+    recentAssets: []
+  });
 
-  const distributionData = [
-    { label: 'Assigned', value: 980, percentage: '79%', color: 'bg-teal-500' },
-    { label: 'Available', value: 210, percentage: '17%', color: 'bg-emerald-500' },
-    { label: 'In Repair', value: 35, percentage: '3%', color: 'bg-amber-500' },
-    { label: 'Retired', value: 15, percentage: '1%', color: 'bg-gray-400' },
-  ];
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [summaryRes, assetsRes] = await Promise.all([
+          api.get('/dashboard/summary'),
+          api.get('/assets?size=5') // Get few recent assets for display
+        ]);
+        setData({
+          summary: summaryRes.data,
+          recentAssets: assetsRes.data.content || []
+        });
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) return (
+    <div style={{ padding: '80px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+      <RefreshCcw className="animate-spin inline-block mr-2" size={20} />
+      Loading Dashboard...
+    </div>
+  );
+
+  const { summary, recentAssets } = data;
+  
+  // Prepare status distribution data for chart
+  // Assuming statusDistribution labels match ['Available', 'Allocated'] or similar
+  const statusData = summary?.statusDistribution?.data || [0, 0];
+  const statusLabels = summary?.statusDistribution?.labels || [];
 
   return (
-    <div className="p-8 space-y-8 max-w-[1600px] mx-auto">
-      {/* Page Header */}
-      <div className="flex justify-between items-end">
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 0' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Overview</h1>
-          <p className="text-gray-500">Real-time inventory metrics and system status.</p>
+          <h1 style={{ fontSize: '28px', marginBottom: '8px', fontWeight: '800' }}>Dashboard Overview</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Real-time inventory metrics and system status.</p>
         </div>
-        <div className="flex items-center gap-2 text-gray-400 text-sm font-medium">
-          <RefreshCcw size={16} />
-          <span>Last updated: Just now</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', fontSize: '13px' }}>
+          <RefreshCcw size={14} /> Last updated: Just now
         </div>
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <MetricCard key={index} {...stat} />
-        ))}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(3, 1fr)', 
+        gap: '24px', 
+        marginBottom: '32px' 
+      }}>
+        <MetricCard 
+          title="Total Assets" 
+          value={summary?.totalAssets || 0} 
+          badgeText="ALL" 
+          icon={Package} 
+          iconBg="var(--primary-light)"
+          valueColor="var(--primary)"
+        />
+        <MetricCard 
+          title="Laptops Ready" 
+          value={summary?.statusDistribution?.data[0] || 0} 
+          badgeText="READY" 
+          badgeVariant="success"
+          icon={CheckCircle2} 
+          iconBg="var(--success-bg)"
+          valueColor="var(--success)"
+        />
+        <MetricCard 
+          title="In Maintenance" 
+          value={summary?.statusDistribution?.data[2] || 0} 
+          badgeText="URGENT" 
+          badgeVariant="danger"
+          icon={AlertTriangle} 
+          iconBg="var(--danger-bg)"
+          valueColor="var(--danger)"
+        />
       </div>
 
-      {/* Charts & Actions Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Distribution Chart */}
-        <Card className="lg:col-span-2 p-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-8">Asset Status Distribution</h3>
-          <div className="flex flex-col md:flex-row items-center justify-between gap-12 px-4">
-            <StatusChart dataValues={[980, 210, 35, 15]} total="1.2k" />
-            
-            <div className="flex-1 w-full max-w-sm space-y-4">
-              {distributionData.map((item) => (
-                <div key={item.label} className="flex items-center justify-between group cursor-default">
-                  <div className="flex items-center gap-3">
-                    <span className={`w-3 h-3 rounded-full ${item.color} shadow-sm transition-transform group-hover:scale-125`}></span>
-                    <span className="text-sm font-medium text-gray-600">{item.label}</span>
+      {/* Main Content Grid */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: '2fr 1fr', 
+        gap: '24px' 
+      }}>
+        {/* Asset Inventory List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Chart Section */}
+          <Card>
+            <h3 style={{ fontSize: '18px', marginBottom: '32px', fontWeight: '700' }}>Asset Status Distribution</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: '40px' }}>
+              <StatusChart data={statusData} total={summary?.totalAssets || 0} />
+              
+              <div style={{ flex: 1, maxWidth: '300px' }}>
+                {statusLabels.map((label, idx) => (
+                  <div key={idx} style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between', 
+                    marginBottom: '16px' 
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ 
+                        width: '10px', 
+                        height: '10px', 
+                        borderRadius: '50%', 
+                        backgroundColor: idx === 0 ? '#22c55e' : (idx === 1 ? '#3F51B5' : '#f59e0b') 
+                      }}></div>
+                      <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-secondary)' }}>{label}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '20px' }}>
+                      <span style={{ fontSize: '14px', fontWeight: '700' }}>{statusData[idx]}</span>
+                      <span style={{ fontSize: '14px', color: 'var(--text-secondary)', width: '35px', textAlign: 'right' }}>
+                        {Math.round((statusData[idx] / (summary?.totalAssets || 1)) * 100)}%
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-6">
-                    <span className="text-sm font-bold text-gray-900">{item.value.toLocaleString()}</span>
-                    <span className="text-xs font-bold text-gray-400 w-8 text-right">{item.percentage}</span>
+                ))}
+              </div>
+            </div>
+          </Card>
+
+          {/* Inventory Section */}
+          <Card>
+            <h3 style={{ fontSize: '18px', marginBottom: '20px', fontWeight: '700' }}>Recent Assets</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {recentAssets.map(asset => (
+                <div key={asset.id} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '16px',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '12px',
+                  backgroundColor: 'var(--bg-page)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ backgroundColor: '#FFF', padding: '10px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <Laptop size={20} color="var(--primary)" />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: '700', fontSize: '15px' }}>{asset.name}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>SN: {asset.serialNumber}</div>
+                    </div>
                   </div>
+                  <Button variant="secondary" onClick={() => {
+                    setSelectedAsset(asset);
+                    setIsModalOpen(true);
+                  }}>
+                    <Eye size={16} /> View Details
+                  </Button>
                 </div>
               ))}
             </div>
-          </div>
-        </Card>
+          </Card>
+        </div>
 
         {/* Quick Actions */}
-        <Card className="p-8 flex flex-col">
-          <div className="flex items-center gap-2 mb-4">
-            <Zap className="text-indigo-600" size={20} fill="currentColor" />
-            <h3 className="text-lg font-bold text-gray-900">Quick Actions</h3>
-          </div>
-          <p className="text-sm text-gray-500 mb-8 leading-relaxed">
-            Instantly locate hardware for new hires or immediate replacements.
-          </p>
-          
-          <div className="space-y-4 mt-auto">
-            <Button variant="primary" className="w-full">
-              <Monitor size={18} />
-              <span>Find Available Spare Laptop</span>
-            </Button>
-            <Button variant="secondary" className="w-full">
-              <Package size={18} />
-              <span>Log New Delivery</span>
-            </Button>
-          </div>
-        </Card>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <Card>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+              <Zap size={20} color="var(--primary)" fill="var(--primary)" />
+              <h3 style={{ fontSize: '18px', fontWeight: '700' }}>Quick Actions</h3>
+            </div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5', marginBottom: '30px' }}>
+              Instantly locate hardware for new hires or immediate replacements.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <Button variant="primary" icon={Laptop} style={{ width: '100%', justifyContent: 'flex-start' }}>
+                Find Available Spare Laptop
+              </Button>
+              <Button variant="secondary" icon={FileText} style={{ width: '100%', justifyContent: 'flex-start' }}>
+                Log New Delivery
+              </Button>
+            </div>
+          </Card>
+        </div>
       </div>
+
+      {/* Allocation Modal */}
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)}
+        title={selectedAsset?.name}
+        subtitle={`SN: ${selectedAsset?.serialNumber}`}
+      >
+        <AllocationModalContent 
+          assetName={selectedAsset?.name}
+          assetSN={selectedAsset?.serialNumber}
+          onComplete={() => setIsModalOpen(false)}
+        />
+      </Modal>
     </div>
   );
 };

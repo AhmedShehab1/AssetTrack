@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import GlobalErrorAlert from '../errors/GlobalErrorAlert';
 import FormFieldError from '../errors/FormFieldError';
@@ -51,6 +51,10 @@ const SignupForm = () => {
     const response = await signup(payload);
     if (response) {
       navigate('/login'); // Redirect to login on successful signup
+=======
+    } catch (err) {
+      setApiError(err.response?.data?.message || 'Something went wrong. Please try again.');
+>>>>>>> origin/Implement-AllocationModal-for-Asset-Assignment-#15
     }
   };
 
@@ -60,6 +64,7 @@ const SignupForm = () => {
         <GlobalErrorAlert error={error} onDismiss={clearError} />
       )}
 
+<<<<<<< HEAD
       <Input
         label="FULL NAME"
         type="text"
