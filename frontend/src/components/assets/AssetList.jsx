@@ -12,7 +12,8 @@ import {
   Headphones,
   HardDrive,
   User as UserIcon,
-  Filter
+  Filter,
+  UserPlus
 } from 'lucide-react';
 import { assetService } from '../../api/services/assets';
 import { userService } from '../../api/services/users';
@@ -21,6 +22,7 @@ import Button from '../common/Button';
 import Input from '../common/Input';
 import Card from '../common/Card';
 import { AssetType, AssetStatus } from '../../api/types';
+import AllocationModal from './AllocationModal';
 
 const AssetList = () => {
   const [assets, setAssets] = useState([]);
@@ -28,6 +30,10 @@ const AssetList = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
+  // Modal state
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   // Pagination & Filtering state
   const [filters, setFormFilters] = useState({
     search: '',
@@ -79,6 +85,17 @@ const AssetList = () => {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFormFilters(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAllocate = (asset) => {
+    setSelectedAsset(asset);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedAsset(null);
+    fetchAssets(); // Refresh list after potential allocation
   };
 
   const getTypeIcon = (type) => {
@@ -257,9 +274,18 @@ const AssetList = () => {
                       )}
                     </td>
                     <td className="py-4 px-6 text-right">
-                      <button className="text-gray-400 hover:text-primary p-1.5 rounded-lg hover:bg-white border border-transparent hover:border-outline-variant transition-all">
-                        <MoreVertical size={18} />
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button 
+                          onClick={() => handleAllocate(asset)}
+                          className="text-gray-400 hover:text-primary p-1.5 rounded-lg hover:bg-white border border-transparent hover:border-outline-variant transition-all"
+                          title="Assign Asset"
+                        >
+                          <UserPlus size={18} />
+                        </button>
+                        <button className="text-gray-400 hover:text-primary p-1.5 rounded-lg hover:bg-white border border-transparent hover:border-outline-variant transition-all">
+                          <MoreVertical size={18} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -294,6 +320,12 @@ const AssetList = () => {
           </div>
         </div>
       </Card>
+
+      <AllocationModal 
+        isOpen={isModalOpen} 
+        onClose={handleModalClose} 
+        asset={selectedAsset} 
+      />
     </div>
   );
 };

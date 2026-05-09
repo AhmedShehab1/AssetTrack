@@ -16,8 +16,10 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: create-drop
     show-sql: true
+  profile:
+    active: dev
   config:
     import: "optional:file:.env[.properties]"
   mail:
