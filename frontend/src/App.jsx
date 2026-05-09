@@ -4,6 +4,7 @@ import { Routes, Route, useNavigate, Outlet } from 'react-router-dom';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import UnauthorizedPage from './pages/UnauthorizedPage';
 import AssetsPage from './pages/AssetsPage';
 import AssetRegistrationPage from './pages/AssetRegistrationPage';
@@ -34,6 +35,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage/>} />
         <Route path="/signup" element={<SignupPage/>} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage/>} />
         <Route path="/unauthorized" element={<UnauthorizedPage/>} />
 
         {/* Internal pages that require auth */}

@@ -5,6 +5,7 @@ export const authService = {
   login: (body) => post('/auth/login', body),
   me: () => get('/auth/me'),
   changePassword: (body) => patch('/auth/me/password', body),
+  forgotPassword: (body) => post('/auth/forgot-password', body),
 };
 
 export default authService;
