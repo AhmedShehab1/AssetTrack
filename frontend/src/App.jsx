@@ -1,5 +1,6 @@
+import Layout from './components/layout/Layout';
 import { lazy, Suspense, useEffect } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, Outlet } from 'react-router-dom';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -46,7 +47,7 @@ export default function App() {
         <Route path="/unauthorized" element={<UnauthorizedPage/>} />
 
         {/* Internal pages that require auth */}
-        <Route element={<ProtectedRoute />}>
+        <Route element={<ProtectedRoute><Layout><Outlet /></Layout></ProtectedRoute>}>
           <Route path="/" element={<DashboardPage/>} />
           <Route path="/assets" element={<AssetsPage/>} />
         </Route>
@@ -56,5 +57,3 @@ export default function App() {
         )}
       </Routes>
     </>
-  );
-}
