@@ -86,7 +86,7 @@ const AssetEditForm = ({ asset, onClose, onRefresh, onUpdate }) => {
           error={error?.fieldErrors?.find(fe => fe.field === 'serialNumber')?.message}
         />
         <div className="flex flex-col space-y-1.5 w-full">
-          <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">LIFECYCLE STATUS</label>
+          <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Lifecycle Status</label>
           <div className="relative">
             <select 
               name="status"

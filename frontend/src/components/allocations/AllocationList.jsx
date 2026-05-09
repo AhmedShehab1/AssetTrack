@@ -14,10 +14,9 @@ import {
   FileText,
   RotateCcw
 } from 'lucide-react';
-import { allocationService } from '../../api/services/allocations';
+import { reportService } from '../../api/services/reports';
 import { useAuth } from '../../hooks/useAssetTrack';
 import Card from '../common/Card';
-import Badge from '../common/Badge';
 import Button from '../common/Button';
 import Input from '../common/Input';
 import GlobalErrorAlert from '../errors/GlobalErrorAlert';
@@ -40,13 +39,11 @@ const AllocationList = () => {
   const fetchAllocations = async () => {
     setLoading(true);
     try {
-      const response = await allocationService.history(null, { 
+      const response = await reportService.allocations({ 
         page, 
         size: 10,
-        active: filters.status === 'active' ? true : (filters.status === 'returned' ? false : undefined)
+        activeOnly: filters.status === 'active' ? true : (filters.status === 'returned' ? false : undefined)
       });
-      // Note: Backend might not support global history on this endpoint yet
-      // If it doesn't, this component would typically show current user's allocations or report data.
       setAllocations(response.content || []);
       setTotalItems(response.meta.totalElements || 0);
       setTotalPages(response.meta.totalPages || 1);
@@ -88,7 +85,7 @@ const AllocationList = () => {
           <h2 className="text-2xl font-extrabold text-text-heading tracking-tight">Organization Allocation Audit</h2>
           <p className="text-text-body text-sm mt-1 font-medium opacity-80">Full history of organizational hardware movements and custody.</p>
         </div>
-        <Button variant="outline" icon={Download} onClick={handleExportCSV} disabled={allocations.length === 0} className="shadow-sm bg-white">
+        <Button variant="outline" icon={Download} onClick={handleExportCSV} disabled={allocations.length === 0} className="shadow-sm bg-white border-outline-variant">
           Export Audit Log
         </Button>
       </div>
@@ -129,7 +126,7 @@ const AllocationList = () => {
       </Card>
 
       {/* Table */}
-      <Card padding="p-0" className="overflow-hidden shadow-sm">
+      <Card padding="p-0" className="overflow-hidden shadow-sm border-outline-variant">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>

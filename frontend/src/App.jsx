@@ -13,6 +13,7 @@ import UsersPage from './pages/UsersPage';
 import SpareLaptopsPage from './pages/SpareLaptopsPage';
 import SettingsPage from './pages/SettingsPage';
 import SupportPage from './pages/SupportPage';
+import AssetReportsPage from './pages/AssetReportsPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import RoleProtectedRoute from './components/auth/RoleProtectedRoute';
 
@@ -60,6 +61,7 @@ export default function App() {
           </Route>
 
           <Route path="/assets" element={<AssetsPage/>} />
+          <Route path="/assets/:assetId/reports" element={<AssetReportsPage/>} />
 
           {/* Registration: ADMIN only */}
           <Route element={<RoleProtectedRoute allowedRoles={['ADMIN']} />}>
