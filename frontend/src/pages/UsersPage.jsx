@@ -87,22 +87,13 @@ const UsersPage = () => {
       clearDeleteError();
       setSuccessMessage(null);
       
-      const result = await deleteUser(userId);
+      const success = await deleteUser(userId);
       
-      // Since delete returns 204 (undefined in our client), 
-      // we check the result of the hook execution.
-      // If result is undefined BUT there's no error, it succeeded.
-      // Wait, useAsyncOperation returns result OR undefined on error.
-      
-      // Let's check for deleteError instead
-      setTimeout(async () => {
-        // Use a small delay to ensure the error state has updated
-        if (!deleteError) {
-          setSuccessMessage(`User ${userEmail} deleted successfully.`);
-          fetchUsers();
-          setTimeout(() => setSuccessMessage(null), 5000);
-        }
-      }, 100);
+      if (success) {
+        setSuccessMessage(`User ${userEmail} deleted successfully.`);
+        fetchUsers();
+        setTimeout(() => setSuccessMessage(null), 5000);
+      }
     }
   };
 
@@ -140,7 +131,7 @@ const UsersPage = () => {
           <div>
             <p className="font-bold text-sm">Could not delete user</p>
             <p className="text-sm opacity-90">
-              {deleteError.status === 409 
+              {deleteError.status === 409 || (deleteError.status === 500 && deleteError.message === "An unexpected error occurred")
                 ? "This user has active or historical asset allocations and cannot be deleted. Try deactivating the account instead." 
                 : deleteError.message || "An unexpected error occurred."}
             </p>
@@ -182,7 +173,7 @@ const UsersPage = () => {
             <thead>
               <tr className="bg-slate-50 border-b border-outline-variant">
                 <th className="py-5 px-8 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest">Employee</th>
-                <th className="py-5 px-4 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest text-center">Role</th>
+                <th className="py-5 px-4 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest">Role</th>
                 <th className="py-5 px-4 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest text-center">Status</th>
                 <th className="py-5 px-4 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest">Date Joined</th>
                 <th className="py-5 px-8 text-[11px] font-extrabold text-gray-400 uppercase tracking-widest text-right">Actions</th>
@@ -270,7 +261,7 @@ const UsersPage = () => {
         {/* Footer / Pagination */}
         <div className="bg-slate-50 border-t border-outline-variant px-8 py-5 flex items-center justify-between">
           <span className="text-sm text-text-body font-bold opacity-70">
-            Showing <span className="text-text-heading">{users.length > 0 ? page * 10 + 1 : 0}</span> — <span className="text-text-heading">{Math.min((page + 1) * 10, totalItems)}</span> of <span className="font-bold text-text-heading">{totalItems}</span> members
+            Showing <span className="text-text-heading">{users.length > 0 ? page * 10 + 1 : 0}</span> — <span className="text-text-heading">{Math.min((page + 1) * 10, totalItems)}</span> of <span className="text-text-heading">{totalItems}</span> members
           </span>
           <div className="flex items-center gap-2">
             <button 

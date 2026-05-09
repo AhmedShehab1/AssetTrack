@@ -105,6 +105,6 @@ export const put = (url, data, config) =>
   apiClient.put(url, data, config).then((res) => res.data);
 
 export const del = (url, config) =>
-  apiClient.delete(url, config).then(() => undefined);
+  apiClient.delete(url, config).then(() => true);
 
 export default apiClient;
