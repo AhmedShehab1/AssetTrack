@@ -35,6 +35,12 @@ export const authService = {
    * @returns {Promise<void>}
    */
   changePassword: (body) => patch('/auth/me/password', body),
+
+  /**
+   * @param {{ email: string }} body
+   * @returns {Promise<void>}
+   */
+  forgotPassword: (body) => post('/auth/forgot-password', body),
 };
 
 export const userService = {

@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, Lock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useLogin } from '../../hooks/useAssetTrack';
 import Input from '../common/Input';
 import Button from '../common/Button';
@@ -52,7 +52,7 @@ const LoginForm = () => {
       
       <Input
         label="PASSWORD"
-        rightLabel="Forgot Password?"
+        rightLabel={<Link to="/forgot-password">Forgot Password?</Link>}
         type="password"
         placeholder="••••••••"
         icon={Lock}
