@@ -9,8 +9,8 @@ const AllocationModal = ({ isOpen, onClose, asset }) => {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={asset.brand + ' ' + asset.model}
-      subtitle={`SN: ${asset.serialNumber}`}
+      title={`${asset.brand} ${asset.model}`}
+      subtitle={`Inventory ID: ${asset.serialNumber}`}
     >
       <AllocationModalContent 
         assetId={asset.id} 

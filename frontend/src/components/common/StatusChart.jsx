@@ -26,8 +26,11 @@ const StatusChart = ({ data = [], total = 0, labels = [] }) => {
 
   const isEmpty = !data || data.length === 0 || data.every(v => v === 0);
 
+  // Unify labels: ASSIGNED -> ALLOCATED
+  const unifiedLabels = labels.map(l => l.toUpperCase() === 'ASSIGNED' ? 'Allocated' : l);
+
   const chartData = {
-    labels: labels.length > 0 ? labels : ['Available', 'Allocated'],
+    labels: unifiedLabels.length > 0 ? unifiedLabels : ['Available', 'Allocated'],
     datasets: [
       {
         data: isEmpty ? [1] : data,

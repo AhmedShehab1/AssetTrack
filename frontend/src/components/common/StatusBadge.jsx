@@ -21,6 +21,12 @@ const StatusBadge = ({ status, className = '' }) => {
           text: 'text-[#17A2B8]',
           dot: 'bg-[#17A2B8]'
         };
+      case 'SPARE':
+        return {
+          bg: 'bg-[#F0F2FF]',
+          text: 'text-[#3F51B5]',
+          dot: 'bg-[#3F51B5]'
+        };
       case 'UNDER_REPAIR':
         return {
           bg: 'bg-[#FFF9E6]',
@@ -43,6 +49,9 @@ const StatusBadge = ({ status, className = '' }) => {
   };
 
   const styles = getStatusStyles(status);
+  
+  // Unify display label: ASSIGNED -> ALLOCATED
+  const displayLabel = status?.toUpperCase() === 'ASSIGNED' ? 'ALLOCATED' : status?.replace('_', ' ');
 
   return (
     <span className={`
@@ -51,7 +60,7 @@ const StatusBadge = ({ status, className = '' }) => {
       ${styles.bg} ${styles.text} ${className}
     `}>
       <span className={`w-1.5 h-1.5 rounded-full ${styles.dot}`}></span>
-      {status?.replace('_', ' ')}
+      {displayLabel}
     </span>
   );
 };

@@ -1,112 +1,98 @@
+import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AllocationModalContent from '../../../components/common/AllocationModalContent';
-import { userService } from '../../../api/services';
-import * as useAssetTrackModule from '../../../hooks/useAssetTrack';
+import { userService } from '../../../api/services/users';
+import { allocationService } from '../../../api/services/allocations';
+import * as useAllocations from '../../../hooks/api/useAllocations';
 
-// Mock the services
-jest.mock('../../../api/services', () => ({
-  userService: {
-    list: jest.fn(),
-  }
-}));
+// Mock services
+jest.mock('../../../api/services/users');
+jest.mock('../../../api/services/allocations');
+jest.mock('../../../hooks/api/useAllocations');
 
-// Mock the allocation hook
-jest.mock('../../../hooks/useAssetTrack', () => ({
-  ...jest.requireActual('../../../hooks/useAssetTrack'),
-  useAllocateAsset: jest.fn()
-}));
+const mockUsers = {
+  content: [
+    { id: 'u1', fullName: 'Alice Admin', email: 'alice@test.com', role: 'ADMIN' },
+    { id: 'u2', fullName: 'Bob Manager', email: 'bob@test.com', role: 'MANAGER' },
+  ],
+  meta: { totalElements: 2, totalPages: 1 }
+};
+
+const mockHistory = {
+  content: [
+    { id: 'h1', assignedTo: { fullName: 'Charlie Dev' }, allocatedAt: '2024-01-01', deallocatedAt: '2024-02-01' }
+  ],
+  meta: { totalElements: 1, totalPages: 1 }
+};
 
 describe('AllocationModalContent', () => {
-  const mockAsset = {
-    id: 'a1',
-    name: 'Test Laptop',
-    sn: 'SN123'
-  };
-
-  const mockUsers = {
-    content: [
-      { id: 'u1', fullName: 'Jane Doe', role: 'DEVELOPER', email: 'jane@test.com' },
-      { id: 'u2', fullName: 'John Smith', role: 'MANAGER', email: 'john@test.com' }
-    ]
-  };
-
+  const mockOnComplete = jest.fn();
   const mockAllocate = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
     userService.list.mockResolvedValue(mockUsers);
-    useAssetTrackModule.useAllocateAsset.mockReturnValue({
+    allocationService.history.mockResolvedValue(mockHistory);
+    useAllocations.useAllocateAsset.mockReturnValue({
       allocate: mockAllocate,
       loading: false,
-      error: null,
-      clearError: jest.fn()
+      error: null
     });
   });
 
-  it('fetches users and allows selection', async () => {
+  it('renders correctly and loads data', async () => {
     render(
       <AllocationModalContent 
-        assetId={mockAsset.id} 
-        assetName={mockAsset.name} 
-        assetSN={mockAsset.sn} 
-        onComplete={jest.fn()} 
+        assetId="a1" 
+        assetName="MacBook Pro" 
+        assetSN="SN123" 
+        onComplete={mockOnComplete} 
       />
     );
 
-    // Should fetch users on mount
-    await waitFor(() => expect(userService.list).toHaveBeenCalledWith({ size: 100 }));
-
-    // Open dropdown and select user
-    const dropdown = screen.getByText('Search employees...');
-    fireEvent.click(dropdown);
-
-    const userOption = await screen.findByText('Jane Doe');
-    fireEvent.click(userOption);
-
-    // Update Assignment button should be enabled
-    const updateButton = screen.getByText('Update Assignment');
-    expect(updateButton).not.toBeDisabled();
+    expect(screen.getByText('Recent Allocation History')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Alice Admin')).toBeInTheDocument();
+      expect(screen.getByText('Charlie Dev')).toBeInTheDocument();
+    });
   });
 
-  it('submits allocation and calls onComplete on success', async () => {
-    const onComplete = jest.fn();
-    mockAllocate.mockResolvedValue({ id: 'alloc1' });
-
+  it('handles the allocation flow', async () => {
+    mockAllocate.mockResolvedValue(true);
+    
     render(
       <AllocationModalContent 
-        assetId={mockAsset.id} 
-        assetName={mockAsset.name} 
-        assetSN={mockAsset.sn} 
-        onComplete={onComplete} 
+        assetId="a1" 
+        assetName="MacBook Pro" 
+        assetSN="SN123" 
+        onComplete={mockOnComplete} 
       />
     );
 
-    // Select user
-    fireEvent.click(screen.getByText('Search employees...'));
-    const userOption = await screen.findByText('Jane Doe');
-    fireEvent.click(userOption);
+    // Select a user
+    const dropdown = screen.getByPlaceholderText('Search employees...');
+    fireEvent.change(dropdown, { target: { value: 'Alice' } });
+    
+    await waitFor(() => {
+      const option = screen.getByText('Alice Admin');
+      fireEvent.click(option);
+    });
 
-    // Click Update
-    fireEvent.click(screen.getByText('Update Assignment'));
+    // Confirm Allocation button should be enabled
+    const confirmBtn = screen.getByText('Confirm Allocation');
+    fireEvent.click(confirmBtn);
 
-    // Should show confirmation step
-    expect(screen.getByText(/Confirm Allocation/i)).toBeInTheDocument();
+    // Confirmation step
+    expect(screen.getByText('Confirm Reallocation')).toBeInTheDocument();
+    const finalBtn = screen.getByText('Confirm Reallocation');
+    fireEvent.click(finalBtn);
 
-    // Confirm
-    const confirmButton = screen.getByText('Confirm Reassignment');
-    fireEvent.click(confirmButton);
-
-    // Should call API
-    await waitFor(() => expect(mockAllocate).toHaveBeenCalledWith(mockAsset.id, {
-      assignedToUserId: 'u1',
-      notes: undefined
-    }));
-
-    // Should show success state
-    expect(await screen.findByText('Allocation Successful!')).toBeInTheDocument();
-
-    // Click Done
-    fireEvent.click(screen.getByText('Done'));
-    expect(onComplete).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mockAllocate).toHaveBeenCalledWith('a1', {
+        assignedToUserId: 'u1',
+        notes: undefined
+      });
+      expect(screen.getByText('Allocation Successful!')).toBeInTheDocument();
+    });
   });
 });

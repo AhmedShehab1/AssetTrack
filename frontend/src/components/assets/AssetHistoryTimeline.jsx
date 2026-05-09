@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, User as UserIcon, Clock, CheckCircle2 } from 'lucide-react';
+import { Calendar, User as UserIcon, Clock } from 'lucide-react';
 
 const AssetHistoryTimeline = ({ history = [], loading = false }) => {
   if (loading) {
@@ -14,16 +14,16 @@ const AssetHistoryTimeline = ({ history = [], loading = false }) => {
 
   if (history.length === 0) {
     return (
-      <div className="py-10 text-center bg-slate-50 rounded-2xl border border-dashed border-outline-variant">
-        <p className="text-sm text-text-body font-medium">No assignment history found.</p>
+      <div className="py-10 text-center bg-slate-50 rounded-2xl border border-dashed border-outline-variant font-sans">
+        <p className="text-sm text-text-body font-medium opacity-60">No allocation history found for this asset.</p>
       </div>
     );
   }
 
   return (
-    <div className="relative pl-6 space-y-8 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-outline-variant">
+    <div className="relative pl-6 space-y-8 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-0.5 before:bg-outline-variant font-sans">
       {history.map((entry, index) => (
-        <div key={entry.id || index} className="relative">
+        <div key={entry.id || entry.allocationId || index} className="relative">
           {/* Dot */}
           <div className={`
             absolute -left-[27px] top-2 w-3.5 h-3.5 rounded-full border-2 bg-white shadow-sm transition-colors
@@ -43,11 +43,11 @@ const AssetHistoryTimeline = ({ history = [], loading = false }) => {
             <div className="flex justify-between items-start mb-1">
               <div className="text-sm font-bold text-text-heading flex items-center gap-2">
                 <UserIcon size={14} className={!entry.deallocatedAt ? 'text-primary' : 'text-text-body'} />
-                {entry.assignedTo?.fullName || 'Unknown User'}
+                {entry.assignedTo?.fullName || 'Unknown Member'}
               </div>
               {!entry.deallocatedAt && (
                 <span className="text-[10px] font-extrabold tracking-widest bg-primary text-white px-2 py-0.5 rounded-full">
-                  CURRENT
+                  ACTIVE
                 </span>
               )}
             </div>

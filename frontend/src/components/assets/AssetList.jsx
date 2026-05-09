@@ -21,7 +21,8 @@ import {
   Calendar,
   Clock,
   RotateCcw,
-  Edit3
+  Edit3,
+  Plus
 } from 'lucide-react';
 import { assetService } from '../../api/services/assets';
 import { userService } from '../../api/services/users';
@@ -36,9 +37,11 @@ import AllocationModal from './AllocationModal';
 import AssetDetail from './AssetDetail';
 import AssetEditModal from './AssetEditModal';
 import ConditionReportModal from './ConditionReportModal';
+import { useNavigate } from 'react-router-dom';
 
 const AssetList = () => {
   const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
   const [assets, setAssets] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +63,7 @@ const AssetList = () => {
     search: '',
     brand: '',
     status: '',
-    assignedTo: ''
+    allocatedTo: ''
   });
   const [page, setPage] = useState(0);
   const [totalAssets, setTotalAssets] = useState(0);
@@ -83,9 +86,9 @@ const AssetList = () => {
       
       let content = response.content || [];
       
-      // Client-side filtering for 'Assigned To' as backend doesn't support it in main list
-      if (filters.assignedTo) {
-        content = content.filter(a => a.currentOwner?.id === filters.assignedTo);
+      // Client-side filtering for 'Allocated To' as backend doesn't support it in main list
+      if (filters.allocatedTo) {
+        content = content.filter(a => a.currentOwner?.id === filters.allocatedTo);
       }
 
       setAssets(content);
@@ -117,7 +120,7 @@ const AssetList = () => {
 
   useEffect(() => {
     fetchAssets();
-  }, [page, filters.status, filters.brand, filters.assignedTo]);
+  }, [page, filters.status, filters.brand, filters.allocatedTo]);
 
   useEffect(() => {
     fetchUsers();
@@ -164,6 +167,17 @@ const AssetList = () => {
     setActiveMenuId(null);
   };
 
+  const handleDeletAsset = async (asset) => {
+    if (!window.confirm(`Are you sure you want to permanently delete this ${asset.brand} asset?`)) return;
+    try {
+      await assetService.delete(asset.id);
+      fetchAssets();
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
+    setActiveMenuId(null);
+  }
+
   const getTypeIcon = (type) => {
     switch (type) {
       case 'LAPTOP': return <Laptop size={18} />;
@@ -197,9 +211,16 @@ const AssetList = () => {
           <h2 className="text-2xl font-extrabold text-text-heading tracking-tight">Asset Master List</h2>
           <p className="text-text-body text-sm mt-1 font-medium opacity-80">Full lifecycle management and organizational tracking.</p>
         </div>
-        <Button variant="outline" icon={Download} onClick={handleExportCSV} disabled={assets.length === 0} className="shadow-sm bg-white">
-          Export CSV
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" icon={Download} onClick={handleExportCSV} disabled={assets.length === 0} className="shadow-sm bg-white">
+            Export CSV
+          </Button>
+          {currentUser?.role === 'ADMIN' && (
+            <Button variant="primary" icon={Plus} onClick={() => navigate('/assets/register')} className="shadow-lg">
+              Register New Asset
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -255,11 +276,11 @@ const AssetList = () => {
           </div>
 
           <div className="flex flex-col space-y-1.5 w-full">
-            <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Assigned To</label>
+            <label className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Allocated To</label>
             <div className="relative">
               <select 
-                name="assignedTo"
-                value={filters.assignedTo}
+                name="allocatedTo"
+                value={filters.allocatedTo}
                 onChange={handleFilterChange}
                 disabled={currentUser?.role === 'DEVELOPER'}
                 className="w-full bg-white border border-gray-200 rounded-xl py-2.5 px-4 text-sm font-bold text-text-heading focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary appearance-none transition-all disabled:opacity-50"
@@ -353,12 +374,12 @@ const AssetList = () => {
                       {activeMenuId === asset.id && (
                         <div ref={menuRef} className="absolute right-6 top-[70%] mt-1 w-56 bg-white rounded-2xl shadow-2xl border border-outline-variant z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 origin-top-right">
                           <div className="p-2 space-y-0.5">
-                            {/* Reusing AllocationModalContent logic via the unified Modal action */}
+                            {/* Unified Details action (reusing dashboard component logic) */}
                             <button 
                               onClick={() => { setSelectedAsset(asset); setIsAllocModalOpen(true); setActiveMenuId(null); }}
                               className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-text-body hover:bg-slate-50 hover:text-primary rounded-xl transition-colors"
                             >
-                              <ArrowLeftRight size={16} /> Assignment & History
+                              <ArrowLeftRight size={16} /> Allocation & History
                             </button>
 
                             {currentUser?.role === 'ADMIN' && (
@@ -375,7 +396,7 @@ const AssetList = () => {
                                   onClick={() => { setSelectedAsset(asset); setIsAllocModalOpen(true); setActiveMenuId(null); }}
                                   className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-primary hover:bg-primary-light/30 rounded-xl transition-colors"
                                >
-                                 <UserPlus size={16} /> Assign to Member
+                                 <UserPlus size={16} /> Allocate to Member
                                </button>
                             )}
 
@@ -403,6 +424,18 @@ const AssetList = () => {
                             >
                               <ShieldAlert size={16} /> Report Issue
                             </button>
+
+                            {currentUser?.role === 'ADMIN' && (
+                              <>
+                                <div className="my-1 border-t border-outline-variant/50"></div>
+                                <button 
+                                  onClick={() => handleDeletAsset(asset)}
+                                  className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-danger hover:bg-danger-bg rounded-xl transition-colors"
+                                >
+                                  <Trash2 size={16} /> Delete Asset Record
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       )}
