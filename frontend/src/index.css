@@ -1,10 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Brand Colors */
-  --primary: #3F51B5;
-  --primary-dark: #303F9F;
-  --primary-light: #E8EAF6;
+  /* Brand Colors - Updated to match screenshot */
+  --primary: #253B95;
+  --primary-dark: #1A2A6C;
+  --primary-light: #E9ECF7;
   
   /* Semantic Colors */
   --success: #28A745;

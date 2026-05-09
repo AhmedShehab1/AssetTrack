@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/auth/AuthLayout';
-import Button from '../components/ui/Button';
+import Button from '../components/common/Button';
 import useAuthStore from '../store/useAuthStore';
 
 const UnauthorizedPage = () => {

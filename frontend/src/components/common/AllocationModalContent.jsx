@@ -42,7 +42,7 @@ const AllocationModalContent = ({ assetName, assetSN, onComplete }) => {
   React.useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await api.get('/users?size=100');
+        const res = await api.get('/users');
         // Map backend fullName to name for SearchableDropdown compatibility
         const mappedUsers = (res.data.content || []).map(user => ({
           ...user,
@@ -90,6 +90,7 @@ const AllocationModalContent = ({ assetName, assetSN, onComplete }) => {
         asset={assetName} 
         onConfirm={() => setStep('success')} 
         onCancel={() => setStep('form')} 
+        onComplete={onComplete}
       />
     );
   }
@@ -116,7 +117,7 @@ const AllocationModalContent = ({ assetName, assetSN, onComplete }) => {
 
       {/* Allocation History */}
       <div>
-        <h3 style={{ fontSize: '16px', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+        <h3 style={{ fontSize: '16px', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', fontWeight: '700' }}>
           Allocation History
         </h3>
         <div style={{ paddingLeft: '20px', borderLeft: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -135,7 +136,7 @@ const AllocationModalContent = ({ assetName, assetSN, onComplete }) => {
 
       {/* Actions */}
       <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '30px' }}>
-        <h3 style={{ fontSize: '18px', marginBottom: '20px' }}>Actions</h3>
+        <h3 style={{ fontSize: '18px', marginBottom: '20px', fontWeight: '700' }}>Actions</h3>
         
         <SearchableDropdown 
           label="Reassign Asset" 
