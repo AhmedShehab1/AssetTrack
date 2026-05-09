@@ -4,7 +4,8 @@ import Card from './Card';
 import SearchableDropdown from './SearchableDropdown';
 import Button from './Button';
 import ConfirmationStep from './ConfirmationStep';
-import api from '../../lib/axios';
+import { userService } from '../../api/services';
+import GlobalErrorAlert from '../errors/GlobalErrorAlert';
 
 const StatusBadge = ({ text, active }) => (
   <div style={{
@@ -38,19 +39,20 @@ const AllocationModalContent = ({ assetName, assetSN, onComplete }) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   React.useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await api.get('/users');
+        const data = await userService.list({ size: 100 });
         // Map backend fullName to name for SearchableDropdown compatibility
-        const mappedUsers = (res.data.content || []).map(user => ({
+        const mappedUsers = (data.content || []).map(user => ({
           ...user,
           name: user.fullName || user.email // Fallback to email as backend lacks fullName
         }));
         setUsers(mappedUsers);
-      } catch (error) {
-        console.error('Error fetching users:', error);
+      } catch (err) {
+        setError(err.message || 'Failed to load users');
       } finally {
         setLoading(false);
       }
@@ -97,6 +99,7 @@ const AllocationModalContent = ({ assetName, assetSN, onComplete }) => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+      {error && <GlobalErrorAlert message={error} onClose={() => setError(null)} />}
       {/* Quick Specs */}
       <div style={{ display: 'flex', gap: '12px' }}>
         <Card padding="16px" style={{ flex: 1, textAlign: 'center' }}>
