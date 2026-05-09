@@ -1,13 +1,12 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AllocationModalContent from '../components/common/AllocationModalContent';
-import api from '../lib/axios';
+import { userService } from '../api/services';
 import { vi } from 'vitest';
 
 // Mock the api instance
-vi.mock('../lib/axios', () => ({
-  default: {
-    get: vi.fn(),
-    post: vi.fn(),
+vi.mock('../api/services', () => ({
+  userService: {
+    list: vi.fn(),
   }
 }));
 
@@ -29,7 +28,7 @@ describe('AllocationModalContent', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.get.mockResolvedValue(mockUsers);
+    userService.list.mockResolvedValue(mockUsers.data);
   });
 
   it('fetches users and allows selection', async () => {
@@ -43,7 +42,7 @@ describe('AllocationModalContent', () => {
     );
 
     // Should fetch users on mount
-    await waitFor(() => expect(api.get).toHaveBeenCalledWith('/users', expect.anything()));
+    await waitFor(() => expect(userService.list).toHaveBeenCalledWith({ size: 100 }));
 
     // Open dropdown and select user
     const dropdown = screen.getByText('Search user...');
@@ -59,7 +58,7 @@ describe('AllocationModalContent', () => {
 
   it('submits allocation and calls onComplete on success', async () => {
     const onComplete = vi.fn();
-    api.post.mockResolvedValue({ data: { success: true } });
+    
 
     render(
       <AllocationModalContent 

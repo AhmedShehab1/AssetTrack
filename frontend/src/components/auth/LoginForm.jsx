@@ -7,8 +7,8 @@ import GlobalErrorAlert from '../errors/GlobalErrorAlert';
 import FormFieldError from '../errors/FormFieldError';
 import { useLogin } from '../../hooks/useAssetTrack';
 import { useAuth } from '../../hooks/useAuth';
-import Input from '../common/Input';
-import Button from '../common/Button';
+import Input from '../ui/Input';
+import Button from '../ui/Button';
 
 const loginSchema = z.object({
   email: z.string().regex(/^\S+@\S+\.\S+$/, 'Please enter a valid email address'),
