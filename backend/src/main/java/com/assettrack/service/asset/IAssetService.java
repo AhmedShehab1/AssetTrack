@@ -11,34 +11,36 @@ import com.assettrack.dto.asset.UpdateAssetRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
-
-import java.util.List;
 import java.util.UUID;
 
+/**
+ * Contract for asset lifecycle, search, and condition-report operations.
+ */
 public interface IAssetService {
-    Page<AssetResponse> searchAssets(AssetStatus status, AssetType type, String brand, String serialNumber,
-            Pageable pageable);
+        Page<AssetResponse> searchAssets(AssetStatus status, AssetType type, String brand, String serialNumber,
+                        Pageable pageable);
 
-    ConditionReportResponse createConditionReport(CreateConditionReportRequest request, Authentication authentication);
+        ConditionReportResponse createConditionReport(CreateConditionReportRequest request,
+                        Authentication authentication);
 
-    ConditionReportResponse createConditionReport(UUID assetId, String description, ConditionSeverity severity,
-            Authentication authentication);
+        ConditionReportResponse createConditionReport(UUID assetId, String description, ConditionSeverity severity,
+                        Authentication authentication);
 
-    Page<ConditionReportResponse> getConditionReports(Authentication authentication, Pageable pageable);
+        Page<ConditionReportResponse> getConditionReports(Authentication authentication, Pageable pageable);
 
-    Page<ConditionReportResponse> getReportsByAsset(UUID assetId, Authentication authentication, Pageable pageable);
+        Page<ConditionReportResponse> getReportsByAsset(UUID assetId, Authentication authentication, Pageable pageable);
 
-    ConditionReportResponse getReportById(UUID reportId, Authentication authentication);
+        ConditionReportResponse getReportById(UUID reportId, Authentication authentication);
 
-    ConditionReportResponse resolveReport(UUID reportId);
+        ConditionReportResponse resolveReport(UUID reportId);
 
-    AssetResponse registerAsset(CreateAssetRequest request);
+        AssetResponse registerAsset(CreateAssetRequest request);
 
-    AssetResponse getAssetById(UUID id);
+        AssetResponse getAssetById(UUID id);
 
-    AssetResponse updateAsset(UUID id, UpdateAssetRequest request);
+        AssetResponse updateAsset(UUID id, UpdateAssetRequest request);
 
-    void deleteAsset(UUID id);
+        void deleteAsset(UUID id);
 
-    void expireWarrantiedAssets();
+        void expireWarrantiedAssets();
 }

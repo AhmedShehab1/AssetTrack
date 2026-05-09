@@ -6,6 +6,9 @@ import com.assettrack.dto.user.UserResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+/**
+ * Mapper for user entities and user-facing DTOs.
+ */
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     @Mapping(target = "fullName", expression = "java(resolveFullName(user))")

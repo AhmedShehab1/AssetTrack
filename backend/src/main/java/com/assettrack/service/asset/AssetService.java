@@ -20,8 +20,7 @@ import com.assettrack.repository.asset.ConditionReportRepository;
 import com.assettrack.repository.user.UserRepository;
 import com.assettrack.security.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -31,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 
 /**
@@ -39,6 +37,7 @@ import java.util.UUID;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AssetService implements IAssetService {
 
     private final AssetRepository assetRepository;
@@ -47,7 +46,6 @@ public class AssetService implements IAssetService {
     private final UserRepository userRepository;
     private final AssetMapper assetMapper;
     private final SecurityUtils securityUtils;
-    private static final Logger log = LoggerFactory.getLogger(AssetService.class);
     // ──────────────────────────── Asset Search ────────────────────────────
 
     /**
@@ -128,7 +126,8 @@ public class AssetService implements IAssetService {
      * Returns all condition reports visible to the current user.
      */
     @Transactional(readOnly = true)
-    public org.springframework.data.domain.Page<ConditionReportResponse> getConditionReports(Authentication authentication, org.springframework.data.domain.Pageable pageable) {
+    public org.springframework.data.domain.Page<ConditionReportResponse> getConditionReports(
+            Authentication authentication, org.springframework.data.domain.Pageable pageable) {
         java.util.UUID userId = securityUtils.getCurrentUserId(authentication);
         org.springframework.data.domain.Page<ConditionReport> reports = securityUtils.isManagerOrAdmin(authentication)
                 ? conditionReportRepository.findAllByOrderByReportDateDesc(pageable)
@@ -150,7 +149,8 @@ public class AssetService implements IAssetService {
         java.util.UUID userId = securityUtils.getCurrentUserId(authentication);
         org.springframework.data.domain.Page<ConditionReport> reports = securityUtils.isManagerOrAdmin(authentication)
                 ? conditionReportRepository.findByAssetIdOrderByReportDateDesc(assetId, pageable)
-                : conditionReportRepository.findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId, pageable);
+                : conditionReportRepository.findByAssetIdAndReportedByIdOrderByReportDateDesc(assetId, userId,
+                        pageable);
 
         return reports.map(assetMapper::toResponse);
     }

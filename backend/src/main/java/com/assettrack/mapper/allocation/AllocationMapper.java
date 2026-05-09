@@ -9,6 +9,9 @@ import org.mapstruct.Mapping;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Mapper for allocation entities and DTOs.
+ */
 @Mapper(componentModel = "spring", uses = { com.assettrack.mapper.user.UserMapper.class,
         com.assettrack.mapper.asset.AssetMapper.class })
 public interface AllocationMapper {

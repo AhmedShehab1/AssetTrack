@@ -7,6 +7,9 @@ import org.springframework.security.core.Authentication;
 
 import java.util.UUID;
 
+/**
+ * Contract for in-app notification operations.
+ */
 public interface INotificationService {
     Page<NotificationResponse> getCurrentUserNotifications(Authentication authentication, Pageable pageable);
 

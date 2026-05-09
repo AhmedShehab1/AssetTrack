@@ -15,6 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
+/**
+ * Mapper for asset and condition report entities.
+ */
 @Mapper(componentModel = "spring", uses = { UserMapper.class })
 public abstract class AssetMapper {
 

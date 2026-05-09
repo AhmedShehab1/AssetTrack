@@ -8,7 +8,7 @@ jest.mock('../../lib/navigation.js', () => ({
 
 jest.mock('../../lib/apiBaseUrl.js', () => ({
   __esModule: true,
-  default: 'http://localhost:8080/api',
+  default: 'http://localhost:8080/api/v1',
 }));
 
 jest.mock('../../store/useAuthStore.js', () => ({
@@ -41,7 +41,7 @@ afterEach(() => {
 
 describe('instance configuration', () => {
   test('baseURL points to the Spring Boot API root', () => {
-    expect(axiosInstance.defaults.baseURL).toBe('http://localhost:8080/api');
+    expect(axiosInstance.defaults.baseURL).toBe('http://localhost:8080/api/v1');
   });
 
   test('timeout is 10 000 ms', () => {

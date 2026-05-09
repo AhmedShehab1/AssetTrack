@@ -9,6 +9,9 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
 
+/**
+ * Contract for asset allocation operations.
+ */
 public interface IAllocationService {
 
     AllocationResponseDto allocate(java.util.UUID assetId, AllocationRequestDto dto);

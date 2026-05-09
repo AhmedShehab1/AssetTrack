@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Legacy error response envelope kept for backward compatibility.
+ */
 @Data
 @Builder
 @NoArgsConstructor

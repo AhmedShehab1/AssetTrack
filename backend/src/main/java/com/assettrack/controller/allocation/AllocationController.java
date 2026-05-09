@@ -7,7 +7,6 @@ import com.assettrack.dto.common.PageUtils;
 import com.assettrack.dto.common.PagedResponse;
 import com.assettrack.service.allocation.IAllocationService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +19,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * Asset Allocation Controller for AssetTrack.
+ *
+ * Manages asset allocation operations including assigning assets to users and
+ * tracking allocation history.
+ * Provides functionality for asset checkout, return, and allocation history
+ * retrieval.
+ *
+ * Base URL: {@code /api/v1/assets/{assetId}/allocations}
+ */
 @RequestMapping("/assets/{assetId}/allocations")
 @RequiredArgsConstructor
 @RestController

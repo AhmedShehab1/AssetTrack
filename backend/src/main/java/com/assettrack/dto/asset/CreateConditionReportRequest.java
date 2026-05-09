@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
+/**
+ * Request payload for creating a condition report using an asset ID.
+ */
 @Data
 @Builder
 @NoArgsConstructor

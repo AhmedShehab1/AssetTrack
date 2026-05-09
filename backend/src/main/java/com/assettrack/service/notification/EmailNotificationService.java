@@ -9,6 +9,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+/**
+ * Email notification service used by alerting workflows.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j

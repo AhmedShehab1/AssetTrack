@@ -8,6 +8,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
+/**
+ * JWT utility service for token creation and validation.
+ */
 @Service
 public class JwtService {
 
@@ -21,7 +24,6 @@ public class JwtService {
         this.jwtEncoder = jwtEncoder;
         this.jwtDecoder = jwtDecoder;
     }
-
 
     public String generateToken(Map<String, Object> claims, Duration ttl) {
         Instant now = Instant.now();
@@ -42,8 +44,6 @@ public class JwtService {
         JwtClaimsSet claimSet = builder.build();
         return jwtEncoder.encode(JwtEncoderParameters.from(claimSet)).getTokenValue();
     }
-
-
 
     public Jwt validateToken(String token) {
         return jwtDecoder.decode(token);

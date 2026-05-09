@@ -1,6 +1,8 @@
 package com.assettrack.domain.user;
 
-
+/**
+ * Application roles that control access to backend operations.
+ */
 public enum Role {
 
     ADMIN("Admin"),

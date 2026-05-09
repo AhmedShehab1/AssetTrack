@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Pagination metadata included in paged responses.
+ */
 @Data
 @Builder
 @NoArgsConstructor

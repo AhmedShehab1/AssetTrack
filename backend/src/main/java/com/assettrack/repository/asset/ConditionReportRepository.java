@@ -9,6 +9,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Repository for asset condition reports.
+ */
 @Repository
 public interface ConditionReportRepository extends JpaRepository<ConditionReport, java.util.UUID> {
 
@@ -16,7 +19,8 @@ public interface ConditionReportRepository extends JpaRepository<ConditionReport
 
     Page<ConditionReport> findByAssetIdOrderByReportDateDesc(java.util.UUID assetId, Pageable pageable);
 
-    Page<ConditionReport> findByAssetIdAndReportedByIdOrderByReportDateDesc(java.util.UUID assetId, java.util.UUID userId, Pageable pageable);
+    Page<ConditionReport> findByAssetIdAndReportedByIdOrderByReportDateDesc(java.util.UUID assetId,
+            java.util.UUID userId, Pageable pageable);
 
     Page<ConditionReport> findByReportedByIdOrderByReportDateDesc(java.util.UUID userId, Pageable pageable);
 

@@ -17,6 +17,9 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Asset allocation entity representing a checkout record.
+ */
 @Entity
 @Table(name = "asset_allocations")
 @Data
@@ -25,26 +28,29 @@ import java.util.UUID;
 @AllArgsConstructor
 public class AssetAllocation {
 
+    /** Allocation identifier. */
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    // Many allocations → one asset
+    /** Allocated asset. */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "asset_id", nullable = false)
     private Asset asset;
 
-    // Many allocations → one user
+    /** User receiving the asset. */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    /** UTC checkout timestamp. */
     @Column(nullable = false)
     private LocalDateTime checkoutDate;
 
-    // null = currently active allocation
+    /** UTC return timestamp; null while the allocation is active. */
     private LocalDateTime returnDate;
 
+    /** Optional allocation notes. */
     @Column(length = 500)
     private String notes;
 }

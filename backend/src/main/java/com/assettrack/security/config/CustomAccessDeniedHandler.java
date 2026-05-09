@@ -13,6 +13,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.Instant;
 
+/**
+ * Handles 403 responses for access denied requests.
+ */
 @Component
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
@@ -23,7 +26,8 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     }
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException {
+    public void handle(HttpServletRequest request, HttpServletResponse response,
+            AccessDeniedException accessDeniedException) throws IOException {
         ApiError apiError = ApiError.builder()
                 .timestamp(Instant.now().toString())
                 .status(HttpStatus.FORBIDDEN.value())

@@ -7,6 +7,9 @@ import org.mapstruct.Mapper;
 import com.assettrack.mapper.user.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 
+/**
+ * Mapper for authentication responses.
+ */
 @Mapper(componentModel = "spring", uses = { UserMapper.class })
 public abstract class AuthMapper {
     @Autowired

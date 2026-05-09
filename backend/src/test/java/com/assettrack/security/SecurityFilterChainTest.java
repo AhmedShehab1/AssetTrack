@@ -2,17 +2,11 @@ package com.assettrack.security;
 
 import java.util.UUID;
 import com.assettrack.repository.user.UserRepository;
-import com.assettrack.service.asset.AssetService;
-import com.assettrack.service.auth.AuthService;
-import com.assettrack.service.dashboard.DashboardService;
-import com.assettrack.service.notification.NotificationService;
-import com.assettrack.service.user.UserService;
 import com.assettrack.dto.user.UserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import java.util.Collections;
-import java.util.List;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;

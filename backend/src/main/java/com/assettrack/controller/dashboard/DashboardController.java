@@ -14,6 +14,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Dashboard Controller for AssetTrack.
+ *
+ * Provides analytics and summary data for admin dashboard including asset
+ * inventories
+ * and status breakdowns.
+ *
+ * Base URL: {@code /api/v1/dashboard}
+ */
 @RestController
 @RequestMapping("/dashboard")
 @RequiredArgsConstructor
@@ -26,6 +35,11 @@ public class DashboardController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @Operation(summary = "Get dashboard summary", description = "Returns asset counts by status and type for the admin dashboard")
     @ApiResponse(responseCode = "200", description = "Dashboard summary retrieved", content = @Content(schema = @Schema(implementation = DashboardSummaryDto.class)))
+    /**
+     * Returns the dashboard summary.
+     *
+     * @return dashboard summary response
+     */
     public ResponseEntity<DashboardSummaryDto> getSummary() {
         return ResponseEntity.ok(dashboardService.getSummary());
     }

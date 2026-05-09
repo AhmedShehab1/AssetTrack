@@ -1,5 +1,10 @@
 package com.assettrack.exception;
 
-public class DuplicateSerialNumberException extends BaseException{
-    public DuplicateSerialNumberException(String message){super(message,409);}
+/**
+ * Exception thrown when an asset serial number is already registered.
+ */
+public class DuplicateSerialNumberException extends BaseException {
+    public DuplicateSerialNumberException(String message) {
+        super(message, 409);
+    }
 }

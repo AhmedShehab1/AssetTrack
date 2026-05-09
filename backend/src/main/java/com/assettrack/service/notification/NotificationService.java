@@ -13,9 +13,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Notification service for retrieving and updating user notifications.
+ */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationService implements INotificationService {
 
     private final NotificationRepository notificationRepository;
@@ -25,6 +30,7 @@ public class NotificationService implements INotificationService {
     @Transactional(readOnly = true)
     public Page<NotificationResponse> getCurrentUserNotifications(Authentication authentication, Pageable pageable) {
         String recipient = getCurrentUserEmail(authentication);
+        log.debug("Loading notifications for recipient {}", recipient);
         return notificationRepository.findByRecipient(recipient, pageable)
                 .map(this::toResponse);
     }
@@ -32,12 +38,15 @@ public class NotificationService implements INotificationService {
     @Transactional
     public NotificationResponse markAsRead(java.util.UUID notificationId, Authentication authentication) {
         String recipient = getCurrentUserEmail(authentication);
+        log.debug("Marking notification {} as read for recipient {}", notificationId, recipient);
         Notification notification = notificationRepository.findByIdAndRecipient(notificationId, recipient)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Notification not found with id: " + notificationId));
 
         notification.setRead(true);
-        return toResponse(notificationRepository.save(notification));
+        Notification saved = notificationRepository.save(notification);
+        log.info("Notification {} marked as read", notificationId);
+        return toResponse(saved);
     }
 
     private String getCurrentUserEmail(Authentication authentication) {

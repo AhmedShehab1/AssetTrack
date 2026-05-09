@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.time.Instant;
 
+/**
+ * Fallback controller that renders a structured ApiError response.
+ */
 @Controller
 public class CustomErrorController implements ErrorController {
 
@@ -33,10 +36,10 @@ public class CustomErrorController implements ErrorController {
             httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         }
 
-        String message = (exceptionMessage != null && !exceptionMessage.toString().isEmpty()) 
-                ? exceptionMessage.toString() 
+        String message = (exceptionMessage != null && !exceptionMessage.toString().isEmpty())
+                ? exceptionMessage.toString()
                 : httpStatus.getReasonPhrase();
-                
+
         String path = requestUri != null ? requestUri.toString() : request.getRequestURI();
 
         ApiError apiError = ApiError.builder()

@@ -20,6 +20,9 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 
+/**
+ * Loads RSA key resources and exposes JWT encoder and decoder beans.
+ */
 @Configuration
 @ConfigurationProperties(prefix = "rsa")
 public class RsaKeyProperties {

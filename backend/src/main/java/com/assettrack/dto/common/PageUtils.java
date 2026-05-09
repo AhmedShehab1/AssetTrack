@@ -2,6 +2,9 @@ package com.assettrack.dto.common;
 
 import org.springframework.data.domain.Page;
 
+/**
+ * Helper methods for mapping Spring Data pages to API responses.
+ */
 public class PageUtils {
 
     public static <T> PagedResponse<T> toPagedResponse(Page<T> page) {
