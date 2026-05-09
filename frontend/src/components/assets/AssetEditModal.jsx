@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Save, X, Box, Info, Calendar, ShieldCheck, Tag } from 'lucide-react';
+import { Save, Box, Info, Calendar, ShieldCheck, Tag } from 'lucide-react';
 import Modal from '../common/Modal';
 import Button from '../common/Button';
 import Input from '../common/Input';
 import { useUpdateAsset } from '../../hooks/api/useAssets';
-import { AssetType, AssetStatus } from '../../api/types';
+import { AssetStatus } from '../../api/types';
 import GlobalErrorAlert from '../errors/GlobalErrorAlert';
-import FormFieldError from '../errors/FormFieldError';
 
-const AssetEditModal = ({ isOpen, onClose, asset, onRefresh }) => {
+const AssetEditModal = ({ isOpen, onClose, asset, onRefresh, onUpdate }) => {
   const [formData, setFormData] = useState({
     brand: '',
     model: '',
@@ -44,7 +43,11 @@ const AssetEditModal = ({ isOpen, onClose, asset, onRefresh }) => {
     e.preventDefault();
     const result = await updateAsset(asset.id, formData);
     if (result) {
-      onRefresh?.();
+      if (onUpdate) {
+        onUpdate(asset.id, formData);
+      } else {
+        onRefresh?.();
+      }
       onClose();
     }
   };

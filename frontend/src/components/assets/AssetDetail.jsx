@@ -17,7 +17,7 @@ import Card from '../common/Card';
 import { allocationService } from '../../api/services/allocations';
 import { useAuth } from '../../hooks/useAssetTrack';
 
-const AssetDetail = ({ asset, isOpen, onClose, onRefresh, onEdit }) => {
+const AssetDetail = ({ asset, isOpen, onClose, onRefresh, onEdit, onUpdate }) => {
   const { user: currentUser } = useAuth();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -45,7 +45,11 @@ const AssetDetail = ({ asset, isOpen, onClose, onRefresh, onEdit }) => {
     setDeallocating(true);
     try {
       await allocationService.deallocate(asset.id);
-      onRefresh?.();
+      if (onUpdate) {
+        onUpdate(asset.id, { status: 'AVAILABLE', currentOwner: null });
+      } else {
+        onRefresh?.();
+      }
       onClose();
     } catch (err) {
       console.error("Deallocation failed", err);

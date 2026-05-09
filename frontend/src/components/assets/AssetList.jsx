@@ -139,11 +139,15 @@ const AssetList = () => {
     setPage(0);
   };
 
+  const handleAssetUpdate = (assetId, updates) => {
+    setAssets(prev => prev.map(a => a.id === assetId ? { ...a, ...updates } : a));
+  };
+
   const handleDeallocate = async (asset) => {
     if (!asset.currentOwner) return;
     try {
       await allocationService.deallocate(asset.id);
-      fetchAssets();
+      handleAssetUpdate(asset.id, { status: 'AVAILABLE', currentOwner: null });
     } catch (err) {
       console.error("Deallocation failed", err);
     }
@@ -153,7 +157,7 @@ const AssetList = () => {
   const handleQuickStatusUpdate = async (asset, newStatus) => {
     try {
       await assetService.update(asset.id, { status: newStatus });
-      fetchAssets();
+      handleAssetUpdate(asset.id, { status: newStatus });
     } catch (err) {
       console.error("Status update failed", err);
     }
@@ -448,6 +452,7 @@ const AssetList = () => {
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
         onRefresh={fetchAssets}
+        onUpdate={handleAssetUpdate}
         onEdit={(asset) => { setSelectedAsset(asset); setIsEditModalOpen(true); }}
       />
 
@@ -455,6 +460,7 @@ const AssetList = () => {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         asset={selectedAsset}
+        onUpdate={handleAssetUpdate}
         onRefresh={fetchAssets}
       />
 
