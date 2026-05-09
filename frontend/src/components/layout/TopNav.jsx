@@ -1,6 +1,7 @@
 import React from 'react';
-import { Search, Bell } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useAuth } from '../../hooks/useAssetTrack';
+import NotificationBell from './NotificationBell';
 
 const TopNav = () => {
   const { user } = useAuth();
@@ -28,10 +29,7 @@ const TopNav = () => {
 
       {/* Actions */}
       <div className="flex items-center gap-5">
-        <div className="relative cursor-pointer p-2 hover:bg-slate-50 rounded-lg transition-colors">
-          <Bell size={20} className="text-text-body" />
-          <div className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full border-2 border-white"></div>
-        </div>
+        <NotificationBell />
         
         <div className="flex items-center gap-2 border-l border-outline-variant pl-5">
           <div className="flex flex-col items-end mr-2">

@@ -7,7 +7,8 @@ import {
   Zap, 
   Laptop, 
   Eye,
-  Truck
+  Truck,
+  ShieldAlert
 } from 'lucide-react';
 import MetricCard from '../components/common/MetricCard';
 import StatusChart from '../components/common/StatusChart';
@@ -15,11 +16,13 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Modal from '../components/common/Modal';
 import AllocationModalContent from '../components/common/AllocationModalContent';
+import ConditionReportModal from '../components/assets/ConditionReportModal';
 import { dashboardService, assetService } from '../api/services';
 import GlobalErrorAlert from '../components/errors/GlobalErrorAlert';
 
 const DashboardPage = () => {
   const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
   const [selectedAsset, setSelectedAsset] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(null);
@@ -156,12 +159,20 @@ const DashboardPage = () => {
                       <div className="text-xs text-text-body">SN: {asset.serialNumber}</div>
                     </div>
                   </div>
-                  <Button variant="outline" onClick={() => {
-                    setSelectedAsset(asset);
-                    setIsModalOpen(true);
-                  }} icon={Eye}>
-                    View Details
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={() => {
+                      setSelectedAsset(asset);
+                      setIsModalOpen(true);
+                    }} icon={Eye}>
+                      View Details
+                    </Button>
+                    <Button variant="ghost" onClick={() => {
+                      setSelectedAsset(asset);
+                      setIsReportModalOpen(true);
+                    }} icon={ShieldAlert} className="text-warning hover:bg-warning/10">
+                      Report Issue
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -204,6 +215,13 @@ const DashboardPage = () => {
           onComplete={() => setIsModalOpen(false)}
         />
       </Modal>
+
+      {/* Condition Report Modal */}
+      <ConditionReportModal 
+        isOpen={isReportModalOpen}
+        onClose={() => setIsReportModalOpen(false)}
+        asset={selectedAsset}
+      />
     </div>
   );
 };
