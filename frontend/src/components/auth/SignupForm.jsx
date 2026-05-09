@@ -58,9 +58,10 @@ const SignupForm = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {apiError && (
-        <div className="bg-error-container text-on-error-container p-3 rounded-md text-sm border border-danger-expired/20">
-          {apiError}
-        </div>
+        <GlobalErrorAlert 
+          message={apiError} 
+          onClose={() => setApiError(null)} 
+        />
       )}
       
       <Input

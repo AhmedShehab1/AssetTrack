@@ -4,15 +4,18 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const StatusChart = ({ data, total }) => {
+const StatusChart = ({ data, labels = ['Available', 'Allocated'], total }) => {
   const chartData = {
-    labels: ['Available', 'Allocated'],
+    labels: labels,
     datasets: [
       {
-        data: data, // e.g., [210, 980]
+        data: data, // e.g., [210, 980, 50]
         backgroundColor: [
-          '#22c55e', // Available (Green)
-          '#3F51B5', // Allocated (Indigo)
+          '#22c55e', // Success/Available (Green)
+          '#3F51B5', // Primary/Allocated (Indigo)
+          '#f59e0b', // Warning/Maintenance (Orange)
+          '#ef4444', // Danger/Decommissioned (Red)
+          '#6366f1', // Other (Violet)
         ],
         borderWidth: 0,
         cutout: '80%',

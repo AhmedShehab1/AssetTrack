@@ -8,6 +8,7 @@ import api from '../../lib/axios';
 import { useAuth } from '../../hooks/useAuth';
 import Input from '../common/Input';
 import Button from '../common/Button';
+import GlobalErrorAlert from '../errors/GlobalErrorAlert';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -43,9 +44,10 @@ const LoginForm = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {apiError && (
-        <div className="bg-error-container text-on-error-container p-3 rounded-md text-sm border border-danger-expired/20">
-          {apiError}
-        </div>
+        <GlobalErrorAlert 
+          message={apiError} 
+          onClose={() => setApiError(null)} 
+        />
       )}
       <Input
         label="WORK EMAIL"

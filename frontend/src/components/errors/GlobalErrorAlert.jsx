@@ -48,10 +48,14 @@ const statusMeta = (status) => {
  *                                       Omit to render without a close button.
  * @param {string}   [props.className] - Additional CSS class(es) for layout.
  */
-const GlobalErrorAlert = ({ error, onDismiss, className }) => {
-  if (!error) return null;
+const GlobalErrorAlert = ({ error, message, onDismiss, onClose, className }) => {
+  // Normalize: handle both 'error' object and 'message' string
+  const activeError = error || (message ? { message, status: 0 } : null);
+  const handleDismiss = onDismiss || onClose;
 
-  const { modifier, icon } = statusMeta(error.status);
+  if (!activeError) return null;
+
+  const { modifier, icon } = statusMeta(activeError.status || 0);
   const rootClass = [
     styles.alert,
     styles[`alert--${modifier}`],
@@ -67,23 +71,23 @@ const GlobalErrorAlert = ({ error, onDismiss, className }) => {
       </span>
 
       <div className={styles.alert__body}>
-        <p className={styles.alert__message}>{error.message}</p>
+        <p className={styles.alert__message}>{activeError.message}</p>
 
         {/* Show status context for 5xx / network so devs can debug */}
-        {(error.status >= 500 || error.status === 0) && (
+        {(activeError.status >= 500 || activeError.status === 0) && (
           <p className={styles.alert__detail}>
-            {error.status === 0
+            {activeError.status === 0
               ? 'Could not connect to the server.'
-              : `Server error (HTTP ${error.status}). Please try again or contact support.`}
+              : `Server error (HTTP ${activeError.status}). Please try again or contact support.`}
           </p>
         )}
       </div>
 
-      {onDismiss && (
+      {handleDismiss && (
         <button
           type="button"
           className={styles.alert__dismiss}
-          onClick={onDismiss}
+          onClick={handleDismiss}
           aria-label="Dismiss error"
         >
           ×

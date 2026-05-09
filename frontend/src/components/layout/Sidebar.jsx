@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Package, History, Users, Settings, HelpCircle, LogOut, Plus } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import Button from '../common/Button';
@@ -7,15 +8,15 @@ const Sidebar = () => {
   const { logout } = useAuth();
   
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', active: true },
-    { icon: Package, label: 'Assets' },
-    { icon: History, label: 'Allocation' },
-    { icon: Users, label: 'Users' },
-    { icon: Settings, label: 'Settings' },
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
+    { icon: Package, label: 'Assets', path: '/assets' },
+    { icon: History, label: 'Allocation', path: '/allocation' },
+    { icon: Users, label: 'Users', path: '/users' },
+    { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
   const bottomItems = [
-    { icon: HelpCircle, label: 'Support' },
+    { icon: HelpCircle, label: 'Support', path: '/support' },
     { icon: LogOut, label: 'Logout', onClick: logout },
   ];
 
@@ -53,44 +54,70 @@ const Sidebar = () => {
 
       <nav style={{ flex: 1 }}>
         {menuItems.map((item, index) => (
-          <div key={index} style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px 24px',
-            color: item.active ? 'var(--primary)' : 'var(--text-secondary)',
-            backgroundColor: item.active ? 'var(--primary-light)' : 'transparent',
-            borderLeft: item.active ? '4px solid var(--primary)' : '4px solid transparent',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            fontSize: '14px',
-            fontWeight: item.active ? '700' : '500'
-          }}>
+          <NavLink 
+            key={index} 
+            to={item.path}
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 24px',
+              color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
+              backgroundColor: isActive ? 'var(--primary-light)' : 'transparent',
+              borderLeft: isActive ? '4px solid var(--primary)' : '4px solid transparent',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              fontSize: '14px',
+              fontWeight: isActive ? '700' : '500',
+              textDecoration: 'none'
+            })}
+          >
             <item.icon size={20} />
             {item.label}
-          </div>
+          </NavLink>
         ))}
       </nav>
 
       <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
         {bottomItems.map((item, index) => (
-          <div 
-            key={index} 
-            onClick={item.onClick}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 24px',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
-          >
-            <item.icon size={20} />
-            {item.label}
-          </div>
+          item.onClick ? (
+            <div 
+              key={index} 
+              onClick={item.onClick}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 24px',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              <item.icon size={20} />
+              {item.label}
+            </div>
+          ) : (
+            <NavLink 
+              key={index} 
+              to={item.path}
+              style={({ isActive }) => ({
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '12px 24px',
+                color: isActive ? 'var(--primary)' : 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                textDecoration: 'none'
+              })}
+            >
+              <item.icon size={20} />
+              {item.label}
+            </NavLink>
+          )
         ))}
       </div>
     </aside>

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { storeToken, clearToken } from '../api/client';
 
 const useAuthStore = create(
   persist(
@@ -9,10 +10,12 @@ const useAuthStore = create(
       isAuthenticated: false,
 
       login: (user, token) => {
+        storeToken(token);
         set({ user, token, isAuthenticated: true });
       },
 
       logout: () => {
+        clearToken();
         set({ user: null, token: null, isAuthenticated: false });
       },
     }),

@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Button = ({ children, variant = 'primary', className = '', icon: Icon, ...props }) => {
+const Button = ({ children, variant = 'primary', className = '', icon: Icon, style: customStyle, ...props }) => {
   const getVariantStyles = () => {
     switch (variant) {
       case 'primary':
@@ -42,7 +42,8 @@ const Button = ({ children, variant = 'primary', className = '', icon: Icon, ...
     fontWeight: '600',
     transition: 'all 0.2s ease',
     outline: 'none',
-    ...getVariantStyles()
+    ...getVariantStyles(),
+    ...customStyle
   };
 
   return (

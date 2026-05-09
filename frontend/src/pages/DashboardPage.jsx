@@ -124,7 +124,7 @@ const DashboardPage = () => {
           <Card>
             <h3 style={{ fontSize: '18px', marginBottom: '32px', fontWeight: '700' }}>Asset Status Distribution</h3>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around', gap: '40px' }}>
-              <StatusChart data={statusData} total={summary?.totalAssets || 0} />
+              <StatusChart data={statusData} labels={statusLabels} total={summary?.totalAssets || 0} />
               
               <div style={{ flex: 1, maxWidth: '300px' }}>
                 {statusLabels.map((label, idx) => (
