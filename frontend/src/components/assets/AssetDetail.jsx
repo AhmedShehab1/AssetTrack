@@ -7,7 +7,6 @@ import {
   ClipboardList,
   ShieldAlert,
   ArrowLeftRight,
-  Trash2,
   Edit3,
   Undo2
 } from 'lucide-react';
@@ -16,7 +15,6 @@ import StatusBadge from '../common/StatusBadge';
 import Button from '../common/Button';
 import Card from '../common/Card';
 import { allocationService } from '../../api/services/allocations';
-import { assetService } from '../../api/services/assets';
 import { useAuth } from '../../hooks/useAssetTrack';
 
 const AssetDetail = ({ asset, isOpen, onClose, onRefresh, onEdit }) => {
@@ -46,28 +44,13 @@ const AssetDetail = ({ asset, isOpen, onClose, onRefresh, onEdit }) => {
     if (!asset || deallocating) return;
     setDeallocating(true);
     try {
-      const response = await allocationService.history(asset.id, { active: true });
-      const activeAlloc = response.content?.[0];
-      if (activeAlloc) {
-        await allocationService.deallocate(asset.id, activeAlloc.id, { notes: 'Returned via details panel' });
-        onRefresh?.();
-        onClose();
-      }
+      await allocationService.deallocate(asset.id);
+      onRefresh?.();
+      onClose();
     } catch (err) {
       console.error("Deallocation failed", err);
     } finally {
       setDeallocating(false);
-    }
-  };
-
-  const handleDecommission = async () => {
-    if (!asset || !window.confirm('Are you sure you want to decommission this asset? This action is permanent.')) return;
-    try {
-      await assetService.update(asset.id, { status: 'DECOMMISSIONED' });
-      onRefresh?.();
-      onClose();
-    } catch (err) {
-      console.error("Decommission failed", err);
     }
   };
 
@@ -159,7 +142,7 @@ const AssetDetail = ({ asset, isOpen, onClose, onRefresh, onEdit }) => {
               )}
               
               <Button variant="outline" icon={ShieldAlert} className="w-full !justify-start text-warning">
-                Report Condition Issue
+                Report Issue
               </Button>
               
               {(currentUser?.role === 'ADMIN' || currentUser?.role === 'MANAGER') && (

@@ -142,12 +142,8 @@ const AssetList = () => {
   const handleDeallocate = async (asset) => {
     if (!asset.currentOwner) return;
     try {
-      const history = await allocationService.history(asset.id, { active: true });
-      const activeAlloc = history.content?.[0];
-      if (activeAlloc) {
-        await allocationService.deallocate(asset.id, activeAlloc.id, { notes: 'Returned via asset list' });
-        fetchAssets();
-      }
+      await allocationService.deallocate(asset.id);
+      fetchAssets();
     } catch (err) {
       console.error("Deallocation failed", err);
     }
