@@ -90,7 +90,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .email("alice.admin@company.com")
                 .passwordHash(passwordEncoder.encode("Admin@1234"))
                 .role(Role.ADMIN)
-                .active(true)
+                .isActive(true)
                 .createdAt(LocalDateTime.now().minusMonths(12))
                 .build();
 
@@ -101,7 +101,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .email("bob.manager@company.com")
                 .passwordHash(passwordEncoder.encode("Manager@1234"))
                 .role(Role.MANAGER)
-                .active(true)
+                .isActive(true)
                 .createdAt(LocalDateTime.now().minusMonths(10))
                 .build();
 
@@ -111,7 +111,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .email("carol.ops@company.com")
                 .passwordHash(passwordEncoder.encode("Manager@1234"))
                 .role(Role.MANAGER)
-                .active(true)
+                .isActive(true)
                 .createdAt(LocalDateTime.now().minusMonths(8))
                 .build();
 
@@ -122,7 +122,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .email("dave.dev@company.com")
                 .passwordHash(passwordEncoder.encode("Dev@12345"))
                 .role(Role.DEVELOPER)
-                .active(true)
+                .isActive(true)
                 .createdAt(LocalDateTime.now().minusMonths(6))
                 .build();
 
@@ -132,7 +132,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .email("eve.eng@company.com")
                 .passwordHash(passwordEncoder.encode("Dev@12345"))
                 .role(Role.DEVELOPER)
-                .active(true)
+                .isActive(true)
                 .createdAt(LocalDateTime.now().minusMonths(5))
                 .build();
 
@@ -142,7 +142,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .email("frank.fe@company.com")
                 .passwordHash(passwordEncoder.encode("Dev@12345"))
                 .role(Role.DEVELOPER)
-                .active(true)
+                .isActive(true)
                 .createdAt(LocalDateTime.now().minusMonths(4))
                 .build();
 
@@ -152,7 +152,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .email("grace.be@company.com")
                 .passwordHash(passwordEncoder.encode("Dev@12345"))
                 .role(Role.DEVELOPER)
-                .active(true)
+                .isActive(true)
                 .createdAt(LocalDateTime.now().minusMonths(3))
                 .build();
 
@@ -163,7 +163,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .email("henry.former@company.com")
                 .passwordHash(passwordEncoder.encode("Dev@12345"))
                 .role(Role.DEVELOPER)
-                .active(false)
+                .isActive(false)
                 .createdAt(LocalDateTime.now().minusMonths(14))
                 .updatedAt(LocalDateTime.now().minusMonths(1))
                 .build();
