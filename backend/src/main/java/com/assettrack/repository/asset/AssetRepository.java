@@ -14,6 +14,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Repository for tracked assets.
+ */
 @Repository
 public interface AssetRepository extends JpaRepository<Asset, java.util.UUID>, JpaSpecificationExecutor<Asset> {
 
@@ -35,11 +38,13 @@ public interface AssetRepository extends JpaRepository<Asset, java.util.UUID>, J
 
     interface StatusCount {
         AssetStatus getStatus();
+
         Long getCount();
     }
 
     interface TypeCount {
         AssetType getType();
+
         Long getCount();
     }
 }

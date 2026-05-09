@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * Legacy validation error response envelope.
+ */
 @Data
 @Builder
 @NoArgsConstructor

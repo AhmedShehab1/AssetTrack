@@ -6,6 +6,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+/**
+ * Main Spring Boot application entry point for AssetTrack.
+ */
 @SpringBootApplication
 @EnableScheduling
 @EnableConfigurationProperties(RsaKeyProperties.class)

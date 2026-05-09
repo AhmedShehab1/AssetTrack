@@ -23,6 +23,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * Asset Condition Report Controller for AssetTrack.
+ *
+ * Manages asset condition reporting functionality including creation,
+ * retrieval, and resolution of condition reports.
+ * Allows users to report asset conditions and administrators to track asset
+ * health status.
+ *
+ * Base URL: {@code /api/v1/assets}
+ */
 @RestController
 @RequestMapping("/assets")
 @RequiredArgsConstructor
@@ -38,6 +48,14 @@ public class ConditionController {
     @ApiResponse(responseCode = "403", description = "Forbidden when a regular user does not own the asset")
     @ApiResponse(responseCode = "404", description = "Asset not found")
     @ApiResponse(responseCode = "422", description = "Validation error")
+    /**
+     * Creates a condition report for an asset.
+     *
+     * @param assetId        asset identifier
+     * @param request        condition report payload
+     * @param authentication current authentication context
+     * @return created condition report response
+     */
     public ResponseEntity<ConditionReportResponse> reportAssetCondition(
             @Parameter(description = "Asset ID") @PathVariable UUID assetId,
             @RequestBody @Validated ReportConditionRequest request,
@@ -57,6 +75,13 @@ public class ConditionController {
     @ApiResponse(responseCode = "403", description = "Forbidden when a regular user does not own the asset")
     @ApiResponse(responseCode = "404", description = "Asset not found")
     @ApiResponse(responseCode = "422", description = "Validation error")
+    /**
+     * Creates a legacy condition report.
+     *
+     * @param request        legacy condition report payload
+     * @param authentication current authentication context
+     * @return created condition report response
+     */
     public ResponseEntity<ConditionReportResponse> createConditionReport(
             @RequestBody @Validated CreateConditionReportRequest request,
             Authentication authentication) {
@@ -68,7 +93,15 @@ public class ConditionController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "List condition reports", description = "Managers and admins see all reports. Regular users see only reports they submitted.")
     @ApiResponse(responseCode = "200", description = "Reports retrieved")
-    public ResponseEntity<PagedResponse<ConditionReportResponse>> getConditionReports(Authentication authentication, Pageable pageable) {
+    /**
+     * Lists condition reports visible to the current user.
+     *
+     * @param authentication current authentication context
+     * @param pageable       pagination parameters
+     * @return paged condition report response
+     */
+    public ResponseEntity<PagedResponse<ConditionReportResponse>> getConditionReports(Authentication authentication,
+            Pageable pageable) {
         return ResponseEntity.ok(PageUtils.toPagedResponse(assetService.getConditionReports(authentication, pageable)));
     }
 
@@ -77,10 +110,19 @@ public class ConditionController {
     @Operation(summary = "List condition reports for an asset", description = "Managers and admins see all reports for the asset. Regular users see only reports they submitted.")
     @ApiResponse(responseCode = "200", description = "Reports retrieved")
     @ApiResponse(responseCode = "404", description = "Asset not found")
+    /**
+     * Lists condition reports for a specific asset.
+     *
+     * @param assetId        asset identifier
+     * @param authentication current authentication context
+     * @param pageable       pagination parameters
+     * @return paged condition report response
+     */
     public ResponseEntity<PagedResponse<ConditionReportResponse>> getReportsByAsset(
             @Parameter(description = "Asset ID") @PathVariable UUID assetId,
             Authentication authentication, Pageable pageable) {
-        return ResponseEntity.ok(PageUtils.toPagedResponse(assetService.getReportsByAsset(assetId, authentication, pageable)));
+        return ResponseEntity
+                .ok(PageUtils.toPagedResponse(assetService.getReportsByAsset(assetId, authentication, pageable)));
     }
 
     @GetMapping("/condition-reports/{reportId}")
@@ -89,6 +131,13 @@ public class ConditionController {
     @ApiResponse(responseCode = "200", description = "Report found", content = @Content(schema = @Schema(implementation = ConditionReportResponse.class)))
     @ApiResponse(responseCode = "403", description = "Forbidden when a regular user does not own the report")
     @ApiResponse(responseCode = "404", description = "Report not found")
+    /**
+     * Returns a condition report by ID.
+     *
+     * @param reportId       report identifier
+     * @param authentication current authentication context
+     * @return condition report response
+     */
     public ResponseEntity<ConditionReportResponse> getConditionReport(
             @Parameter(description = "Condition Report ID") @PathVariable UUID reportId,
             Authentication authentication) {
@@ -101,6 +150,12 @@ public class ConditionController {
     @ApiResponse(responseCode = "200", description = "Report resolved", content = @Content(schema = @Schema(implementation = ConditionReportResponse.class)))
     @ApiResponse(responseCode = "404", description = "Report not found")
     @ApiResponse(responseCode = "403", description = "Forbidden when Admin or Manager role is missing")
+    /**
+     * Resolves a condition report.
+     *
+     * @param reportId report identifier
+     * @return updated condition report response
+     */
     public ResponseEntity<ConditionReportResponse> resolveReport(
             @Parameter(description = "Condition Report ID") @PathVariable UUID reportId) {
         return ResponseEntity.ok(assetService.resolveReport(reportId));

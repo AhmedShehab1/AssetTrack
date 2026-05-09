@@ -12,6 +12,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+/**
+ * Full asset response returned by asset endpoints.
+ */
 @Data
 @Builder
 @NoArgsConstructor

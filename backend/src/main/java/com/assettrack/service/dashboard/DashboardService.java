@@ -18,9 +18,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Dashboard service for aggregate inventory and analytics queries.
+ */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DashboardService implements IDashboardService {
 
         private final AssetRepository assetRepository;
@@ -28,6 +33,7 @@ public class DashboardService implements IDashboardService {
         private final UserMapper userMapper;
 
         public DashboardSummaryDto getSummary() {
+                log.debug("Building dashboard summary");
                 long totalAssets = assetRepository.count();
 
                 Map<AssetStatus, Long> statusCounts = assetRepository.countByStatus().stream()
@@ -58,13 +64,17 @@ public class DashboardService implements IDashboardService {
 
         @Transactional(readOnly = true)
         public SpareAssetResponse getQuickSpareLaptop() {
+                log.debug("Fetching quick spare laptop");
                 return assetRepository
                                 .findFirstByTypeAndStatusOrderByCreatedAtAsc(AssetType.LAPTOP, AssetStatus.AVAILABLE)
                                 .map(asset -> new SpareAssetResponse(
                                                 assetMapper.toResponse(asset),
                                                 resolveLastOwner(asset),
                                                 resolveLastDeallocatedAt(asset)))
-                                .orElseThrow(() -> new ResourceNotFoundException("No available spare laptop found."));
+                                .orElseThrow(() -> {
+                                        log.warn("No available spare laptop found");
+                                        return new ResourceNotFoundException("No available spare laptop found.");
+                                });
         }
 
         private UserSummary resolveLastOwner(com.assettrack.domain.asset.Asset asset) {

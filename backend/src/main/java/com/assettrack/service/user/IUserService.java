@@ -9,6 +9,9 @@ import org.springframework.security.core.Authentication;
 
 import java.util.UUID;
 
+/**
+ * Contract for user account and profile operations.
+ */
 public interface IUserService {
     UserResponse getMyProfile(Authentication authentication);
 

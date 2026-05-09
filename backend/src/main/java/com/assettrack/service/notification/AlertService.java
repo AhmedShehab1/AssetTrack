@@ -9,6 +9,9 @@ import org.springframework.web.util.HtmlUtils;
 
 import java.util.List;
 
+/**
+ * Scheduled alert service for low-stock notifications.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j

@@ -8,6 +8,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Request payload for reporting an asset condition through the asset route.
+ */
 @Data
 @Builder
 @NoArgsConstructor

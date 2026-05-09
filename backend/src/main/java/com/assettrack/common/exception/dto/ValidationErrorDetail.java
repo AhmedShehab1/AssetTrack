@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Detailed validation error entry used by legacy responses.
+ */
 @Data
 @Builder
 @NoArgsConstructor

@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * Standard error envelope returned by the global exception handler.
+ */
 @Data
 @Builder
 @NoArgsConstructor

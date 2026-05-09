@@ -1,5 +1,8 @@
 package com.assettrack.domain.notification;
 
+/**
+ * Notification categories supported by the system.
+ */
 public enum NotificationType {
     WARRANTY_EXPIRY,
     LOW_STOCK,

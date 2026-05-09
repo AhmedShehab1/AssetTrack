@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * Request payload for allocating an asset to a user.
+ */
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor

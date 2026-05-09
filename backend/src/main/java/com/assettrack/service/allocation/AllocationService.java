@@ -13,26 +13,28 @@ import com.assettrack.repository.asset.AssetAllocationRepository;
 import com.assettrack.repository.asset.AssetRepository;
 import com.assettrack.repository.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import com.assettrack.exception.ResourceNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Allocation service for assigning and returning assets.
+ */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AllocationService implements IAllocationService {
 
     private final AssetRepository assetRepository;
     private final UserRepository userRepository;
     private final AssetAllocationRepository allocationRepository;
     private final AllocationMapper allocationMapper;
-    private static final Logger log = LoggerFactory.getLogger(AllocationService.class);
 
     /**
      * Allocates an available asset to a user.
@@ -66,6 +68,7 @@ public class AllocationService implements IAllocationService {
     }
 
     public AllocationResponseDto getAllocationById(UUID allocationId, UUID assetId) {
+        log.debug("Loading allocation {} for asset {}", allocationId, assetId);
         AssetAllocation assetAllocation = allocationRepository.findById(allocationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Allocation not found"));
         if (!assetAllocation.getAsset().getId().equals(assetId)) {
@@ -99,6 +102,7 @@ public class AllocationService implements IAllocationService {
         asset.setStatus(AssetStatus.AVAILABLE);
         assetRepository.save(asset);
         allocationRepository.save(allocation);
+        log.info("Asset {} deallocated successfully", assetId);
     }
 
     /**
@@ -112,6 +116,7 @@ public class AllocationService implements IAllocationService {
     @Override
     @Transactional(readOnly = true)
     public Page<AllocationHistoryDto> getAllocationHistory(java.util.UUID assetId, Pageable pageable) {
+        log.debug("Loading allocation history for asset {}", assetId);
         assetRepository.findById(assetId)
                 .orElseThrow(() -> new ResourceNotFoundException("Asset is not found"));
         return allocationRepository.findByAssetId(assetId, pageable)

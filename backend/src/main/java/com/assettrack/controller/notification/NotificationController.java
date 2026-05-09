@@ -18,6 +18,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+/**
+ * Notification Controller for AssetTrack.
+ *
+ * Manages in-app user notifications including retrieval, marking as read,
+ * and notification preferences management.
+ *
+ * Base URL: {@code /api/v1/notifications}
+ */
 @RestController
 @RequestMapping("/notifications")
 @RequiredArgsConstructor
@@ -30,8 +38,17 @@ public class NotificationController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "List my notifications", description = "Returns paginated in-app alerts for the authenticated user.")
     @ApiResponse(responseCode = "200", description = "Notifications retrieved")
-    public ResponseEntity<PagedResponse<NotificationResponse>> getNotifications(Authentication authentication, Pageable pageable) {
-        return ResponseEntity.ok(PageUtils.toPagedResponse(notificationService.getCurrentUserNotifications(authentication, pageable)));
+    /**
+     * Returns the current user's notifications.
+     *
+     * @param authentication current authentication context
+     * @param pageable       pagination parameters
+     * @return paged notification response
+     */
+    public ResponseEntity<PagedResponse<NotificationResponse>> getNotifications(Authentication authentication,
+            Pageable pageable) {
+        return ResponseEntity.ok(
+                PageUtils.toPagedResponse(notificationService.getCurrentUserNotifications(authentication, pageable)));
     }
 
     @PatchMapping("/{notificationId}/read")
@@ -39,6 +56,13 @@ public class NotificationController {
     @Operation(summary = "Mark notification as read", description = "Marks one of the authenticated user's notifications as read.")
     @ApiResponse(responseCode = "200", description = "Notification marked as read", content = @Content(schema = @Schema(implementation = NotificationResponse.class)))
     @ApiResponse(responseCode = "404", description = "Notification not found")
+    /**
+     * Marks a notification as read.
+     *
+     * @param notificationId notification identifier
+     * @param authentication current authentication context
+     * @return updated notification response
+     */
     public ResponseEntity<NotificationResponse> markAsRead(
             @PathVariable UUID notificationId,
             Authentication authentication) {

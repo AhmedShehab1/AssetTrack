@@ -4,6 +4,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import java.util.List;
 
+/**
+ * Non-production inventory port implementation that returns sample data.
+ */
 @Component
 @Profile("!prod")
 public class MockInventoryCheckPort implements InventoryCheckPort {
@@ -11,8 +14,7 @@ public class MockInventoryCheckPort implements InventoryCheckPort {
     public List<LowStockItem> getLowStockItems(int threshold) {
         // Mock data to return items with stock < threshold
         return List.of(
-            new LowStockItem("Laptop Charger", 2),
-            new LowStockItem("Wireless Mouse", 4)
-        );
+                new LowStockItem("Laptop Charger", 2),
+                new LowStockItem("Wireless Mouse", 4));
     }
 }

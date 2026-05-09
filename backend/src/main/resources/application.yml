@@ -16,8 +16,8 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: create
-    show-sql: true
+      ddl-auto: validate
+    show-sql: false
   config:
     import: "optional:file:.env[.properties]"
   mail:
@@ -32,6 +32,8 @@ spring:
           starttls:
             enable: true
 
+cors:
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:8080}
 mail:
   from: ${MAIL_FROM:no-reply@assettrack.local}
 
