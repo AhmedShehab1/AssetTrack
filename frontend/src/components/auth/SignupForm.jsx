@@ -6,8 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import GlobalErrorAlert from '../errors/GlobalErrorAlert';
 import FormFieldError from '../errors/FormFieldError';
 import { useSignup } from '../../hooks/useAssetTrack';
-import Input from '../ui/Input';
-import Button from '../ui/Button';
+import Input from '../common/Input';
+import Button from '../common/Button';
 
 const PASSWORD_PATTERN = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
 
