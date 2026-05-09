@@ -8,7 +8,8 @@ import {
   Settings, 
   HelpCircle, 
   LogOut, 
-  Plus 
+  Plus,
+  Laptop
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAssetTrack';
 import Button from '../common/Button';
@@ -20,6 +21,7 @@ const Sidebar = () => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: Package, label: 'Assets', path: '/assets' },
     { icon: History, label: 'Allocation', path: '/allocations' },
+    { icon: Laptop, label: 'Spare Laptops', path: '/spare-laptops' },
     { icon: Users, label: 'Users', path: '/users' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];

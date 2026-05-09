@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Package, 
   CheckCircle2, 
@@ -21,6 +22,7 @@ import { dashboardService, assetService } from '../api/services';
 import GlobalErrorAlert from '../components/errors/GlobalErrorAlert';
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = React.useState(false);
   const [selectedAsset, setSelectedAsset] = React.useState(null);
@@ -190,7 +192,12 @@ const DashboardPage = () => {
               Instantly locate hardware for new hires or immediate replacements.
             </p>
             <div className="flex flex-col gap-4">
-              <Button variant="primary" icon={Laptop} className="w-full !justify-start">
+              <Button 
+                variant="primary" 
+                icon={Laptop} 
+                className="w-full !justify-start"
+                onClick={() => navigate('/spare-laptops')}
+              >
                 Find Available Spare Laptop
               </Button>
               <Button variant="outline" icon={Truck} className="w-full !justify-start">
