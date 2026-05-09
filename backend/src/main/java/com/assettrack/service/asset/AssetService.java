@@ -224,6 +224,13 @@ public class AssetService implements IAssetService {
             throw new DuplicateSerialNumberException(
                     "Asset with serial number " + request.getSerialNumber() + " already exists");
         }
+
+        // Validate status transition: Cannot set DECOMMISSIONED if currently ALLOCATED
+        if (request.getStatus() == AssetStatus.DECOMMISSIONED && asset.getStatus() == AssetStatus.ALLOCATED) {
+            log.warn("Attempted to decommission an allocated asset: {}", id);
+            throw new ConflictException("Cannot decommission an asset that is currently ALLOCATED. Please return it to inventory first.");
+        }
+
         assetMapper.updateAssetFromRequest(request, asset);
         return assetMapper.toResponse(assetRepository.save(asset));
     }

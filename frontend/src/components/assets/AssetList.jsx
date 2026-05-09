@@ -20,7 +20,8 @@ import {
   Undo2,
   Calendar,
   Clock,
-  RotateCcw
+  RotateCcw,
+  Edit3
 } from 'lucide-react';
 import { assetService } from '../../api/services/assets';
 import { userService } from '../../api/services/users';
@@ -33,6 +34,7 @@ import Card from '../common/Card';
 import { AssetType, AssetStatus } from '../../api/types';
 import AllocationModal from './AllocationModal';
 import AssetDetail from './AssetDetail';
+import AssetEditModal from './AssetEditModal';
 import ConditionReportModal from './ConditionReportModal';
 
 const AssetList = () => {
@@ -51,6 +53,7 @@ const AssetList = () => {
   const [isAllocModalOpen, setIsAllocModalOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   // Pagination & Filtering state
   const [filters, setFormFilters] = useState({
@@ -73,7 +76,8 @@ const AssetList = () => {
         page, 
         size: 10,
         // Backend supports status, type, brand, serialNumber
-        brand: filters.search || filters.brand || undefined,
+        brand: filters.brand || (filters.search?.length > 2 ? filters.search : undefined),
+        serialNumber: (filters.search?.length > 4 ? filters.search : undefined),
         status: filters.status || undefined,
       });
       
@@ -88,7 +92,7 @@ const AssetList = () => {
       setTotalAssets(response.meta.totalElements);
       setTotalPages(response.meta.totalPages);
 
-      // Extract unique brands for the filter dropdown if we haven't already or from a larger set
+      // Extract unique brands for the filter dropdown
       if (availableBrands.length === 0) {
         const fullSet = await assetService.list({ size: 100 });
         const brands = [...new Set(fullSet.content.map(a => a.brand))].sort();
@@ -349,20 +353,22 @@ const AssetList = () => {
                       {activeMenuId === asset.id && (
                         <div ref={menuRef} className="absolute right-6 top-[70%] mt-1 w-56 bg-white rounded-2xl shadow-2xl border border-outline-variant z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-150 origin-top-right">
                           <div className="p-2 space-y-0.5">
-                            {/* Unified Details action (reusing dashboard component logic) */}
+                            {/* Reusing AllocationModalContent logic via the unified Modal action */}
                             <button 
                               onClick={() => { setSelectedAsset(asset); setIsAllocModalOpen(true); setActiveMenuId(null); }}
                               className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-text-body hover:bg-slate-50 hover:text-primary rounded-xl transition-colors"
                             >
                               <ArrowLeftRight size={16} /> Assignment & History
                             </button>
-                            
-                            <button 
-                              onClick={() => { setSelectedAsset(asset); setIsDetailOpen(true); setActiveMenuId(null); }}
-                              className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-text-body hover:bg-slate-50 hover:text-primary rounded-xl transition-colors"
-                            >
-                              <Eye size={16} /> Comprehensive Profile
-                            </button>
+
+                            {currentUser?.role === 'ADMIN' && (
+                              <button 
+                                onClick={() => { setSelectedAsset(asset); setIsEditModalOpen(true); setActiveMenuId(null); }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-text-body hover:bg-slate-50 hover:text-primary rounded-xl transition-colors"
+                              >
+                                <Edit3 size={16} /> Edit Asset Details
+                              </button>
+                            )}
 
                             {(currentUser?.role === 'ADMIN' || currentUser?.role === 'MANAGER') && !asset.currentOwner && (
                                <button 
@@ -395,7 +401,7 @@ const AssetList = () => {
                               onClick={() => { setSelectedAsset(asset); setIsReportModalOpen(true); setActiveMenuId(null); }}
                               className="w-full flex items-center gap-3 px-3 py-2.5 text-xs font-bold text-warning hover:bg-warning-bg rounded-xl transition-colors"
                             >
-                              <ShieldAlert size={16} /> Report Condition Issue
+                              <ShieldAlert size={16} /> Report Issue
                             </button>
 
                             {currentUser?.role === 'ADMIN' && (
@@ -457,6 +463,14 @@ const AssetList = () => {
         asset={selectedAsset}
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
+        onRefresh={fetchAssets}
+        onEdit={(asset) => { setSelectedAsset(asset); setIsEditModalOpen(true); }}
+      />
+
+      <AssetEditModal 
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        asset={selectedAsset}
         onRefresh={fetchAssets}
       />
 

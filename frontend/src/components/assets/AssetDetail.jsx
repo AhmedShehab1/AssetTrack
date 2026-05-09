@@ -19,7 +19,7 @@ import { allocationService } from '../../api/services/allocations';
 import { assetService } from '../../api/services/assets';
 import { useAuth } from '../../hooks/useAssetTrack';
 
-const AssetDetail = ({ asset, isOpen, onClose, onRefresh }) => {
+const AssetDetail = ({ asset, isOpen, onClose, onRefresh, onEdit }) => {
   const { user: currentUser } = useAuth();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -148,7 +148,12 @@ const AssetDetail = ({ asset, isOpen, onClose, onRefresh }) => {
             
             <div className="grid grid-cols-1 gap-3">
               {currentUser?.role === 'ADMIN' && (
-                <Button variant="outline" icon={Edit3} className="w-full !justify-start">
+                <Button 
+                  variant="outline" 
+                  icon={Edit3} 
+                  className="w-full !justify-start"
+                  onClick={() => { onEdit?.(asset); onClose(); }}
+                >
                   Edit Asset Details
                 </Button>
               )}
