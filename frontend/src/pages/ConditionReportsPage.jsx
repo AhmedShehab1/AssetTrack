@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldAlert, Clock, MessageSquare, CheckCircle2 } from 'lucide-react';
 import { conditionReportService } from '../api/services/conditions';
 import Card from '../components/common/Card';
+import Button from '../components/common/Button';
 import Badge from '../components/common/Badge';
 import GlobalErrorAlert from '../components/errors/GlobalErrorAlert';
+import { RefreshCcw, Eye } from 'lucide-react';
 
 const ConditionReportsPage = () => {
   const navigate = useNavigate();
@@ -12,19 +13,21 @@ const ConditionReportsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        const response = await conditionReportService.listAll({ size: 1000 });
-        setReports(response.content || []);
-      } catch (err) {
-        setError(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchReports();
+  const fetchReports = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await conditionReportService.listAll({ size: 1000 });
+      setReports(response.content || []);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
 
   const getSeverityVariant = (severity) => {
     switch (severity) {
@@ -35,59 +38,54 @@ const ConditionReportsPage = () => {
     }
   };
 
-  if (loading) return <div className="p-20 text-center">Loading reports...</div>;
-
   return (
-    <div className="container mx-auto py-8 px-4 max-w-5xl space-y-8 font-sans">
-      <h1 className="text-3xl font-black text-text-heading">Global Condition Reports</h1>
-      {error && <GlobalErrorAlert error={error} />}
-      
-      <div className="space-y-4">
-        {reports.map((report) => (
-          <Card 
-            key={report.id} 
-            padding="p-6" 
-            className="cursor-pointer hover:shadow-lg transition-all border-outline-variant"
-            onClick={() => navigate(`/assets/${report.assetId}/reports?reportId=${report.id}`)}
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-3">
-                <h3 className="font-bold text-text-heading">{report.asset.brand} {report.asset.model}</h3>
-                <Badge variant={getSeverityVariant(report.severity)} className="text-[9px]">{report.severity}</Badge>
-                <span className={`text-[10px] font-black uppercase tracking-widest ${report.status === 'RESOLVED' || report.status === 'CLOSED' ? 'text-success' : 'text-primary'}`}>
-                  {report.status}
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-text-body opacity-40 uppercase">
-                {new Date(report.reportedAt).toLocaleDateString()}
-              </span>
-            </div>
-
-            <div className="flex gap-4">
-              <div className="mt-1">
-                <MessageSquare size={18} className="text-slate-300" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-text-heading font-medium leading-relaxed">{report.description}</p>
-                <div className="mt-3 flex items-center gap-2 text-[10px] text-text-body font-bold opacity-60">
-                  <span>Reported by</span>
-                  <span className="text-primary uppercase">{report.reportedBy?.fullName || 'Member'}</span>
-                </div>
-              </div>
-            </div>
-
-            {report.resolutionNotes && (
-              <div className="mt-6 p-4 bg-green-50 rounded-2xl border border-green-100/50 flex gap-3">
-                <CheckCircle2 size={16} className="text-success shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-[9px] font-black text-success uppercase tracking-widest mb-1">Resolution</p>
-                  <p className="text-xs text-green-900 font-medium leading-relaxed opacity-80 m-0">{report.resolutionNotes}</p>
-                </div>
-              </div>
-            )}
-          </Card>
-        ))}
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-extrabold">All Condition Reports</h1>
+        <Button onClick={fetchReports} icon={RefreshCcw} variant="outline">Refresh</Button>
       </div>
+
+      {error && <GlobalErrorAlert error={error} />}
+
+      <Card padding="p-0">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="bg-slate-50">
+              <th className="p-4">Asset</th>
+              <th className="p-4">Severity</th>
+              <th className="p-4">Status</th>
+              <th className="p-4">Description</th>
+              <th className="p-4">Reported By</th>
+              <th className="p-4"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan="6" className="text-center p-10">Loading reports...</td></tr>
+            ) : (
+              reports.map((report) => (
+                <tr key={report.id} className="border-b hover:bg-slate-50">
+                  <td className="p-4">{report.asset.brand} {report.asset.model}</td>
+                  <td className="p-4"><Badge variant={getSeverityVariant(report.severity)}>{report.severity}</Badge></td>
+                  <td className="p-4">{report.status}</td>
+                  <td className="p-4">{report.description}</td>
+                  <td className="p-4">{report.reportedBy?.fullName}</td>
+                  <td className="p-4">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      icon={Eye}
+                      onClick={() => navigate(`/assets/${report.assetId}/reports?reportId=${report.id}`)}
+                    >
+                      View
+                    </Button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </Card>
     </div>
   );
 };
