@@ -17,7 +17,11 @@ const ConditionReportsPage = () => {
     setLoading(true);
     try {
       const response = await conditionReportService.listAll({ size: 1000 });
-      setReports(response.content || []);
+      // Filter for open issues (OPEN or IN_PROGRESS)
+      const openReports = (response.content || []).filter(r => 
+        r.status === 'OPEN' || r.status === 'IN_PROGRESS'
+      );
+      setReports(openReports);
     } catch (err) {
       setError(err);
     } finally {

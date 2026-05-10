@@ -2,9 +2,9 @@ import React from 'react';
 import Card from './Card';
 import Badge from './Badge';
 
-const MetricCard = ({ title, value, badgeText, badgeVariant, icon: Icon, iconBg, valueColor, onClick }) => {
+const MetricCard = ({ title, value, badgeText, badgeVariant, icon: Icon, iconBg, valueColor }) => {
   return (
-    <Card padding="p-6" onClick={onClick} className="cursor-pointer hover:shadow-lg transition-shadow">
+    <Card padding="p-6" className="cursor-pointer hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-start mb-5">
         <div 
           className="p-3 rounded-xl flex items-center justify-center"
