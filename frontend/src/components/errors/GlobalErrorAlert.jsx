@@ -66,3 +66,4 @@ const GlobalErrorAlert = ({ error, onDismiss, onClose, className = '' }) => {
 };
 
 export default GlobalErrorAlert;
+

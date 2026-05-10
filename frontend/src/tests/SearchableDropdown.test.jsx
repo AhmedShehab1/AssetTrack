@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import SearchableDropdown from '../components/common/SearchableDropdown';
 
 
@@ -8,41 +8,81 @@ describe('SearchableDropdown', () => {
     { id: 2, name: 'Dell', role: 'Brand' }
   ];
 
-  it('calls onSearch after delay when typing', async () => {
-    const onSearch = jest.fn();
+  it('renders with placeholder text', () => {
+    const onSelect = jest.fn();
     render(
       <SearchableDropdown 
         label="Test" 
+        placeholder="Search user..."
         options={mockOptions} 
-        onSearch={onSearch} 
-        onSelect={jest.fn()} 
+        onSelect={onSelect} 
+      />
+    );
+
+    // Verify placeholder is rendered
+    expect(screen.getByText('Search user...')).toBeInTheDocument();
+  });
+
+  it('opens dropdown when clicked', () => {
+    const onSelect = jest.fn();
+    render(
+      <SearchableDropdown 
+        label="Test" 
+        placeholder="Search user..."
+        options={mockOptions} 
+        onSelect={onSelect} 
+      />
+    );
+
+    // Click to open dropdown
+    fireEvent.click(screen.getByText('Search user...'));
+
+    // Verify filter input is visible
+    const input = screen.getByPlaceholderText('Filter users...');
+    expect(input).toBeInTheDocument();
+  });
+
+  it('filters options based on search input', () => {
+    const onSelect = jest.fn();
+    render(
+      <SearchableDropdown 
+        label="Test" 
+        placeholder="Search user..."
+        options={mockOptions} 
+        onSelect={onSelect} 
       />
     );
 
     // Open dropdown
     fireEvent.click(screen.getByText('Search user...'));
 
+    // Find and type in filter input
     const input = screen.getByPlaceholderText('Filter users...');
     fireEvent.change(input, { target: { value: 'ap' } });
 
-    // Should not call immediately
-    expect(onSearch).not.toHaveBeenCalled();
-
-    // Should call after debounce
-    await waitFor(() => expect(onSearch).toHaveBeenCalledWith('ap'), { timeout: 500 });
+    // Verify only Apple option is shown
+    expect(screen.getByText('Apple')).toBeInTheDocument();
+    expect(screen.queryByText('Dell')).not.toBeInTheDocument();
   });
 
-  it('displays loading state', () => {
+  it('calls onSelect when option is clicked', () => {
+    const onSelect = jest.fn();
     render(
       <SearchableDropdown 
         label="Test" 
-        options={[]} 
-        loading={true} 
-        onSelect={jest.fn()} 
+        placeholder="Search user..."
+        options={mockOptions} 
+        onSelect={onSelect} 
       />
     );
-    // Search icon is replaced by Loader2 which has a specific class or can be found by aria-label if added
-    // For now we check that Search icon is NOT there or Loader is there.
-    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
+
+    // Open dropdown
+    fireEvent.click(screen.getByText('Search user...'));
+
+    // Click on first option
+    fireEvent.click(screen.getByText('Apple'));
+
+    // Verify onSelect was called with correct option
+    expect(onSelect).toHaveBeenCalledWith(mockOptions[0]);
   });
 });

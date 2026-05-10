@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { Mail, Lock, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSignup } from '../../hooks/useAssetTrack';
+import api from '../../lib/axios';
 import Input from '../common/Input';
 import Button from '../common/Button';
 
@@ -56,7 +57,7 @@ const SignupForm = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {apiError && (
-        <div className="bg-error-container text-on-error-container p-3 rounded-md text-sm border border-danger-expired/20">
+        <div className="bg-red-50 text-red-700 p-4 rounded-xl text-sm border border-red-100 font-medium">
           {apiError.message || 'Signup failed. Please try again.'}
         </div>
       )}

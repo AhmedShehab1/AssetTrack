@@ -10,7 +10,8 @@ import {
   LogOut, 
   Plus,
   Laptop,
-  User as UserIcon
+  User as UserIcon,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAssetTrack';
 import Button from '../common/Button';
@@ -21,6 +22,7 @@ const Sidebar = () => {
   const allMenuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/', roles: ['ADMIN', 'MANAGER'] },
     { icon: Package, label: 'Assets', path: '/assets', roles: ['ADMIN', 'MANAGER', 'DEVELOPER'] },
+    { icon: AlertTriangle, label: 'Condition Reports', path: '/condition-reports', roles: ['ADMIN', 'MANAGER'] },
     { icon: History, label: 'Allocation', path: '/allocations', roles: ['ADMIN', 'MANAGER'] },
     { icon: Laptop, label: 'Spare Laptops', path: '/spare-laptops', roles: ['ADMIN', 'MANAGER'] },
     { icon: Users, label: 'Users', path: '/users', roles: ['ADMIN'] },
@@ -37,7 +39,7 @@ const Sidebar = () => {
 
   return (
     <aside className="w-[var(--sidebar-width)] h-screen bg-white border-r border-outline-variant fixed left-0 top-0 flex flex-col py-8 z-50">
-      {/* Brand ... */}
+      {/* Brand */}
       <div className="px-6 mb-10">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
@@ -115,3 +117,4 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
+

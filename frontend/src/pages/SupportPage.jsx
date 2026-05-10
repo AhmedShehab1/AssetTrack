@@ -18,12 +18,14 @@ const SupportPage = () => {
         {/* Contact Methods */}
         <Card padding="p-8" className="space-y-6">
           <div className="flex items-center gap-2.5 text-primary border-b border-outline-variant pb-4">
-            <Mail size={20} />
+            <div className="w-8 h-8 rounded-lg bg-primary-light flex items-center justify-center text-primary">
+              <Mail size={20} />
+            </div>
             <h3 className="font-extrabold uppercase tracking-widest text-xs">Technical Support</h3>
           </div>
           
           <div className="space-y-4">
-            <p className="text-sm text-text-body leading-relaxed">
+            <p className="text-sm text-text-body leading-relaxed font-medium">
               If you're experiencing technical issues with the AssetTrack platform, please contact our IT helpdesk.
             </p>
             <div className="bg-slate-50 p-4 rounded-xl border border-outline-variant">
@@ -37,20 +39,22 @@ const SupportPage = () => {
         {/* Documentation */}
         <Card padding="p-8" className="space-y-6">
           <div className="flex items-center gap-2.5 text-primary border-b border-outline-variant pb-4">
-            <ShieldCheck size={20} />
+            <div className="w-8 h-8 rounded-lg bg-primary-light flex items-center justify-center text-primary">
+              <ShieldCheck size={20} />
+            </div>
             <h3 className="font-extrabold uppercase tracking-widest text-xs">Guidelines</h3>
           </div>
           
           <div className="space-y-4">
-            <p className="text-sm text-text-body leading-relaxed">
+            <p className="text-sm text-text-body leading-relaxed font-medium">
               Review organizational policies regarding hardware care, allocation periods, and lost/stolen device reporting.
             </p>
             <div className="space-y-2">
-              <a href="#" className="flex items-center justify-between p-3 bg-slate-50 rounded-xl text-xs font-bold text-text-heading hover:bg-slate-100 transition-all border border-outline-variant">
-                Device Care Policy <ExternalLink size={14} />
+              <a href="#" className="flex items-center justify-between p-3 bg-slate-50 rounded-xl text-xs font-bold text-text-heading hover:bg-slate-100 transition-all border border-outline-variant group">
+                Device Care Policy <ExternalLink size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </a>
-              <a href="#" className="flex items-center justify-between p-3 bg-slate-50 rounded-xl text-xs font-bold text-text-heading hover:bg-slate-100 transition-all border border-outline-variant">
-                Software Install Guidelines <ExternalLink size={14} />
+              <a href="#" className="flex items-center justify-between p-3 bg-slate-50 rounded-xl text-xs font-bold text-text-heading hover:bg-slate-100 transition-all border border-outline-variant group">
+                Software Install Guidelines <ExternalLink size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </a>
             </div>
           </div>
@@ -59,15 +63,20 @@ const SupportPage = () => {
 
       {/* FAQs */}
       <Card padding="p-8" className="space-y-6">
-        <h3 className="text-lg font-bold text-text-heading">Frequently Asked Questions</h3>
-        <div className="space-y-6">
-          <div className="space-y-2 border-l-4 border-primary-light pl-4">
-            <p className="text-sm font-bold text-text-heading">How do I request a replacement laptop?</p>
-            <p className="text-sm text-text-body">Go to the Dashboard and use the "Find Available Spare Laptop" action, or contact your manager directly.</p>
+        <div className="flex items-center gap-2.5 mb-2">
+          <div className="w-8 h-8 rounded-lg bg-primary-light flex items-center justify-center text-primary">
+            <MessageSquare size={20} />
           </div>
-          <div className="space-y-2 border-l-4 border-primary-light pl-4">
+          <h3 className="text-lg font-bold text-text-heading">Frequently Asked Questions</h3>
+        </div>
+        <div className="space-y-6">
+          <div className="space-y-2 border-l-4 border-primary/20 pl-4">
+            <p className="text-sm font-bold text-text-heading">How do I request a replacement laptop?</p>
+            <p className="text-sm text-text-body font-medium">Go to the Dashboard and use the "Find Available Spare Laptop" action, or contact your manager directly.</p>
+          </div>
+          <div className="space-y-2 border-l-4 border-primary/20 pl-4">
             <p className="text-sm font-bold text-text-heading">My asset is broken. What should I do?</p>
-            <p className="text-sm text-text-body">Find your asset in the "Assets" list or on your profile and click "Report Issue" to submit a condition report.</p>
+            <p className="text-sm text-text-body font-medium">Find your asset in the "Assets" list or on your profile and click "Report Issue" to submit a condition report.</p>
           </div>
         </div>
       </Card>
@@ -76,3 +85,4 @@ const SupportPage = () => {
 };
 
 export default SupportPage;
+

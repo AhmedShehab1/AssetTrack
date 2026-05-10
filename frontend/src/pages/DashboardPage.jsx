@@ -68,7 +68,16 @@ const DashboardPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <MetricCard title="Total Assets" value={summary?.totalAssets || 0} badgeText="ALL" icon={Package} iconBg="var(--primary-light)" valueColor="var(--primary)" />
         <MetricCard title="Laptops Available" value={getStatusCount('AVAILABLE')} badgeText="READY" badgeVariant="success" icon={CheckCircle2} iconBg="var(--success-bg)" valueColor="var(--success)" />
-        <MetricCard title="Pending Issues" value={summary?.openConditionReports || 0} badgeText="TOTAL" badgeVariant="danger" icon={AlertTriangle} iconBg="var(--danger-bg)" valueColor="var(--danger)" />
+        <MetricCard 
+          title="Pending Issues" 
+          value={summary?.openConditionReports || 0} 
+          badgeText="TOTAL" 
+          badgeVariant="danger" 
+          icon={AlertTriangle} 
+          iconBg="var(--danger-bg)" 
+          valueColor="var(--danger)" 
+          onClick={() => navigate('/condition-reports')}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

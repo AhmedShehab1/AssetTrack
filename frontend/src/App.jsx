@@ -42,6 +42,7 @@ export default function App() {
           {/* Dashboard - ADMIN, MANAGER only */}
           <Route element={<RoleProtectedRoute allowedRoles={['ADMIN', 'MANAGER']} />}>
             <Route path="/" element={<DashboardPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
           </Route>
 
           {/* Assets - ADMIN, MANAGER, DEVELOPER */}
@@ -91,4 +92,5 @@ export default function App() {
     </Routes>
   );
 }
+
 
