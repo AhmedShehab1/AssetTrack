@@ -21,4 +21,6 @@ public interface ConditionReportRepository extends JpaRepository<ConditionReport
     Page<ConditionReport> findByReportedByIdOrderByReportDateDesc(java.util.UUID userId, Pageable pageable);
 
     List<ConditionReport> findByStatus(ConditionReportStatus status);
+    
+    long countByStatus(ConditionReportStatus status);
 }

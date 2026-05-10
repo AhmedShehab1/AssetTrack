@@ -1,8 +1,12 @@
 package com.assettrack.controller.user;
 
+import com.assettrack.domain.user.Role;
+import com.assettrack.dto.asset.AssetResponse;
 import com.assettrack.dto.user.UpdateEmailRequest;
 import com.assettrack.dto.user.UpdatePasswordRequest;
+import com.assettrack.dto.user.UpdateUserRequest;
 import com.assettrack.dto.user.UserResponse;
+import com.assettrack.service.asset.IAssetService;
 import com.assettrack.service.user.IUserService;
 import com.assettrack.dto.common.PageUtils;
 import com.assettrack.dto.common.PagedResponse;
@@ -27,7 +31,7 @@ import java.util.UUID;
 @Tag(name = "Users", description = "User management and self-service endpoints")
 public class UserController {
     private final IUserService userService;
-
+    private final IAssetService assetService;
     @GetMapping("/auth/me")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get my profile", description = "Returns the authenticated user's profile")
@@ -43,8 +47,12 @@ public class UserController {
     @Operation(summary = "List all users", description = "Returns a paginated list of all users")
     @ApiResponse(responseCode = "200", description = "Users retrieved")
     @ApiResponse(responseCode = "403", description = "Forbidden")
-    public ResponseEntity<PagedResponse<UserResponse>> getAllUsers(Pageable pageable){
-        return ResponseEntity.ok(PageUtils.toPagedResponse(userService.getAllUsers(pageable)));
+    public ResponseEntity<PagedResponse<UserResponse>> getAllUsers(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Role role,
+            @RequestParam(required = false) Boolean active,
+            Pageable pageable) {
+        return ResponseEntity.ok(PageUtils.toPagedResponse(userService.listUsers(search, role, active, pageable)));
     }
 
     @GetMapping("/users/inactive")
@@ -132,4 +140,33 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+
+    // Add PATCH /users/{id}
+    @PatchMapping("/users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponse> updateUser(
+            @PathVariable UUID id,
+            @RequestBody @Validated UpdateUserRequest request,
+            Authentication authentication) {
+        return ResponseEntity.ok(userService.updateUser(id, request, authentication));
+    }
+
+    // Add GET /users/{userId}/assets
+    @GetMapping("/users/{id}/assets")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PagedResponse<AssetResponse>> getUserAssets(
+            @PathVariable UUID id,
+            Pageable pageable) {
+        return ResponseEntity.ok(PageUtils.toPagedResponse(assetService.getAssetsForUser(id, pageable)));
+    }
+
+    @GetMapping("/search/users")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<PagedResponse<UserResponse>> searchUsers(
+            @RequestParam String q,
+            @RequestParam(required = false) Role role,
+            @RequestParam(required = false) Boolean active,
+            Pageable pageable) {
+        return ResponseEntity.ok(PageUtils.toPagedResponse(userService.searchUsers(q, role, active, pageable)));
+    }
 }

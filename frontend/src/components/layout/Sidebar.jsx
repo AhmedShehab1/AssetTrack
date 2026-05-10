@@ -1,96 +1,115 @@
 import React from 'react';
-import { LayoutDashboard, Package, History, Users, Settings, HelpCircle, LogOut, Plus } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
+import { NavLink, Link } from 'react-router-dom';
+import { 
+  LayoutDashboard, 
+  Package, 
+  History, 
+  Users, 
+  Settings, 
+  HelpCircle, 
+  LogOut, 
+  Plus,
+  Laptop,
+  User as UserIcon,
+  AlertTriangle
+} from 'lucide-react';
+import { useAuth } from '../../hooks/useAssetTrack';
 import Button from '../common/Button';
 
 const Sidebar = () => {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', active: true },
-    { icon: Package, label: 'Assets' },
-    { icon: History, label: 'Allocation' },
-    { icon: Users, label: 'Users' },
-    { icon: Settings, label: 'Settings' },
+  const allMenuItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/', roles: ['ADMIN', 'MANAGER'] },
+    { icon: Package, label: 'Assets', path: '/assets', roles: ['ADMIN', 'MANAGER', 'DEVELOPER'] },
+    { icon: AlertTriangle, label: 'Condition Reports', path: '/condition-reports', roles: ['ADMIN', 'MANAGER'] },
+    { icon: History, label: 'Allocation', path: '/allocations', roles: ['ADMIN', 'MANAGER'] },
+    { icon: Laptop, label: 'Spare Laptops', path: '/spare-laptops', roles: ['ADMIN', 'MANAGER'] },
+    { icon: Users, label: 'Users', path: '/users', roles: ['ADMIN'] },
+    { icon: UserIcon, label: 'My Profile', path: '/profile', roles: ['ADMIN', 'MANAGER', 'DEVELOPER'] },
+    { icon: Settings, label: 'Settings', path: '/settings', roles: ['ADMIN', 'MANAGER', 'DEVELOPER'] },
   ];
 
+  const menuItems = allMenuItems.filter(item => item.roles.includes(user?.role));
+
   const bottomItems = [
-    { icon: HelpCircle, label: 'Support' },
+    { icon: HelpCircle, label: 'Support', path: '/support' },
     { icon: LogOut, label: 'Logout', onClick: logout },
   ];
 
   return (
-    <aside style={{
-      width: 'var(--sidebar-width)',
-      height: '100vh',
-      backgroundColor: '#FFFFFF',
-      borderRight: '1px solid var(--border-color)',
-      position: 'fixed',
-      left: 0,
-      top: 0,
-      display: 'flex',
-      flexDirection: 'column',
-      padding: '30px 0',
-      zIndex: 100
-    }}>
-      <div style={{ padding: '0 24px', marginBottom: '40px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '32px', height: '32px', backgroundColor: 'var(--primary)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Package color="white" size={20} />
+    <aside className="w-[var(--sidebar-width)] h-screen bg-white border-r border-outline-variant fixed left-0 top-0 flex flex-col py-8 z-50">
+      {/* Brand */}
+      <div className="px-6 mb-10">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
+            <Package className="text-white" size={18} />
           </div>
           <div>
-            <h1 style={{ fontSize: '18px', fontWeight: '800', lineHeight: 1 }}>AssetTrack</h1>
-            <p style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '2px' }}>Enterprise Asset Mgmt</p>
+            <h1 className="text-lg font-extrabold leading-none text-text-heading">AssetTrack</h1>
+            <p className="text-[10px] text-text-body font-bold uppercase tracking-wider mt-1">Enterprise Asset Mgmt</p>
           </div>
         </div>
       </div>
 
-      <div style={{ padding: '0 16px', marginBottom: '30px' }}>
-        <Button variant="primary" style={{ width: '100%', justifyContent: 'flex-start', padding: '12px 16px' }}>
-          <Plus size={20} /> Add New Asset
-        </Button>
-      </div>
+      {/* Action */}
+      {user?.role === 'ADMIN' && (
+        <div className="px-4 mb-8">
+          <Link to="/assets/register" className="block w-full">
+            <Button variant="primary" className="w-full !justify-start px-4 py-3">
+              <Plus size={20} /> Add New Asset
+            </Button>
+          </Link>
+        </div>
+      )}
 
-      <nav style={{ flex: 1 }}>
-        {menuItems.map((item, index) => (
-          <div key={index} style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: '12px 24px',
-            color: item.active ? 'var(--primary)' : 'var(--text-secondary)',
-            backgroundColor: item.active ? 'var(--primary-light)' : 'transparent',
-            borderLeft: item.active ? '4px solid var(--primary)' : '4px solid transparent',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            fontSize: '14px',
-            fontWeight: item.active ? '700' : '500'
-          }}>
-            <item.icon size={20} />
-            {item.label}
-          </div>
-        ))}
-      </nav>
-
-      <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
-        {bottomItems.map((item, index) => (
-          <div 
-            key={index} 
-            onClick={item.onClick}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 24px',
-              color: 'var(--text-secondary)',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto">
+        {menuItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) => `
+              flex items-center gap-3 px-6 py-3.5 
+              text-sm font-semibold transition-all duration-200
+              border-l-4
+              ${isActive 
+                ? 'text-primary bg-primary-light border-primary' 
+                : 'text-text-body border-transparent hover:bg-slate-50 hover:text-text-heading'}
+            `}
           >
             <item.icon size={20} />
             {item.label}
-          </div>
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div className="border-t border-outline-variant pt-5">
+        {bottomItems.map((item, index) => (
+          item.onClick ? (
+            <button
+              key={index}
+              onClick={item.onClick}
+              className="w-full flex items-center gap-3 px-6 py-3.5 text-sm font-semibold text-text-body hover:bg-red-50 hover:text-danger transition-colors"
+            >
+              <item.icon size={20} />
+              {item.label}
+            </button>
+          ) : (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) => `
+                flex items-center gap-3 px-6 py-3.5 
+                text-sm font-semibold transition-colors
+                ${isActive ? 'text-primary bg-primary-light' : 'text-text-body hover:bg-slate-50'}
+              `}
+            >
+              <item.icon size={20} />
+              {item.label}
+            </NavLink>
+          )
         ))}
       </div>
     </aside>
@@ -98,3 +117,4 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
+

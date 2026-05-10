@@ -3,11 +3,7 @@ package com.assettrack.service.asset;
 import com.assettrack.domain.asset.AssetStatus;
 import com.assettrack.domain.asset.AssetType;
 import com.assettrack.domain.asset.ConditionSeverity;
-import com.assettrack.dto.asset.AssetResponse;
-import com.assettrack.dto.asset.ConditionReportResponse;
-import com.assettrack.dto.asset.CreateAssetRequest;
-import com.assettrack.dto.asset.CreateConditionReportRequest;
-import com.assettrack.dto.asset.UpdateAssetRequest;
+import com.assettrack.dto.asset.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -39,4 +35,18 @@ public interface IAssetService {
     void deleteAsset(UUID id);
 
     void expireWarrantiedAssets();
+
+    // GET /assets — list with warranty filters
+    Page<AssetResponse> listAssets(AssetStatus status, AssetType type,
+                                   Integer warrantyExpiringWithinDays, Boolean warrantyExpired,
+                                   Pageable pageable);
+
+    // GET /users/{userId}/assets
+    Page<AssetResponse> getAssetsForUser(UUID userId, Pageable pageable);
+
+    // GET /dashboard/expiring-warranties
+    Page<ExpiringAssetSummary> getExpiringWarranties(int withinDays, Pageable pageable);
+
+    // PATCH /assets/{assetId}/condition-reports/{reportId}
+    ConditionReportResponse updateConditionReport(UUID reportId, UpdateConditionReportRequest request);
 }

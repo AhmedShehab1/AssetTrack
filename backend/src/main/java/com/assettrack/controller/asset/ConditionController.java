@@ -3,6 +3,7 @@ package com.assettrack.controller.asset;
 import com.assettrack.dto.asset.ConditionReportResponse;
 import com.assettrack.dto.asset.CreateConditionReportRequest;
 import com.assettrack.dto.asset.ReportConditionRequest;
+import com.assettrack.dto.asset.UpdateConditionReportRequest;
 import com.assettrack.dto.common.PageUtils;
 import com.assettrack.dto.common.PagedResponse;
 import com.assettrack.service.asset.IAssetService;
@@ -104,5 +105,25 @@ public class ConditionController {
     public ResponseEntity<ConditionReportResponse> resolveReport(
             @Parameter(description = "Condition Report ID") @PathVariable UUID reportId) {
         return ResponseEntity.ok(assetService.resolveReport(reportId));
+    }
+    
+    // GET /assets/{assetId}/condition-reports/{reportId}
+    @GetMapping("/{assetId}/condition-reports/{reportId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ConditionReportResponse> getConditionReport(
+            @PathVariable UUID assetId,
+            @PathVariable UUID reportId,
+            Authentication authentication) {
+        return ResponseEntity.ok(assetService.getReportById(reportId, authentication));
+    }
+
+    // PATCH /assets/{assetId}/condition-reports/{reportId}
+    @PatchMapping("/{assetId}/condition-reports/{reportId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    public ResponseEntity<ConditionReportResponse> updateConditionReport(
+            @PathVariable UUID assetId,
+            @PathVariable UUID reportId,
+            @RequestBody @Validated UpdateConditionReportRequest request) {
+        return ResponseEntity.ok(assetService.updateConditionReport(reportId, request));
     }
 }

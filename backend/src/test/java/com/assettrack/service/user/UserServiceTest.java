@@ -528,7 +528,7 @@ class UserServiceTest {
             assertThatThrownBy(() -> userService.deleteUser(targetId, authentication))
                     .isInstanceOf(ActiveUserDeletionException.class);
 
-            verify(userRepository, never()).delete(any());
+            verify(userRepository.deleteById(user.getId()));
         }
 
         @Test

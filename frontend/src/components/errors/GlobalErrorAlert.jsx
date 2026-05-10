@@ -1,111 +1,69 @@
-/**
- * @fileoverview
- * GlobalErrorAlert — Displays top-level ApiError messages.
- *
- * Use this whenever an API call fails and you want to surface a
- * banner-style message to the user.  It handles all status codes
- * with contextually appropriate copy and styling.
- *
- * @example
- * // Inside a form component after a failed submission:
- * {apiError && <GlobalErrorAlert error={apiError} onDismiss={() => setApiError(null)} />}
- */
-
 import React from 'react';
-import PropTypes from 'prop-types';
-import { ApiErrorShape } from '../../api/types';
-import styles from './GlobalErrorAlert.module.css';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Maps HTTP status codes to a CSS modifier class and an icon character.
- * @param {number} status
- * @returns {{ modifier: string, icon: string }}
- */
-const statusMeta = (status) => {
-  if (status === 0) return { modifier: 'network', icon: '⚡' };
-  if (status === 401) return { modifier: 'auth', icon: '🔒' };
-  if (status === 403) return { modifier: 'auth', icon: '🚫' };
-  if (status === 404) return { modifier: 'info', icon: '🔍' };
-  if (status === 409) return { modifier: 'warning', icon: '⚠️' };
-  if (status >= 500) return { modifier: 'server', icon: '🔧' };
-  return { modifier: 'error', icon: '✕' };
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Component
-// ─────────────────────────────────────────────────────────────────────────────
+import ValidationErrorAlert from './ValidationErrorAlert';
+import AccessErrorAlert from './AccessErrorAlert';
+import ConflictErrorAlert from './ConflictErrorAlert';
+import ServerErrorAlert from './ServerErrorAlert';
+import NotFoundErrorAlert from './NotFoundErrorAlert';
+import { AlertCircle, X } from 'lucide-react';
 
 /**
- * Banner-style alert for top-level API errors.
- *
- * @param {object}   props
- * @param {ApiError} props.error      - The structured error from the API client.
- * @param {Function} [props.onDismiss] - Called when the user closes the alert.
- *                                       Omit to render without a close button.
- * @param {string}   [props.className] - Additional CSS class(es) for layout.
+ * Smart entry-point for API Error visualization.
+ * Delegates to specific handlers based on HTTP status code per openapi.yaml.
  */
-const GlobalErrorAlert = ({ error, onDismiss, className }) => {
+const GlobalErrorAlert = ({ error, onDismiss, onClose, className = '' }) => {
   if (!error) return null;
 
-  const { modifier, icon } = statusMeta(error.status);
-  const rootClass = [
-    styles.alert,
-    styles[`alert--${modifier}`],
-    className,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const handleClose = onDismiss || onClose;
+  const status = error.status || 500;
+
+  // Render the specific handler component
+  const renderSpecificError = () => {
+    switch (status) {
+      case 400:
+        return <ValidationErrorAlert error={error} onDismiss={handleClose} />;
+      case 403:
+        return <AccessErrorAlert error={error} onDismiss={handleClose} />;
+      case 404:
+        return <NotFoundErrorAlert error={error} />;
+      case 409:
+        return <ConflictErrorAlert error={error} onDismiss={handleClose} />;
+      case 500:
+        return <ServerErrorAlert error={error} onDismiss={handleClose} />;
+      default:
+        // Fallback for 401 (usually handled by redirect) or 404
+        return (
+          <div className="bg-red-50 border border-red-200 p-5 rounded-2xl flex items-start gap-4">
+            <div className="bg-red-100 p-2 rounded-xl text-red-600 shrink-0">
+              <AlertCircle size={20} />
+            </div>
+            <div className="flex-1">
+              <h4 className="text-sm font-black text-red-900 uppercase tracking-widest mb-1">Error {status}</h4>
+              <p className="text-sm text-red-800 font-medium opacity-80 leading-relaxed">
+                {error.message || 'An unexpected error occurred.'}
+              </p>
+            </div>
+          </div>
+        );
+    }
+  };
 
   return (
-    <div role="alert" aria-live="assertive" className={rootClass}>
-      <span className={styles.alert__icon} aria-hidden="true">
-        {icon}
-      </span>
-
-      <div className={styles.alert__body}>
-        <p className={styles.alert__message}>{error.message}</p>
-
-        {/* Show status context for 5xx / network so devs can debug */}
-        {(error.status >= 500 || error.status === 0) && (
-          <p className={styles.alert__detail}>
-            {error.status === 0
-              ? 'Could not connect to the server.'
-              : `Server error (HTTP ${error.status}). Please try again or contact support.`}
-          </p>
-        )}
-      </div>
-
-      {onDismiss && (
+    <div className={`relative group ${className}`}>
+      {renderSpecificError()}
+      
+      {handleClose && (
         <button
           type="button"
-          className={styles.alert__dismiss}
-          onClick={onDismiss}
-          aria-label="Dismiss error"
+          className="absolute top-4 right-4 p-1.5 rounded-xl hover:bg-black/5 text-gray-400 hover:text-gray-600 transition-all opacity-0 group-hover:opacity-100"
+          onClick={handleClose}
+          aria-label="Close"
         >
-          ×
+          <X size={16} />
         </button>
       )}
     </div>
   );
 };
 
-GlobalErrorAlert.propTypes = {
-  /** Structured ApiError returned by the API client interceptor. */
-  error: ApiErrorShape,
-  /** Optional dismiss callback; omitting it hides the close button. */
-  onDismiss: PropTypes.func,
-  /** Additional class(es) for positioning / spacing from the parent layout. */
-  className: PropTypes.string,
-};
-
-GlobalErrorAlert.defaultProps = {
-  error: null,
-  onDismiss: undefined,
-  className: '',
-};
-
 export default GlobalErrorAlert;
+

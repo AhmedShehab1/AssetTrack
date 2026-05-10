@@ -4,6 +4,7 @@ import com.assettrack.domain.user.Role;
 import com.assettrack.domain.user.User;
 import com.assettrack.dto.user.UpdateEmailRequest;
 import com.assettrack.dto.user.UpdatePasswordRequest;
+import com.assettrack.dto.user.UpdateUserRequest;
 import com.assettrack.dto.user.UserResponse;
 import com.assettrack.exception.*;
 import com.assettrack.mapper.user.UserMapper;
@@ -11,6 +12,7 @@ import com.assettrack.repository.user.UserRepository;
 import com.assettrack.security.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.Authentication;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -252,6 +254,58 @@ public class UserService implements IUserService {
             throw new ActiveUserDeletionException("Cannot delete an active user. Deactivate first.");
         }
         userRepository.delete(user);
+    }
+
+    // GET /users
+    @Transactional(readOnly = true)
+    public Page<UserResponse> listUsers(String search, Role role, Boolean active, Pageable pageable) {
+        Specification<User> spec = Specification.where(null);
+
+        if (search != null && !search.isBlank()) {
+            String pattern = "%" + search.toLowerCase() + "%";
+            spec = spec.and((root, query, cb) -> cb.or(
+                    cb.like(cb.lower(root.get("email")), pattern),
+                    cb.like(cb.lower(root.get("firstName")), pattern),
+                    cb.like(cb.lower(root.get("lastName")), pattern)
+            ));
+        }
+        if (role != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("role"), role));
+        }
+        if (active != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("active"), active));
+        }
+
+        return userRepository.findAll(spec, pageable).map(userMapper::toResponse);
+    }
+
+    // PATCH /users/{userId}
+    @Transactional
+    public UserResponse updateUser(UUID id, UpdateUserRequest request, Authentication authentication) {
+        log.info("Updating user: {}", id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+
+        if (request.fullName() != null) {
+            String[] parts = request.fullName().split(" ", 2);
+            user.setFirstName(parts[0]);
+            user.setLastName(parts.length > 1 ? parts[1] : null);
+        }
+        if (request.active() != null) {
+            UUID currentId = securityUtils.getCurrentUserId(authentication);
+            if (id.equals(currentId)) {
+                throw new SelfOperationException("Admin cannot change their own status");
+            }
+            user.setActive(request.active());
+        }
+
+        return userMapper.toResponse(userRepository.save(user));
+    }
+
+    // GET /search/users
+    @Transactional(readOnly = true)
+    public Page<UserResponse> searchUsers(String q, Role role, Boolean active, Pageable pageable) {
+        return listUsers(q, role, active, pageable);
     }
 
 }

@@ -1,9 +1,11 @@
 import React from 'react';
-import { Search, Bell, HelpCircle, Settings } from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuth } from '../../hooks/useAssetTrack';
+import NotificationBell from './NotificationBell';
+import { useNavigate } from 'react-router-dom';
 
 const TopNav = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const getInitials = (name) => {
     if (!name) return '??';
@@ -15,37 +17,23 @@ const TopNav = () => {
   };
 
   return (
-    <header style={{
-      height: 'var(--header-height)',
-      backgroundColor: '#FFFFFF',
-      borderBottom: '1px solid var(--border-color)',
-      padding: '0 30px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      position: 'sticky',
-      top: 0,
-      zIndex: 90
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', width: '400px', backgroundColor: 'var(--bg-page)', padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-        <Search size={18} color="var(--text-secondary)" />
-        <input 
-          type="text" 
-          placeholder="Search assets, users, or locations..." 
-          style={{ border: 'none', background: 'none', marginLeft: '10px', width: '100%', outline: 'none', fontSize: '14px' }} 
-        />
-      </div>
+    <header className="h-[var(--header-height)] bg-white border-b border-outline-variant px-8 flex items-center justify-end sticky top-0 z-40 gap-8 font-sans">
+      {/* Search removed - redundant */}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        <div style={{ position: 'relative', cursor: 'pointer' }}>
-          <Bell size={20} color="var(--text-secondary)" />
-          <div style={{ position: 'absolute', top: '-2px', right: '-2px', width: '8px', height: '8px', backgroundColor: 'var(--danger)', borderRadius: '50%', border: '2px solid white' }}></div>
-        </div>
-        <HelpCircle size={20} color="var(--text-secondary)" style={{ cursor: 'pointer' }} />
-        <Settings size={20} color="var(--text-secondary)" style={{ cursor: 'pointer' }} />
+      {/* Actions */}
+      <div className="flex items-center gap-5">
+        <NotificationBell />
         
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '10px', cursor: 'pointer' }} title={user?.fullName || user?.email}>
-          <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '14px' }}>
+        <div className="flex items-center gap-2 border-l border-outline-variant pl-5">
+          <div className="flex flex-col items-end mr-2">
+            <span className="text-sm font-bold text-text-heading leading-none">{user?.fullName || 'User'}</span>
+            <span className="text-[10px] text-text-body font-bold uppercase tracking-tighter mt-1">{user?.role?.replace('ROLE_', '') || 'Member'}</span>
+          </div>
+          <div 
+            onClick={() => navigate('/profile')}
+            className="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-primary/20 cursor-pointer hover:scale-105 active:scale-95 transition-all"
+            title="View Profile"
+          >
             {getInitials(user?.fullName || user?.email)}
           </div>
         </div>
