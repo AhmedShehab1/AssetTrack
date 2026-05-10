@@ -13,7 +13,7 @@ import {
   Edit2
 } from 'lucide-react';
 import { assetService } from '../api/services/assets';
-import { conditionService } from '../api/services/conditions';
+import { conditionReportService } from '../api/services/conditions';
 import { useAuth } from '../hooks/useAssetTrack';
 import Card from '../components/common/Card';
 import Button from '../components/common/Button';
@@ -40,7 +40,7 @@ const AssetReportsPage = () => {
     try {
       const [assetData, reportsData] = await Promise.all([
         assetService.getById(assetId),
-        conditionService.list(assetId, { size: 50 })
+        conditionReportService.list(assetId, { size: 50 })
       ]);
       setAsset(assetData);
       setReports(reportsData.content || []);
@@ -57,7 +57,7 @@ const AssetReportsPage = () => {
 
   const handleResolve = async (reportId, status, resolutionNotes) => {
     try {
-      await conditionService.update(assetId, reportId, { status, resolutionNotes });
+      await conditionReportService.update(assetId, reportId, { status, resolutionNotes });
       fetchData();
     } catch (err) {
       console.error("Failed to update report", err);

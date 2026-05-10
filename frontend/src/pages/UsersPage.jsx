@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   UserPlus, 
@@ -21,19 +22,19 @@ import Card from '../components/common/Card';
 import Button from '../components/common/Button';
 import Input from '../components/common/Input';
 import Badge from '../components/common/Badge';
-import UserModal from '../components/users/UserModal';
+import ActionModal from '../components/common/ActionModal';
 import GlobalErrorAlert from '../components/errors/GlobalErrorAlert';
 
 const UsersPage = () => {
   const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   
   // Modal state
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [modalConfig, setModalConfig] = useState({ isOpen: false, type: null, payload: null });
 
   // Delete hook
   const { deleteUser, loading: deleting, error: deleteError, clearError: clearDeleteError } = useDeleteUser();
@@ -51,7 +52,6 @@ const UsersPage = () => {
       const response = await userService.list({ 
         page, 
         size: 10,
-        // search: searchQuery || undefined // Backend does not support search parameter
       });
       setUsers(response.content);
       setTotalItems(response.meta.totalElements);
@@ -68,13 +68,11 @@ const UsersPage = () => {
   }, [page]);
 
   const handleAddUser = () => {
-    setSelectedUser(null);
-    setIsModalOpen(true);
+    setModalConfig({ isOpen: true, type: 'USER', payload: null });
   };
 
   const handleEditUser = (user) => {
-    setSelectedUser(user);
-    setIsModalOpen(true);
+    setModalConfig({ isOpen: true, type: 'USER', payload: user });
   };
 
   const handleDeleteUser = async (userId, userEmail) => {
@@ -110,7 +108,6 @@ const UsersPage = () => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  // Client-side filtering as a fallback for lack of backend search support
   const filteredUsers = users.filter(u => 
     !searchQuery || 
     u.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -294,10 +291,11 @@ const UsersPage = () => {
         </div>
       </Card>
 
-      <UserModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        user={selectedUser}
+      <ActionModal 
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        type={modalConfig.type}
+        payload={modalConfig.payload}
         onRefresh={fetchUsers}
       />
     </div>
