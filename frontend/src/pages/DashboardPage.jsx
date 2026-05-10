@@ -176,7 +176,7 @@ const DashboardPage = () => {
                       setSelectedAsset(asset);
                       setIsReportModalOpen(true);
                     }} icon={ShieldAlert} className="text-warning hover:bg-warning/10">
-                      Report Issue
+                      Condition Report
                     </Button>
                   </div>
                 </div>
