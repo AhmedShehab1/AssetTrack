@@ -25,6 +25,7 @@ import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import SupportPage from './pages/SupportPage';
 import AxiosSandboxPage from './pages/AxiosSandboxPage';
+import NotificationsPage from './pages/NotificationsPage';
 
 export default function App() {
   return (
@@ -49,6 +50,7 @@ export default function App() {
           <Route element={<RoleProtectedRoute allowedRoles={['ADMIN', 'MANAGER', 'DEVELOPER']} />}>
             <Route path="/assets" element={<AssetsPage />} />
             <Route path="/assets/:assetId/reports" element={<AssetReportsPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
           </Route>
 
           {/* Asset Registration - ADMIN only */}

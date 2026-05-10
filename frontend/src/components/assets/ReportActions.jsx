@@ -2,7 +2,7 @@ import React from 'react';
 import { RotateCcw, PlayCircle, CheckCircle, XCircle } from 'lucide-react';
 import Button from '../common/Button';
 
-const ReportActions = ({ report, onUpdateStatus, onOpenResolveModal }) => {
+const ReportActions = ({ report, onUpdateStatus }) => {
   const buttonClass = "!text-[10px] !py-1.5 font-black uppercase tracking-widest";
 
   return (
@@ -31,7 +31,7 @@ const ReportActions = ({ report, onUpdateStatus, onOpenResolveModal }) => {
         <Button
           variant="ghost"
           className={`${buttonClass} text-success`}
-          onClick={() => onOpenResolveModal(report)}
+          onClick={() => onUpdateStatus(report.id, 'RESOLVED', '')}
           icon={CheckCircle}
         >
           Mark Resolved
