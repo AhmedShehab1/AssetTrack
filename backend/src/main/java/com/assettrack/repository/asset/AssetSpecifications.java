@@ -5,6 +5,8 @@ import com.assettrack.domain.asset.AssetStatus;
 import com.assettrack.domain.asset.AssetType;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.time.LocalDate;
+
 /**
  * JPA Specifications for building dynamic, composable queries against the Asset entity.
  * <p>
@@ -61,5 +63,15 @@ public final class AssetSpecifications {
                 serialNumber == null || serialNumber.isBlank()
                         ? cb.conjunction()
                         : cb.equal(root.get("serialNumber"), serialNumber);
+    }
+
+    public static Specification<Asset> warrantyExpired(LocalDate today) {
+        return (root, query, cb) ->
+                cb.lessThan(root.get("warrantyExpirationDate"), today);
+    }
+
+    public static Specification<Asset> warrantyExpiringBefore(LocalDate cutoff) {
+        return (root, query, cb) ->
+                cb.lessThanOrEqualTo(root.get("warrantyExpirationDate"), cutoff);
     }
 }

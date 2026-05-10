@@ -3,6 +3,7 @@ package com.assettrack.service.allocation;
 import com.assettrack.domain.asset.Asset;
 import com.assettrack.domain.asset.AssetAllocation;
 import com.assettrack.domain.asset.AssetStatus;
+import com.assettrack.domain.asset.AssetType;
 import com.assettrack.domain.user.User;
 import com.assettrack.dto.allocation.AllocationHistoryDto;
 import com.assettrack.dto.allocation.AllocationRequestDto;
@@ -17,10 +18,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import com.assettrack.exception.ResourceNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -115,6 +118,40 @@ public class AllocationService implements IAllocationService {
         assetRepository.findById(assetId)
                 .orElseThrow(() -> new ResourceNotFoundException("Asset is not found"));
         return allocationRepository.findByAssetId(assetId, pageable)
+                .map(allocationMapper::toHistoryDto);
+    }
+    @Transactional(readOnly = true)
+    public Page<AllocationHistoryDto> getGlobalAllocationReport(
+            UUID userId, AssetType assetType,
+            LocalDate from, LocalDate to,
+            Boolean activeOnly, Pageable pageable) {
+
+        Specification<AssetAllocation> spec = Specification.where(null);
+
+        if (userId != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("user").get("id"), userId));
+        }
+        if (assetType != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.equal(root.get("asset").get("type"), assetType));
+        }
+        if (from != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.greaterThanOrEqualTo(
+                            root.get("checkoutDate").as(LocalDate.class), from));
+        }
+        if (to != null) {
+            spec = spec.and((root, query, cb) ->
+                    cb.lessThanOrEqualTo(
+                            root.get("checkoutDate").as(LocalDate.class), to));
+        }
+        if (Boolean.TRUE.equals(activeOnly)) {
+            spec = spec.and((root, query, cb) ->
+                    cb.isNull(root.get("returnDate")));
+        }
+
+        return allocationRepository.findAll(spec, pageable)
                 .map(allocationMapper::toHistoryDto);
     }
 }

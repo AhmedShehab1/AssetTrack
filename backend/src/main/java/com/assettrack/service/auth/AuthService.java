@@ -13,17 +13,19 @@ import com.assettrack.security.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import com.assettrack.dto.user.UserResponse;
 import com.assettrack.mapper.user.UserMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService implements IAuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -32,6 +34,11 @@ public class AuthService implements IAuthService {
     private final AuthMapper authMapper;
     private final UserMapper userMapper;
 
+    /**
+     * Generates a JWT token for the given user.
+     * @param user the user to generate the token for
+     * @return a JWT token
+     */
     private String generateToken(User user) {
         return jwtService.generateToken(
                 Map.of(
@@ -39,8 +46,19 @@ public class AuthService implements IAuthService {
                         "userId", user.getId()),
                 Duration.ofHours(24));
     }
+
+    /**
+     * Registers a new user.
+     * @param request contains the user's email, password, and full name
+     * @return the newly created user
+     * @throws EmailAlreadyExistsException if the user's email is already in use
+     * */
+    @Transactional
+    @Override
     public UserResponse register(SignupRequest request) {
+        log.info("Registering user: {}", request);
         if (userRepository.existsByEmail(request.getEmail())) {
+            log.warn("Email already in use");
             throw new EmailAlreadyExistsException("Email already in use");
         }
         User user = new User();
@@ -61,11 +79,26 @@ public class AuthService implements IAuthService {
         return userMapper.toResponse(saved);
     }
 
+    /**
+     * Authenticates a user and generates a JWT token.
+     * Throws an exception if authentication fails.
+     * @param request contains the user's email and password
+     * @return a JWT token and user details
+     * @throws ResourceNotFoundException if the user does not exist
+     * @throws EmailAlreadyExistsException if the user's email is already in use
+     * */
+    @Transactional(readOnly = true)
+    @Override
     public AuthResponse login(LoginRequest request) {
+        log.info("Logging in user: {}", request);
         authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (!user.isActive()) {
+            log.warn("User is not active");
+            throw new ResourceNotFoundException("User is not active");
+        }
         String token = generateToken(user);
         return authMapper.toResponse(token, user);
     }
