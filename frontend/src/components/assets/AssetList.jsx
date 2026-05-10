@@ -89,26 +89,28 @@ const AssetList = () => {
         });
       }
       
-      let content = response.content || [];
+      let content = response?.content || [];
       
       // Client-side filtering for 'Allocated To' (Admin/Manager only)
       if (currentUser?.role !== 'DEVELOPER' && activeFilters.allocatedTo) {
-        content = content.filter(a => a.currentOwner?.id === activeFilters.allocatedTo);
+        content = content.filter(a => a?.currentOwner?.id === activeFilters.allocatedTo);
       }
 
       // Search fallback for non-developers
       if (currentUser?.role !== 'DEVELOPER' && activeFilters.search && content.length === 0 && activePage === 0) {
          const fullSet = await assetService.list({ size: 100 });
-         content = fullSet.content.filter(a => 
-            a.brand.toLowerCase().includes(activeFilters.search.toLowerCase()) || 
-            a.serialNumber.toLowerCase().includes(activeFilters.search.toLowerCase()) ||
-            a.model.toLowerCase().includes(activeFilters.search.toLowerCase())
-         );
+         if (fullSet?.content) {
+           content = fullSet.content.filter(a => 
+              a.brand?.toLowerCase().includes(activeFilters.search.toLowerCase()) || 
+              a.serialNumber?.toLowerCase().includes(activeFilters.search.toLowerCase()) ||
+              a.model?.toLowerCase().includes(activeFilters.search.toLowerCase())
+           );
+         }
       }
 
       setAssets(content);
-      setTotalAssets(response.meta.totalElements);
-      setTotalPages(response.meta.totalPages);
+      setTotalAssets(response?.meta?.totalElements || 0);
+      setTotalPages(response?.meta?.totalPages || 0);
 
       if (availableBrands.length === 0 && currentUser?.role !== 'DEVELOPER') {
         const fullSet = await assetService.list({ size: 100 });

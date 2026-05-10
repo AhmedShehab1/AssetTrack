@@ -61,7 +61,7 @@ const AllocationModalContent = ({ assetId, assetName, assetSN, onComplete, onSuc
       setHistoryLoading(true);
       try {
         const response = await allocationService.history(assetId, { size: 5 });
-        setHistory(response.content || []);
+        setHistory(response?.content || []);
       } catch (err) {
         console.error("Failed to load allocation history", err);
       } finally {

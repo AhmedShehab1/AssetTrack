@@ -32,9 +32,3 @@ export const useDeleteUser = () => {
   return { deleteUser: execute, loading, error, clearError };
 };
 
-export const useUserAssets = () => {
-  const { execute, loading, error, clearError } = useAsyncOperation(({ userId, params }) => 
-    userService.getAssets(userId, params)
-  );
-  return { getUserAssets: execute, loading, error, clearError };
-};

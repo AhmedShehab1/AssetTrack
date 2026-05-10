@@ -29,7 +29,7 @@ const DashboardPage = () => {
           dashboardService.inventory(),
           assetService.list({ size: 5 })
         ]);
-        setData({ summary: summaryData, recentAssets: assetsData.content || [] });
+        setData({ summary: summaryData, recentAssets: assetsData?.content || [] });
       } catch (err) {
         setError(err);
       } finally {

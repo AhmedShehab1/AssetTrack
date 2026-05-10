@@ -44,9 +44,9 @@ const AllocationList = () => {
         size: 10,
         activeOnly: filters.status === 'active' ? true : (filters.status === 'returned' ? false : undefined)
       });
-      setAllocations(response.content || []);
-      setTotalItems(response.meta.totalElements || 0);
-      setTotalPages(response.meta.totalPages || 1);
+      setAllocations(response?.content || []);
+      setTotalItems(response?.meta?.totalElements || 0);
+      setTotalPages(response?.meta?.totalPages || 1);
     } catch (err) {
       setError(err);
     } finally {

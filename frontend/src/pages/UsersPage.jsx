@@ -50,9 +50,9 @@ const UsersPage = () => {
     setError(null);
     try {
       const response = await userService.list({ page, size: 10 });
-      setUsers(response.content);
-      setTotalItems(response.meta.totalElements);
-      setTotalPages(response.meta.totalPages);
+      setUsers(response?.content || []);
+      setTotalItems(response?.meta?.totalElements || 0);
+      setTotalPages(response?.meta?.totalPages || 0);
     } catch (err) {
       setError(err);
     } finally {
