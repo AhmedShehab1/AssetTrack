@@ -47,8 +47,12 @@ public class UserController {
     @Operation(summary = "List all users", description = "Returns a paginated list of all users")
     @ApiResponse(responseCode = "200", description = "Users retrieved")
     @ApiResponse(responseCode = "403", description = "Forbidden")
-    public ResponseEntity<PagedResponse<UserResponse>> getAllUsers(Pageable pageable){
-        return ResponseEntity.ok(PageUtils.toPagedResponse(userService.getAllUsers(pageable)));
+    public ResponseEntity<PagedResponse<UserResponse>> getAllUsers(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Role role,
+            @RequestParam(required = false) Boolean active,
+            Pageable pageable) {
+        return ResponseEntity.ok(PageUtils.toPagedResponse(userService.listUsers(search, role, active, pageable)));
     }
 
     @GetMapping("/users/inactive")

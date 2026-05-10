@@ -54,21 +54,17 @@ public class AllocationController {
         return ResponseEntity.ok(allocationService.getAllocationById(allocationId, assetId));
     }
 
-    @PostMapping("/deallocate")
+    @PostMapping("/{allocationId}/deallocate")
     @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     @Operation(summary = "Deallocate an asset", description = "Marks the current allocation as ended.")
     @ApiResponse(responseCode = "204", description = "Asset deallocated")
-    public ResponseEntity<Void> deallocate(@PathVariable UUID assetId) {
-        allocationService.deallocate(assetId);
-        return ResponseEntity.noContent().build();
-    }
-    // Change from /deallocate to /{allocationId}/deallocate
-    @PostMapping("/{allocationId}/deallocate")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public ResponseEntity<Void> deallocate(
             @PathVariable UUID assetId,
             @PathVariable UUID allocationId) {
         allocationService.deallocate(assetId);
         return ResponseEntity.noContent().build();
     }
+    // Change from /deallocate to /{allocationId}/deallocate
+
+
 }
