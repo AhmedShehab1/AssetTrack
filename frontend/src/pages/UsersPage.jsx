@@ -45,14 +45,11 @@ const UsersPage = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await userService.list({ 
-        page, 
-        size: 10,
-      });
+      const response = await userService.list({ page, size: 10 });
       setUsers(response.content);
       setTotalItems(response.meta.totalElements);
       setTotalPages(response.meta.totalPages);
@@ -61,11 +58,11 @@ const UsersPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page]);
 
   useEffect(() => {
     fetchUsers();
-  }, [page]);
+  }, [fetchUsers]);
 
   const handleAddUser = () => {
     setModalConfig({ isOpen: true, type: 'USER', payload: null });

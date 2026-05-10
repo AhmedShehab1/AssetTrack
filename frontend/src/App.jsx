@@ -63,6 +63,7 @@ export default function App() {
 
           <Route path="/assets" element={<AssetsPage/>} />
           <Route path="/assets/:assetId/reports" element={<AssetReportsPage/>} />
+          <Route path="/condition-reports" element={<ConditionReportsPage/>} />
           
           {/* Profile: Any user for self, Admin/Manager for others */}
           <Route path="/profile" element={<ProfilePage/>} />
