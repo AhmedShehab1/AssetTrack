@@ -46,11 +46,7 @@ const AssetReportsPage = () => {
 
   const handleStatusUpdate = async (reportId, status, resolutionNotes = '') => {
     try {
-      if (status === 'RESOLVED') {
-        await conditionReportService.resolve(assetId, reportId);
-      } else {
-        await conditionReportService.update(assetId, reportId, { status, resolutionNotes });
-      }
+      await conditionReportService.update(assetId, reportId, { status, resolutionNotes });
       fetchData();
     } catch (err) {
       console.error("Failed to update report", err);

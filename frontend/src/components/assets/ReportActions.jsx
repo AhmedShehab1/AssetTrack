@@ -5,12 +5,6 @@ import Button from '../common/Button';
 const ReportActions = ({ report, onUpdateStatus, onOpenResolveModal }) => {
   const buttonClass = "!text-[10px] !py-1.5 font-black uppercase tracking-widest";
 
-  const handleResolveClick = () => {
-    if (window.confirm('Are you sure you want to mark this report as resolved?')) {
-      onUpdateStatus(report.id, 'RESOLVED');
-    }
-  };
-
   return (
     <div className="bg-slate-50/50 border-t border-outline-variant p-3 flex justify-end gap-2">
       {report.status !== 'OPEN' && (
@@ -37,10 +31,10 @@ const ReportActions = ({ report, onUpdateStatus, onOpenResolveModal }) => {
         <Button
           variant="ghost"
           className={`${buttonClass} text-success`}
-          onClick={handleResolveClick}
+          onClick={() => onOpenResolveModal(report)}
           icon={CheckCircle}
         >
-          Resolved
+          Mark Resolved
         </Button>
       )}
       {report.status === 'RESOLVED' && (
