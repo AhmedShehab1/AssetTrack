@@ -1,28 +1,61 @@
-# AssetTrack
-Asset tracking system with role-based access control.
+# 📦 AssetTrack
 
-## Local Development (Host Backend + Docker DB)
+<div align="center">
+  <h3>Enterprise-Grade Asset Tracking & Management System</h3>
+  <br />
+  <img src="./image.png" alt="AssetTrack Demonstration" width="800" />
+</div>
 
-1) Start the database only: `make db` (or `docker-compose up -d postgres pgadmin`)
-	- PostgreSQL runs on localhost:5432.
-	- pgAdmin is available at http://localhost:8081 (Login: admin@assettrack.com / admin).
-2) Optional email alerts (host backend):
-	- Copy [.env.example](.env.example) to `.env` and fill in Mailtrap values.
-3) Run the backend: `make backend`
-	- Loads `.env.local` if present and generates RSA keys if missing.
-4) Run the frontend: `cd frontend && npm install && npm run dev`
+**AssetTrack** is a comprehensive, enterprise-grade asset tracking system built with a robust Spring Boot backend and a modern React frontend. It features role-based access control, condition reporting, automated low-stock alerts, and much more.
 
-If you want to store keys elsewhere, set `RSA_PRIVATE_KEY_LOCATION` and `RSA_PUBLIC_KEY_LOCATION` (for example, `file:/absolute/path/private_pkcs8.pem`).
+---
 
-## Docker (Backend + Postgres)
+## 🚀 Features
+- **Role-Based Access Control**: Granular permissions for Admins, Managers, and Developers.
+- **Asset Lifecycle Management**: Track assets from procurement to decommissioning.
+- **Condition Reports**: Log issues, track repairs, and manage warranty statuses.
+- **Automated Notifications**: Get alerted for low stock and expiring warranties via email (Mailtrap) and in-app notifications.
 
-Run everything with Docker Compose:
+---
+
+## 🛠️ Local Development (Host Backend + Docker DB)
+
+1) **Start the database only:** 
+   ```bash
+   make db
+   ```
+   *(or `docker-compose up -d postgres pgadmin`)*
+   - PostgreSQL runs on `localhost:5432`.
+   - pgAdmin is available at [http://localhost:8081](http://localhost:8081) *(Login: `admin@assettrack.com` / `admin`)*.
+
+2) **Optional email alerts (host backend):**
+   - Copy [.env.example](.env.example) to `.env` and fill in Mailtrap values.
+
+3) **Run the backend:** 
+   ```bash
+   make backend
+   ```
+   - Loads `.env.local` if present and generates RSA keys if missing.
+
+4) **Run the frontend:** 
+   ```bash
+   make frontend
+   ```
+   *(OR `cd frontend && npm install && npm run dev`)*
+
+> **Key Management Note:** If you want to store keys elsewhere, set `RSA_PRIVATE_KEY_LOCATION` and `RSA_PUBLIC_KEY_LOCATION` (for example, `file:/absolute/path/private_pkcs8.pem`).
+
+---
+
+## 🐳 Docker (Backend + Postgres)
+
+Run everything seamlessly with Docker Compose:
 
 ```bash
 docker-compose up -d
 ```
 
-Notes:
+**Notes:**
 - Compose loads variables from `.env` at the repo root.
 - Copy [.env.example](.env.example) to `.env` and fill values before running.
 - The backend container auto-generates RSA keys on first start and stores them in a named volume.
@@ -30,30 +63,52 @@ Notes:
 - Optional mail settings are picked up from `.env` if present.
 
 If you only want the database in Docker and run the backend on the host:
-
 ```bash
 docker-compose up -d postgres pgadmin
 ```
 
-## Mailtrap (Email Testing)
+---
 
-1) Create a shared inbox in Mailtrap and invite the team to the workspace.
+## 🧪 Database Seeding (Demonstration Data)
+
+To quickly test the application with realistic data, we use the **`DatabaseSeeder`** component.
+
+It populates the database with:
+- **Users**: Admin, Managers, and Developers. *(e.g., login as `alice.admin@company.com` with password `Admin@1234`)*
+- **Assets**: Laptops, Monitors, Keyboards, Mice, etc.
+- **Allocations**: Historical and active asset assignments.
+- **Condition Reports & Notifications**: To demonstrate alerting and repair flows.
+
+### How to activate the Seeder:
+The seeder runs automatically when the `dev` or `seed` Spring profile is active.
+```properties
+spring.profiles.active=dev
+```
+*You can view the exact data generated or customize it by checking the file:*
+👉 **[`backend/src/main/java/com/assettrack/config/DatabaseSeeder.java`](backend/src/main/java/com/assettrack/config/DatabaseSeeder.java)**
+
+---
+
+## 📧 Mailtrap (Email Testing)
+
+1) Create a shared inbox in [Mailtrap](https://mailtrap.io) and invite the team to the workspace.
 2) Use the shared SMTP credentials locally (do not commit them).
-	- Copy [.env.example](.env.example) to `.env`.
-3) Environment variables used by the app:
-	- `MAILTRAP_HOST` (default: `sandbox.smtp.mailtrap.io`)
-	- `MAILTRAP_PORT` (default: `2525`)
-	- `MAILTRAP_USERNAME`
-	- `MAILTRAP_PASSWORD`
-	- Optional: `MAIL_FROM` (default: `no-reply@assettrack.local`)
-	- Optional: `ALERTS_RECIPIENT_EMAIL` (defaults to `admin@assettrack.com`)
-
+   - Copy [.env.example](.env.example) to `.env`.
+3) **Environment variables used by the app:**
+   - `MAILTRAP_HOST` (default: `sandbox.smtp.mailtrap.io`)
+   - `MAILTRAP_PORT` (default: `2525`)
+   - `MAILTRAP_USERNAME`
+   - `MAILTRAP_PASSWORD`
+   - *Optional:* `MAIL_FROM` (default: `no-reply@assettrack.local`)
+   - *Optional:* `ALERTS_RECIPIENT_EMAIL` (defaults to `admin@assettrack.com`)
 4) Email alerts are sent by the low-stock scheduled job in `AlertService`.
-	- To test quickly, create low-stock items and set `ALERTS_RECIPIENT_EMAIL` to a test address.
+   - To test quickly, create low-stock items and set `ALERTS_RECIPIENT_EMAIL` to a test address.
 
-## Token Helper
+---
 
-Use the helper script to get a JWT for Swagger:
+## 🔐 Token Helper
+
+Use the helper script to quickly get a JWT for Swagger testing:
 
 ```bash
 ./backend/scripts/get-token.sh
@@ -61,19 +116,20 @@ Use the helper script to get a JWT for Swagger:
 
 It will login or auto-register (default email `dev@assettrack.local`, password `ChangeMe123`).
 
-Common options:
-
+**Common options:**
 ```bash
 ./backend/scripts/get-token.sh --email user@company.com --password "MyPass123"
 ASSETTRACK_EMAIL=user@company.com ASSETTRACK_PASSWORD=MyPass123 ./backend/scripts/get-token.sh
 ./backend/scripts/get-token.sh --print-header
 ```
 
-Swagger UI: `http://localhost:8080/swagger-ui/index.html` → Authorize → paste the token (or the `Authorization: Bearer ...` header).
+**Swagger UI Authentication:** Go to `http://localhost:8080/swagger-ui/index.html` → **Authorize** → paste the token (or the `Authorization: Bearer ...` header).
 
-## Convenience Commands
+---
 
-Use Make targets from the repo root:
+## 🛠️ Convenience Commands
+
+Use Make targets from the repo root for a smoother developer experience:
 
 ```bash
 make db
@@ -82,17 +138,21 @@ make frontend
 make docker
 ```
 
-Notes:
+**Notes:**
 - `make backend` loads `.env` via `scripts/load-env.sh` if it exists.
 - `make backend` also runs `backend/scripts/ensure-rsa-keys.sh` to generate keys if missing.
 - Run `make backend` and `make frontend` in separate terminals.
 
+---
+
 ## 📖 API Documentation
 
-The API is documented using the OpenAPI 3.0 specification. You can view the interactive Swagger UI documentation here:
-[https://AhmedShehab1.github.io/AssetTrack/docs/](https://AhmedShehab1.github.io/AssetTrack/docs/)
+The API is strictly documented using the OpenAPI 3.0 specification. You can view the interactive Swagger UI documentation here:
+**[https://AhmedShehab1.github.io/AssetTrack/](https://AhmedShehab1.github.io/AssetTrack/)**
 
-## API Testing with Schemathesis
+---
+
+## 🛡️ API Testing with Schemathesis
 
 We use property-based testing with [Schemathesis](https://schemathesis.io/) to ensure our Spring Boot implementation strictly adheres to our OpenAPI specification. This approach automatically generates hundreds of test cases to catch edge cases, validation errors, and conformance issues.
 
@@ -105,7 +165,3 @@ You can run the API tests locally using Docker:
 ```bash
 docker run schemathesis/schemathesis:stable run http://shehabtech.me/AssetTrack --schema ./docs/openapi.yaml
 ```
-
-### GitHub Actions
-
-Schemathesis tests run automatically on every push and pull request to the `main` branch. You can view the results and detailed Schema Coverage reports in the **Actions** tab of the repository.
