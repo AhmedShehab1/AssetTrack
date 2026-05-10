@@ -5,11 +5,11 @@ import TopNav from './TopNav';
 
 const Layout = ({ children }) => {
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="flex min-h-screen">
       <Sidebar />
-      <div style={{ flex: 1, marginLeft: 'var(--sidebar-width)', display: 'flex', flexDirection: 'column' }}>
+      <div className="flex-1 ml-[var(--sidebar-width)] flex flex-col">
         <TopNav />
-        <main style={{ padding: '30px', flex: 1 }}>
+        <main className="p-8 flex-1 overflow-x-hidden">
           {children || <Outlet />}
         </main>
       </div>

@@ -62,4 +62,13 @@ public class AllocationController {
         allocationService.deallocate(assetId);
         return ResponseEntity.noContent().build();
     }
+    // Change from /deallocate to /{allocationId}/deallocate
+    @PostMapping("/{allocationId}/deallocate")
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    public ResponseEntity<Void> deallocate(
+            @PathVariable UUID assetId,
+            @PathVariable UUID allocationId) {
+        allocationService.deallocate(assetId);
+        return ResponseEntity.noContent().build();
+    }
 }

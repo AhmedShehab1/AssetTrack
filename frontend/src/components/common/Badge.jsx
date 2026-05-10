@@ -1,35 +1,21 @@
 import React from 'react';
 
 const Badge = ({ children, variant = 'default', className = '' }) => {
-  const getStyles = () => {
-    switch (variant) {
-      case 'success':
-        return { backgroundColor: 'var(--success-bg)', color: 'var(--success)' };
-      case 'danger':
-        return { backgroundColor: 'var(--danger-bg)', color: 'var(--danger)' };
-      case 'warning':
-        return { backgroundColor: 'var(--warning-bg)', color: 'var(--warning)' };
-      case 'info':
-        return { backgroundColor: 'var(--info-bg)', color: 'var(--info)' };
-      default:
-        return { backgroundColor: 'var(--border-color)', color: 'var(--text-secondary)' };
-    }
-  };
-
-  const style = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '4px 10px',
-    borderRadius: '20px',
-    fontSize: '11px',
-    fontWeight: '700',
-    letterSpacing: '0.05em',
-    textTransform: 'uppercase',
-    ...getStyles()
+  const variants = {
+    success: 'bg-[#EAF7ED] text-[#28A745]',
+    danger: 'bg-[#FDECEA] text-[#DC3545]',
+    warning: 'bg-[#FFF9E6] text-[#FFC107]',
+    info: 'bg-[#E8F6F8] text-[#17A2B8]',
+    default: 'bg-slate-100 text-slate-500',
   };
 
   return (
-    <span className={`badge ${className}`} style={style}>
+    <span className={`
+      inline-flex items-center px-2.5 py-1 
+      rounded-full text-[10px] font-bold uppercase tracking-wider
+      ${variants[variant] || variants.default}
+      ${className}
+    `}>
       {children}
     </span>
   );

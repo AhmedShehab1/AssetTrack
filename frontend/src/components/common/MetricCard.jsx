@@ -4,23 +4,19 @@ import Badge from './Badge';
 
 const MetricCard = ({ title, value, badgeText, badgeVariant, icon: Icon, iconBg, valueColor }) => {
   return (
-    <Card padding="24px">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-        <div style={{ 
-          backgroundColor: iconBg || 'var(--primary-light)', 
-          padding: '12px', 
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}>
+    <Card padding="p-6" className="cursor-pointer hover:shadow-lg transition-shadow">
+      <div className="flex justify-between items-start mb-5">
+        <div 
+          className="p-3 rounded-xl flex items-center justify-center"
+          style={{ backgroundColor: iconBg || 'var(--primary-light)' }}
+        >
           {Icon && <Icon size={24} style={{ color: valueColor || 'var(--primary)' }} />}
         </div>
         {badgeText && <Badge variant={badgeVariant}>{badgeText}</Badge>}
       </div>
       <div>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', fontWeight: '500', marginBottom: '8px' }}>{title}</p>
-        <h2 style={{ fontSize: '32px', fontWeight: '800', color: valueColor || 'var(--text-primary)' }}>{value}</h2>
+        <p className="text-text-body text-[13px] font-medium mb-2 uppercase tracking-wide">{title}</p>
+        <h2 className="text-3xl font-extrabold text-text-heading" style={{ color: valueColor }}>{value}</h2>
       </div>
     </Card>
   );
